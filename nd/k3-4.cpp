@@ -1,0 +1,255 @@
+#include "main.h"
+
+inline void increment (vertex u, vertex v, vertex w, vector<vertex>& xtris, vector<vp>& el, vector<vertex>& xel, Graph& orientedTris, Graph& graph, Graph& FC) {
+
+	vertex i = -1;
+	for (i = xel[u]; i < xel[u+1]; i++)
+		if (el[i].second == v)
+			break;
+
+	bool fl = false;
+	for (vertex j = 0; j < orientedTris[i].size(); j++)
+		if (orientedTris[i][j] == w) {
+			FC[i][j]++;
+			fl = true;
+			break;
+		}
+}
+
+inline void shake (vertex m, vertex u, vertex v, vertex w, vertex* a, vertex* b, Graph& graph) {
+	if (m == u) {
+		*a = v;
+		*b = w;
+		if (less_than (w, v, graph))
+			swap (*a, *b);
+	}
+}
+
+inline vertex maxOriented (vertex a, vertex b, vertex c, Graph& graph) {
+
+	if (less_than (b, a, graph))
+		return less_than (a, c, graph) ? c : a;
+	else
+		return less_than (b, c, graph) ? c : b;
+}
+
+inline void threeWay (vector<vertex>& x, vector<vertex>& y, vector<vertex>& z, vector<vertex>& commonNeighbors) {
+	vertex i = 0, j = 0, k = 0;
+	while (i < x.size() && j < y.size() && k < z.size()) {
+		vertex a = x[i];
+		vertex b = y[j];
+		vertex c = z[k];
+		if (a == b && a == c) {
+			commonNeighbors.push_back(a);
+			i++; j++; k++;
+		}
+		else {
+			vertex m = max ({a, b, c});
+			if (a != m)
+				i++;
+			if (b != m)
+				j++;
+			if (c != m)
+				k++;
+		}
+	}
+}
+
+inline vertex getTriangleId (vertex u, vertex v, vertex w, vector<vertex>& xtris, vector<vp>& el, vector<vertex>& xel, Graph& orientedTris, Graph& graph) {
+	// given the neighbor triangle u, v, w; get el-id by smallest and middle, then get tris id by largest's index in orientedTris[el-id] : xtris[el-id]+index
+	vertex a, b, m = maxOriented (u, v, w, graph);
+	shake (m, u, v, w, &a, &b, graph);
+	shake (m, v, u, w, &a, &b, graph);
+	shake (m, w, u, v, &a, &b, graph);
+
+
+	vertex i = -1;
+	for (i = xel[a]; i < xel[a+1]; i++)
+		if (el[i].second == b)
+			break;
+
+	if (i == -1) {
+		printf ("gnti has bug\n");
+		exit(1);
+	}
+
+	bool fl = false;
+	for (vertex j = 0; j < orientedTris[i].size(); j++)
+		if (orientedTris[i][j] == m)
+			return xtris[i] + j;
+
+	if (!fl) {
+		printf ("arrtir has bug in end\n");
+		exit(1);
+	}
+
+}
+
+void create_triangleList (Graph& orientedGraph, vector<vp>& el, Graph& orientedTris, vector<vt>& tris, vector<vertex>& xtris, Graph& FC) {
+
+	xtris.push_back(0);
+	for (size_t i = 0; i < el.size(); i++) {
+		vertex u = get<0>(el[i]);
+		vertex v = get<1>(el[i]);
+		vector<vertex> commonNeighbors;
+		intersection (orientedGraph[u], orientedGraph[v], commonNeighbors);
+		for (auto w : commonNeighbors) {
+			orientedTris[i].push_back (w);
+			FC[i].push_back (0);
+			vt tr = make_tuple (u, v, w);
+			tris.push_back (tr);
+		}
+		xtris.push_back(tris.size());
+	}
+}
+
+// per triangle
+void count4cliques (Graph& graph, Graph& orientedGraph, vector<vp>& el, vector<vertex>& xel, Graph& orientedTris, vector<vt>& tris, vector<vertex>& xtris, Graph& FC) {
+
+	for (auto t : tris) {
+		vertex i = 0, j = 0, k = 0;
+		vertex u = get<0>(t);
+		vertex v = get<1>(t);
+		vertex w = get<2>(t);
+
+		while (i < orientedGraph[u].size() && j < orientedGraph[v].size() && k < orientedGraph[w].size()) {
+			vertex a = orientedGraph[u][i];
+			vertex b = orientedGraph[v][j];
+			vertex c = orientedGraph[w][k];
+
+			if (a == b && a == c) {
+				vertex x = a;
+				increment (u, v, w, xtris, el, xel, orientedTris, graph, FC);
+				increment (u, v, x, xtris, el, xel, orientedTris, graph, FC);
+				increment (u, w, x, xtris, el, xel, orientedTris, graph, FC);
+				increment (v, w, x, xtris, el, xel, orientedTris, graph, FC);
+				i++; j++; k++;
+			}
+			else {
+				vertex m = max ({a, b, c});
+				if (a != m)
+					i++;
+				if (b != m)
+					j++;
+				if (c != m)
+					k++;
+			}
+		}
+	}
+}
+
+void base_k34 (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* max34, string vfile, FILE* fp) {
+
+	timestamp peelingStart;
+
+	vertex nVtx = graph.size();
+
+	// Prepare a CSR-like structure to index edges and create directed graph from low degree vertices to higher degree vertices
+	vector<vp> el;
+	vector<vertex> xel;
+	Graph orientedGraph;
+	indexEdges (graph, el, xel, orientedGraph);
+
+	vector<vector<vertex>> orientedTris (nEdge); // like orientedGraph: each vector<vertex> is the list of third vertices, w, in the triangles of i-th edge, u - v, in el s.t. u < v < w (deg ordering)
+	vector<vt> tris; // like el: list of the triangles aligned to the order in orientedTriangles
+	vector<vertex> xtris; // like xel: indices in tris that starts the triangle list for an edge
+	vector<vector<vertex>> FC (nEdge); // 4-clique counts of each triangle in the orientedTris
+	create_triangleList (orientedGraph, el, orientedTris, tris, xtris, FC);
+
+	// 4-clique counting for each triangle
+	count4cliques (graph, orientedGraph, el, xel, orientedTris, tris, xtris, FC);
+
+	// Peeling
+	K.resize (tris.size(), -1);
+	Naive_Bucket nBucket;
+	nBucket.Initialize (nEdge, tris.size()); // maximum 4-clique count of a triangle is nVtx
+
+	vertex id = 0;
+	for (size_t i = 0; i < FC.size(); i++)
+		for (size_t j = 0; j < FC[i].size(); j++) {
+			if (FC[i][j] > 0)
+				nBucket.Insert (xtris[i]+j, FC[i][j]);
+			else
+				K[xtris[i] + j] = 0;
+			id++;
+		}
+
+	vertex fc_t = 0;
+
+	// required for hierarchy
+	vertex cid; // subcore id number
+	vector<subcore> skeleton; // equal K valued cores
+	vector<vertex> component; // subcore ids for each vertex
+	vector<vp> relations;
+	vector<vertex> unassigned;
+	vertex nSubcores;
+
+	if (hierarchy) {
+		cid = 0;
+		nSubcores = 0;
+		component.resize (tris.size(), -1);
+	}
+
+	while (true) {
+		edge t, val ;
+		if (nBucket.PopMin(&t, &val)) // if the bucket is empty
+			break;
+
+		if (hierarchy) {
+			unassigned.clear();
+			subcore sc (val);
+			skeleton.push_back (sc);
+		}
+
+		fc_t = K[t] = val;
+
+		vertex u = get<0> (tris[t]);
+		vertex v = get<1> (tris[t]);
+		vertex w = get<2> (tris[t]);
+		vector<vertex> commonNeighbors;
+		threeWay (graph[u], graph[v], graph[w], commonNeighbors);
+		for (auto x : commonNeighbors) { // decrease the FC of the neighbor triangles with greater FC
+			vertex p = getTriangleId (u, v, x, xtris, el, xel, orientedTris, graph);
+			vertex r = getTriangleId (u, w, x, xtris, el, xel, orientedTris, graph);
+			vertex s = getTriangleId (v, w, x, xtris, el, xel, orientedTris, graph);
+			if (K[p] == -1 && K[r] == -1 && K[s] == -1) {
+				if (nBucket.CurrentValue(p) > fc_t)
+					nBucket.DecVal(p);
+				if (nBucket.CurrentValue(r) > fc_t)
+					nBucket.DecVal(r);
+				if (nBucket.CurrentValue(s) > fc_t)
+					nBucket.DecVal(s);
+			}
+			else if (hierarchy)
+				createSkeleton (t, {p, r, s}, &nSubcores, K, skeleton, component, unassigned, relations);
+		}
+
+		if (hierarchy)
+			updateUnassigned (t, component, &cid, relations, unassigned);
+	}
+
+	nBucket.Free();
+	*max34 = fc_t; // fc_t is fc of the last popped triangle
+
+	timestamp peelingEnd;
+	print_time (fp, "Peeling time: ", peelingEnd - peelingStart);
+
+#ifdef K_VALUES
+	for (int i = 0; i < K.size(); i++)
+		printf ("K[%d]: %d\n", i, K[i]);
+#endif
+
+	if (hierarchy) {
+		buildHierarchy (*max34, relations, skeleton, &nSubcores, nEdge, nVtx);
+		timestamp nucleusEnd;
+
+		print_time (fp, "Nucleus decomposition time with hierarchy construction: ", nucleusEnd - peelingStart);
+		fprintf (fp, "# subcores: %d\t\t # subsubcores: %d\t\t |V|: %d\n", nSubcores, skeleton.size(), graph.size());
+
+		helpers hp (&tris);
+		presentNuclei (34, skeleton, component, graph, nEdge, hp, vfile, fp);
+		timestamp totalEnd;
+
+		print_time (fp, "Total time, including the density computations: ", totalEnd - peelingStart);
+	}
+}
