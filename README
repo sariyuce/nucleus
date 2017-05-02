@@ -1,0 +1,29 @@
+- Install sparsehash library to compile the code, https://code.google.com/p/sparsehash/.
+- Edit makefile to point to sparsehash library
+- './make' to compile
+- './nucleus <graph> <algorithm> <hierarchy?>" to run;
+		 <graph> is the input graph in matrix market or chaco format,
+		 <algorithm> can be '12 (k-core), 13, 14, 23 (k-truss) or 34',
+		 <hierarchy> is 1 to get the hierarchy, subgraphs and densities; 0 gets only K values
+
+- When <hierarchy> is 1, there are 3 output files
+		- <graph>_<algorithm>-Hierarchy: Runtimes, statistics and significantly dense subgraphs
+		- <graph>_<algorithm>_NUCLEI: Each line is a nucleus, first 6 numbers are subgraph id, K value, |V|, |E|, edge densityand 1 (0) if the nucleus is (not) a leaf in the hierarchy
+		- <graph>_<algorithm>_circle.json: Visualization file given to vis.sh -- ./vis.sh <graph>_<algorithm>_circle.json visualizes the hierarchy if you have use OSX and online
+
+
+- In the *-Hierarchy file, "7: K: 1 |V|: 112 |E|: 425 ed: 0.06837 pr: 49 (LEAF)" means the nucleus with id 7 has K value of 1, and it has 112 vertices, 425 edges with 0.06837 edge density. It's a leaf in the hierarchy and its parent is the nucleus with the id of 49.
+
+- Please cite those papers if you use the code:
+
+    "Finding the Hierarchy of Dense Subgraphs using Nucleus Decompositions"
+	A. E. Sariyuce, C. Seshadhri, A. Pinar, U. V. Catalyurek
+	International World Wide Web Conference (WWW), 2015.
+
+    "Fast Hierarhcy Construction for Dense Subgraphs"
+	A. E. Sariyuce, A. Pinar
+	Very Large Data Bases Conference (VLDB), 2017	
+
+
+- Contact a.erdemsariyuce@gmail.com for any questions/comments
+    
