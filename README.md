@@ -5,10 +5,9 @@ This is a collection of the codes on the nucleus decomposition framework.
 - 'dnd' has the directed 2,3 nucleus decomposition algorithms
 
 
-
-[1] Finding the Hierarchy of Dense Subgraphs using Nucleus Decompositions
-A. Erdem Sarıyüce, C. Seshadhri, Ali Pınar, Ümit V. Çatalyürek
-International World Wide Web Conference (WWW), 2015, sariyuce.com/papers/www15.pdf
+[1] Finding the Hierarchy of Dense Subgraphs using Nucleus Decompositions<brsdf
+A. Erdem Sarıyüce, C. Seshadhri, Ali Pınar, Ümit V. Çatalyürek<br>
+International World Wide Web Conference (WWW), 2015, sariyuce.com/papers/www15.pdf<br>
 
 [2] Fast Hierarchy Construction for Dense Subgraphs
 A. Erdem Sarıyüce, Ali Pınar
