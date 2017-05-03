@@ -1,0 +1,24 @@
+- Install sparsehash library to compile the code, https://code.google.com/p/sparsehash/.
+- Edit makefile to point to sparsehash library
+- './make' to compile
+- './binucleus <graph> <algorithm> <hierarchy?>" to run;
+		 <graph> is the bipartite input graph in matrix market format, first line should |E| |LeftV| |RightV|
+		 <algorithm> is TIP or WING -- TIP works on the right (primary) vertices
+		 <hierarchy> is 1 to get the hierarchy, subgraphs and densities; 0 gets only K values
+
+- When <hierarchy> is 1, there are 3 output files
+		- <graph>_<algorithm>-Hierarchy: Runtimes, statistics and significantly dense subgraphs
+		- <graph>_<algorithm>_NUCLEI: Each line is a nucleus, first 7 numbers are subgraph id, K value, |LeftV|, |RightV|, |E|, edge density and 1 (0) if the nucleus is (not) a leaf in the hierarchy
+		- <graph>_<algorithm>_circle.json: Visualization file given to vis.sh -- ./vis.sh <graph>_<algorithm>_circle.json visualizes the hierarchy if you have use OSX and online
+
+
+- In the *-Hierarchy file, "3796: K: 14 |PV|: 2 |SV|: 15 |E|: 20 ed: 0.66 pr: 3780 (LEAF)" means the nucleus with id 3796 has K value of 14, and it has 2 primary (right) vertices, 15 secondary (left) vertices, 20 edges with 0.66 edge density. It's a leaf in the hierarchy and its parent is the nucleus with the id of 3780
+
+- Please cite this paper if you use the code:
+
+    "Peeling Bipartite Networks for Dense Subgraph Discovery"
+     A. Erdem Sariyuce, Ali Pinar
+     arXiv:1611.02756
+
+- Contact a.erdemsariyuce@gmail.com for any questions/comments
+    
