@@ -9,6 +9,7 @@ This is a collection of the codes on the nucleus decomposition framework.
 [1] Finding the Hierarchy of Dense Subgraphs using Nucleus Decompositions
 A. Erdem Sarıyüce, C. Seshadhri, Ali Pınar, Ümit V. Çatalyürek
 International World Wide Web Conference (WWW), 2015, sariyuce.com/papers/www15.pdf
+
 [2] Fast Hierarchy Construction for Dense Subgraphs
 A. Erdem Sarıyüce, Ali Pınar
 International Conference on Very Large Data Bases (VLDB), 2017, sariyuce.com/papers/vldb17.pdf
