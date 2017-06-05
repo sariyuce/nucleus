@@ -137,7 +137,7 @@ void wingDecomposition (Graph& leftGraph, Graph& rightGraph, edge nEdge, vector<
 				vertex f = EL(u, uwInd);
 				vertex g = EL(t, tvInd);
 				vertex h = EL(t, twInd);
-				if (K[f] == -1 && K[g] == -1 && K[h]) {
+				if (K[f] == -1 && K[g] == -1 && K[h] == -1) {
 					if (nBucket.CurrentValue (f) > val)
 						nBucket.DecVal (f);
 					if (nBucket.CurrentValue (g) > val)
