@@ -246,7 +246,7 @@ void ReadReuters (char *filename, EdgeType* nEdge, vector<vector<VtxType>>& left
 			}
 			leftGraph[u].push_back (v);
 			rightGraph[v].push_back (u);
-			*nEdge++;
+			(*nEdge)++;
 		}
 
 		co++;
@@ -261,19 +261,19 @@ void ReadReuters (char *filename, EdgeType* nEdge, vector<vector<VtxType>>& left
 //	exit(1);
 	for (size_t i = 0; i < leftGraph.size(); i++) {
 
-		if (i % 1000 == 0) {
-			timestamp t2;
-			cout << "left sort: " << i << "  size: "<< leftGraph[i].size() << " time: " << t2 - t1 << endl;
-		}
+//		if (i % 1000 == 0) {
+//			timestamp t2;
+//			cout << "left sort: " << i << "  size: "<< leftGraph[i].size() << " time: " << t2 - t1 << endl;
+//		}
 		sort (leftGraph[i].begin(), leftGraph[i].end());
 	}
 
 	for (size_t i = 0; i < rightGraph.size(); i++) {
 
-		if (i % 1000 == 0) {
-			timestamp t2;
-			cout << "right sort: " << i << "  size: "<< rightGraph[i].size() << " time: " << t2 - t1 << endl;
-		}
+//		if (i % 1000 == 0) {
+//			timestamp t2;
+//			cout << "right sort: " << i << "  size: "<< rightGraph[i].size() << " time: " << t2 - t1 << endl;
+//		}
 		sort (rightGraph[i].begin(), rightGraph[i].end());
 	}
 
@@ -358,8 +358,8 @@ void ReadBipartiteGraph(char *filename, EdgeType* nEdge, vector<vector<VtxType>>
 		ReadReuters<VtxType> (filename, nEdge, leftGraph, rightGraph);
 	else if (ext == ".graph") // Chaco
 		ReadBipartiteGraphFromChacoFile<VtxType> (filename, nEdge, leftGraph, rightGraph);
-	else if (ext.find("wiki") != string::npos) {
-		printf ("wiki read\n");
+	else if (st.find("out") != string::npos) {
+//		printf ("wiki read\n");
 		ReadReuters<VtxType> (filename, nEdge, leftGraph, rightGraph);
 	}
 	else // MatrixMarket

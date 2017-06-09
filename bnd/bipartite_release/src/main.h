@@ -105,7 +105,6 @@ inline vertex find_ind (vector<vertex>& rg, vertex g) {
 	exit(1);
 }
 
-
 inline void prefixSum (vector<vertex>& xRight, Graph& rightGraph, vector<vp>& el) {
 	vertex sum = 0;
 	xRight.push_back (sum);
@@ -250,7 +249,7 @@ inline void updateUnassigned (vertex t, vector<vertex>& component, vertex* cid, 
 		relations[i] = make_pair (relations[i].first, component[t]);
 }
 
-inline void indicesIntersection(vector<vertex>& a, vector<vertex>& b,
+inline void indicesIntersection (vector<vertex>& a, vector<vertex>& b,
 		vector<vertex>& res, vertex g) {
 	size_t i = 0, j = 0;
 	while (i < a.size() && j < b.size()) {
@@ -261,6 +260,25 @@ inline void indicesIntersection(vector<vertex>& a, vector<vertex>& b,
 		else {
 //			if (a[i] != g)
 			{
+				res.push_back(i);
+				res.push_back(j);
+			}
+			i++;
+			j++;
+		}
+	}
+}
+
+inline void indicesIntersectionOld (vector<vertex>& a, vector<vertex>& b,
+		vector<vertex>& res, vertex g) {
+	size_t i = 0, j = 0;
+	while (i < a.size() && j < b.size()) {
+		if (a[i] < b[j])
+			i++;
+		else if (b[j] < a[i])
+			j++;
+		else {
+			if (a[i] != g) {
 				res.push_back(i);
 				res.push_back(j);
 			}
@@ -333,12 +351,10 @@ inline void intersection (vector<vertex>& a, vector<vertex>& b, vector<vertex>& 
 
 template <typename VtxType, typename EdgeType>
 void ReadBipartiteGraph(char *filename, EdgeType* nEdge, vector<vector<VtxType>>& leftGraph, vector<vector<VtxType>>& rightGraph);
-void tipDecomposition (Graph& leftGraph, Graph& rightGraph, edge nEdge, vector<vertex>& K, bool hierarchy, vertex* maxbicore, string vfile, FILE* fp, vertex* bCount);
-void hopefullyFastertipDecomposition (Graph& leftGraph, Graph& rightGraph, edge nEdge, vector<vertex>& K, bool hierarchy, vertex* maxbicore, string vfile, FILE* fp, vertex* bCount);
-void insallahFasterTipDecomposition (Graph& leftGraph, Graph& rightGraph, edge nEdge, vector<vertex>& K, bool hierarchy, vertex* maxbicore, string vfile, FILE* fp, vertex* bCount);
+void tipDecomposition (Graph& leftGraph, Graph& rightGraph, edge nEdge, vector<vertex>& K, bool hierarchy, vertex* maxbicore, string vfile, FILE* fp, long* bCount);
+void oldtipDecomposition (Graph& leftGraph, Graph& rightGraph, edge nEdge, vector<vertex>& K, bool hierarchy, vertex* maxbicore, string vfile, FILE* fp, long* bCount);
 
-void wingDecomposition (Graph& leftGraph, Graph& rightGraph, edge nEdge, vector<vertex>& K, bool hierarchy, vector<vp>& el, vector<vertex>& xRight, vertex* maxbicore, string vfile, FILE* fp, vertex* bCount);
-void insallahFasterwingDecomposition (Graph& leftGraph, Graph& rightGraph, edge nEdge, vector<vertex>& K, bool hierarchy, vector<vp>& el, vector<vertex>& xRight, vertex* maxbicore, string vfile, FILE* fp, vertex* bCount);
-void hopefullyFasterwingDecomposition (Graph& leftGraph, Graph& rightGraph, edge nEdge, vector<vertex>& K, bool hierarchy, vector<vp>& el, vector<vertex>& xRight, vertex* maxbicore, string vfile, FILE* fp, vertex* bCount);
+void wingDecomposition (Graph& leftGraph, Graph& rightGraph, edge nEdge, vector<vertex>& K, bool hierarchy, vector<vp>& el, vector<vertex>& xRight, vertex* maxbicore, string vfile, FILE* fp, long* bCount);
+void oldwingDecomposition (Graph& leftGraph, Graph& rightGraph, edge nEdge, vector<vertex>& K, bool hierarchy, vector<vp>& el, vector<vertex>& xRight, vertex* maxbicore, string vfile, FILE* fp, long* bCount);
 void buildHierarchy (vertex cn, vector<vp>& relations, vector<subcore>& skeleton, vertex* nSubcores, edge nEdge, vertex rightnVtx, vertex leftnVtx);
 void presentNuclei (string variant, vector<subcore>& skeleton, vector<vertex>& component, edge nEdge, helpers& ax, string vfile, FILE* gp, Graph& leftGraph, Graph& rightGraph, vector<vertex>* xRight);

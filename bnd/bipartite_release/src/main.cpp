@@ -18,7 +18,7 @@ int main(int argc, char *argv[]) {
 	}
 
 	// read the graph, gives sorted edges in left and rightGraph
-	edge nEdge;
+	edge nEdge = 0;
 	Graph leftGraph, rightGraph;
 
 	ReadBipartiteGraph<vertex, vertex> (filename, &nEdge, leftGraph, rightGraph);
@@ -38,33 +38,38 @@ int main(int argc, char *argv[]) {
 
 	timestamp t1;
 
-	vertex bCount = 0;
+	long bCount = 0;
 	vertex maxK; // maximum K value in the graph
 	vector<vertex> K;
 	vector<vertex> xRight;
 	vector<vp> el;
 
 	if (nd == "RIGHT_TIP") {
-//		insallahFasterTipDecomposition (leftGraph, rightGraph, nEdge, K, hierarchy, &maxK, vfile, fp, &bCount);
-		hopefullyFastertipDecomposition (leftGraph, rightGraph, nEdge, K, hierarchy, &maxK, vfile, fp, &bCount);
 //		 tipDecomposition (leftGraph, rightGraph, nEdge, K, hierarchy, &maxK, vfile, fp, &bCount); // Right vertices are primary
+		 oldtipDecomposition (leftGraph, rightGraph, nEdge, K, hierarchy, &maxK, vfile, fp, &bCount); // Right vertices are primary
 	}
 	else if (nd == "LEFT_TIP") {
-//		insallahFasterTipDecomposition (rightGraph, leftGraph, nEdge, K, hierarchy, &maxK, vfile, fp, &bCount); // Left vertices are primary
-		hopefullyFastertipDecomposition (rightGraph, leftGraph, nEdge, K, hierarchy, &maxK, vfile, fp, &bCount); // Left vertices are primary
 //		 tipDecomposition (rightGraph, leftGraph, nEdge, K, hierarchy, &maxK, vfile, fp, &bCount); // Left vertices are primary
+		 oldtipDecomposition (rightGraph, leftGraph, nEdge, K, hierarchy, &maxK, vfile, fp, &bCount); // Left vertices are primary
 	}
 	else if (nd == "WING") { // todo: should be same when you swap leftGraph and rightGraph
+//		prefixSum (xRight, rightGraph, el);
+//		printf ("summed\n");
+//		insallahFasterwingDecomposition (leftGraph, rightGraph, nEdge, K, hierarchy, el, xRight, &maxK, vfile, fp, &bCount);
+
+//		prefixSum (xRight, leftGraph, el);
+//		printf ("summed\n");
+//		insallahFasterwingDecomposition (rightGraph, leftGraph, nEdge, K, hierarchy, el, xRight, &maxK, vfile, fp, &bCount);
+
 		prefixSum (xRight, rightGraph, el);
-		printf ("summed\n");
-		insallahFasterwingDecomposition (leftGraph, rightGraph, nEdge, K, hierarchy, el, xRight, &maxK, vfile, fp, &bCount);
-//		wingDecomposition (leftGraph, rightGraph, nEdge, K, hierarchy, el, xRight, &maxK, vfile, fp, &bCount);
+		printf ("el.size(): %d   summed\n", el.size());
+ 		oldwingDecomposition (leftGraph, rightGraph, nEdge, K, hierarchy, el, xRight, &maxK, vfile, fp, &bCount);
 	}
 	timestamp t2;
 
-	printf ("%s\t|L|: %d\t|R|: %d\t|E|: %d\tmaxK: %d nButterflies: %d\tTotal time: ", gname.c_str(), leftGraph.size(), rightGraph.size(), nEdge, maxK, bCount);
+	printf ("%s\t|L|: %d\t|R|: %d\t|E|: %d\tmaxK: %d nButterflies: %ld\tTotal time: ", gname.c_str(), leftGraph.size(), rightGraph.size(), nEdge, maxK, bCount);
 	cout << t2 - t1 << endl;
-	fprintf (fp, "%s\t|L|: %d\t|R|: %d\t|E|: %d\tmaxK: %d\tnButterflies: %d\t", gname.c_str(), leftGraph.size(), rightGraph.size(), nEdge, maxK, bCount);
+	fprintf (fp, "%s\t|L|: %d\t|R|: %d\t|E|: %d\tmaxK: %d\tnButterflies: %ld\t", gname.c_str(), leftGraph.size(), rightGraph.size(), nEdge, maxK, bCount);
 	print_time (fp, "Total Time: ", t2 - t1);
 	fclose (fp);
 //
