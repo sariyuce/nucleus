@@ -1,11 +1,34 @@
 #include "main.h"
 
-vertex countButterflies (Graph& rightGraph, Graph& leftGraph, vertex* butterflyCounts, long* bCount) {
 
+
+inline long long NEWnChoosek(long long n, int k) {
+	if (k > n)
+		return 0;
+	if (k * 2 > n)
+		k = n - k;
+	if (k == 0)
+		return 1;
+
+	long long result = n;
+	for (long long i = 2; i <= k; ++i) {
+		result *= (n - i + 1);
+		result /= i;
+	}
+	return result;
+}
+
+
+long long countButterflies (Graph& rightGraph, Graph& leftGraph, vertex* terflyCounts, long long* bCount) {
+
+
+	long long* butterflyCounts = (long long *) calloc (sizeof(long long), rightGraph.size());
 	timestamp t1;
-	vertex maxBc = 0;
-	HashMap<int> dup (0);
-	for (vertex i = 0; i < rightGraph.size(); i++) {
+	long long maxBc = 0;
+	long long ee = 0;
+	HashMap<long long> dup (0);
+	vertex i = 0;
+	for (i = 0; i < rightGraph.size(); i++) {
 		dup.reset (0);
 		for (auto v : rightGraph[i])
 			for (auto w : leftGraph[v]) {
@@ -14,49 +37,68 @@ vertex countButterflies (Graph& rightGraph, Graph& leftGraph, vertex* butterflyC
 				}
 			}
 
+
 		for (auto it = dup.begin(); it != dup.end(); it++) {
 			int x = it->first;
-			int count = it->second;
+			long long count = it->second;
 			if (x != i && count > 1) {
-				int c = nChoosek (count, 2);
+				long long c = NEWnChoosek (count, 2);
+				ee += c;
 				butterflyCounts[i] += c;
 				butterflyCounts[x] += c;
 			}
 		}
 		if (butterflyCounts[i] > maxBc)
 			maxBc = butterflyCounts[i];
-		*bCount += butterflyCounts[i];
+//		*bCount += ee;
+		(*bCount) += butterflyCounts[i];
 		timestamp t3;
 	}
 
 	*bCount /= 2;
 
-	printf ("bFly: %ld, Left: %d, Right: %d\n", *bCount, leftGraph.size(), rightGraph.size());
+	printf ("i: %d\n", i);
+	printf ("ee: %lld\n", ee);
+	printf ("bFly: %lld, Left: %d, Right: %d\n", *bCount, leftGraph.size(), rightGraph.size());
+
+	long long aa = 0;
+	for (vertex i = 0; i < rightGraph.size(); i++) {
+		aa += butterflyCounts[i];
+	}
+	printf ("aa: %lld\n", aa);
+
+
 	return maxBc;
 }
 
-void tipDecomposition (Graph& leftGraph, Graph& rightGraph, edge nEdge, vector<vertex>& K, bool hierarchy, vertex* maxbicore, string vfile, FILE* fp, long* bCount) {
+void tipDecomposition (Graph& leftGraph, Graph& rightGraph, edge nEdge, vector<vertex>& K, bool hierarchy, vertex* maxbicore, string vfile, FILE* fp, long long* bCount) {
 
 	timestamp countingStart;
 
 	vertex* butterflyCounts = (vertex *) calloc (sizeof(vertex), rightGraph.size());
-	vertex maxBc = countButterflies (rightGraph, leftGraph, butterflyCounts, bCount); // counts butterflies for each vertex on the right
+	long long maxBc = countButterflies (rightGraph, leftGraph, butterflyCounts, bCount); // counts butterflies for each vertex on the right
 
 	timestamp peelingStart;
-	print_time (fp, "Counting bflies (per vertex) time: ", peelingStart - countingStart);
-	cout << "Counting bflies (per vertex) time: " << peelingStart - countingStart << endl;
-	printf ("# bflys: %d\n", *bCount);
+	printf ("# bflys: %lld\n", *bCount);
+	cout << "Counting butterflies per vertex time: " << peelingStart - countingStart << endl;
+	print_time (fp, "Counting butterflies per vertex time: ", peelingStart - countingStart);
+	printf ("maxBc: %lld\n", maxBc);
+	printf ("nEdge: %d\n", nEdge);
 
 	// peeling
 	K.resize (rightGraph.size(), -1);
 	Naive_Bucket nBucket;
 	nBucket.Initialize (maxBc+1, rightGraph.size());
-	for (size_t i = 0; i < rightGraph.size(); i++)
+	long long nb = 0;
+	for (size_t i = 0; i < rightGraph.size(); i++) {
+		nb += butterflyCounts[i];
 		if (butterflyCounts[i] > 0)
 			nBucket.Insert (i, butterflyCounts[i]);
 		else
 			K[i] = 0;
+	}
 
+	printf ("nb : %lld\n", nb);
 	vertex bf_u = 0;
 
 
@@ -118,8 +160,10 @@ void tipDecomposition (Graph& leftGraph, Graph& rightGraph, edge nEdge, vector<v
 	*maxbicore = bf_u;
 
 	timestamp peelingEnd;
-	print_time (fp, "Peeling time: ", peelingEnd - peelingStart);
-	cout << "Peeling time: " << peelingEnd - peelingStart << endl;
+	cout << "Only peeling time: " << peelingEnd - peelingStart << endl;
+	print_time (fp, "Only peeling time: ", peelingEnd - peelingStart);
+	cout << "Total time: " << peelingEnd - countingStart << endl;
+	print_time (fp, "Total time: ", peelingEnd - countingStart);
 
 #ifdef K_VALUES
 	for (int i = 0; i < K.size(); i++)
@@ -129,7 +173,7 @@ void tipDecomposition (Graph& leftGraph, Graph& rightGraph, edge nEdge, vector<v
 	if (hierarchy) {
 		buildHierarchy (*maxbicore, relations, skeleton, &nSubcores, nEdge, rightGraph.size(), leftGraph.size());
 		timestamp nucleusEnd;
-
+//		printf ("asdfasdf\n");
 		print_time (fp, "Tip decomposition time with hierarchy construction: ", nucleusEnd - peelingStart);
 		fprintf (fp, "# subcores: %d\t\t # subsubcores: %d\t\t |V|: %d\n", nSubcores, skeleton.size(), rightGraph.size());
 
@@ -146,7 +190,7 @@ void tipDecomposition (Graph& leftGraph, Graph& rightGraph, edge nEdge, vector<v
 
 
 // rightGraph is primary, leftGraph is secondary
-void oldtipDecomposition (Graph& leftGraph, Graph& rightGraph, edge nEdge, vector<vertex>& K, bool hierarchy, vertex* maxbicore, string vfile, FILE* fp, long* bCount) {
+void oldtipDecomposition (Graph& leftGraph, Graph& rightGraph, edge nEdge, vector<vertex>& K, bool hierarchy, vertex* maxbicore, string vfile, FILE* fp, long long* bCount) {
 
 	timestamp peelingStart;
 
@@ -232,6 +276,7 @@ void oldtipDecomposition (Graph& leftGraph, Graph& rightGraph, edge nEdge, vecto
 	if (hierarchy) {
 		buildHierarchy (*maxbicore, relations, skeleton, &nSubcores, nEdge, rightGraph.size(), leftGraph.size());
 		timestamp nucleusEnd;
+
 
 		print_time (fp, "Tip decomposition time with hierarchy construction: ", nucleusEnd - peelingStart);
 		fprintf (fp, "# subcores: %d\t\t # subsubcores: %d\t\t |V|: %d\n", nSubcores, skeleton.size(), rightGraph.size());

@@ -2,7 +2,7 @@
 
 #define EL(A, B) (xRight[A]+B)
 
-inline void limitedIntersection (Graph& rightGraph, vertex b, vertex c, Graph& butterflyCounts, vertex a, long* bCount) {
+inline void limitedIntersection (Graph& rightGraph, vertex b, vertex c, Graph& butterflyCounts, vertex a, long long* bCount) {
 
 	vertex i = 0, j = 0;
 	while (rightGraph[b][i] < a) // b - a index
@@ -34,7 +34,7 @@ inline void limitedIntersection (Graph& rightGraph, vertex b, vertex c, Graph& b
 	}
 }
 
-void countButterflies (Graph& rightGraph, Graph& leftGraph, Graph& butterflyCounts, long* bCount) {
+void countButterflies (Graph& rightGraph, Graph& leftGraph, Graph& butterflyCounts, long long* bCount) {
 
 	timestamp t1;
 	int nedge = 0;
@@ -59,14 +59,13 @@ inline vertex getEdgeIndex (vertex a, vertex b, vector<vp>& el, vector<vertex>& 
 }
 
 // no hierarchy construction
-void wingDecomposition (Graph& leftGraph, Graph& rightGraph, edge nEdge, vector<vertex>& K, bool hierarchy, vector<vp>& el, vector<vertex>& xRight, vertex* maxbicore, string vfile, FILE* fp, long* bCount) {
+void wingDecomposition (Graph& leftGraph, Graph& rightGraph, edge nEdge, vector<vertex>& K, bool hierarchy, vector<vp>& el, vector<vertex>& xRight, vertex* maxbicore, string vfile, FILE* fp, long long* bCount) {
 
+	timestamp countingStart;
 	vector<vp> left_el;
 	vector<vertex> xLeft;
 
 	prefixSum (xLeft, leftGraph, left_el);
-
-	timestamp countingStart;
 
 	Graph butterflyCounts (rightGraph.size());
 	for (vertex i = 0; i < rightGraph.size(); i++)
@@ -95,10 +94,13 @@ void wingDecomposition (Graph& leftGraph, Graph& rightGraph, edge nEdge, vector<
 #endif
 
 	timestamp peelingStart;
-	cout << "counting time: " << peelingStart - countingStart << endl;
-	// peeling
+	printf ("# bflys: %ld\n", *bCount);
+	cout << "Counting butterflies per edge time (includes prefix sum): " << peelingStart - countingStart << endl;
+	print_time (fp, "Counting butterflies per edge time (includes prefix sum): ", peelingStart - countingStart);
 	printf ("maxBc: %d\n", maxBc);
 	printf ("nEdge: %d\n", nEdge);
+
+	// peeling
 	K.resize (el.size(), -1);
 	Naive_Bucket nBucket;
 	nBucket.Initialize (maxBc, nEdge);
@@ -186,8 +188,10 @@ void wingDecomposition (Graph& leftGraph, Graph& rightGraph, edge nEdge, vector<
 	*maxbicore = bf_e;
 
 	timestamp peelingEnd;
-	cout << "peeling time: " << peelingEnd - peelingStart << endl;
-	print_time (fp, "Peeling time: ", peelingEnd - peelingStart);
+	cout << "Only peeling time: " << peelingEnd - peelingStart << endl;
+	print_time (fp, "Only peeling time: ", peelingEnd - peelingStart);
+	cout << "Total time: " << peelingEnd - countingStart << endl;
+	print_time (fp, "Total time: ", peelingEnd - countingStart);
 
 #ifdef K_VALUES
 	for (int i = 0; i < K.size(); i++)
@@ -195,7 +199,7 @@ void wingDecomposition (Graph& leftGraph, Graph& rightGraph, edge nEdge, vector<
 #endif
 }
 
-void oldwingDecomposition (Graph& leftGraph, Graph& rightGraph, edge nEdge, vector<vertex>& K, bool hierarchy, vector<vp>& el, vector<vertex>& xRight, vertex* maxbicore, string vfile, FILE* fp, long* bCount) {
+void oldwingDecomposition (Graph& leftGraph, Graph& rightGraph, edge nEdge, vector<vertex>& K, bool hierarchy, vector<vp>& el, vector<vertex>& xRight, vertex* maxbicore, string vfile, FILE* fp, long long* bCount) {
 
 	timestamp peelingStart;
 
