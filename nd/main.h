@@ -31,7 +31,7 @@ using namespace std;
 using namespace util;
 
 
-#define UPPERBOUND 500 // compute densities of subgraphs with at most this size, set to INT_MAX to compute all -- takes a lot of time
+#define UPPERBOUND 200 // compute densities of subgraphs with at most this size, set to INT_MAX to compute all -- takes a lot of time
 #define LOWERBOUND 0 // show subgraphs with at least this size
 #define PRIME 251231 // for hash function
 
@@ -39,6 +39,7 @@ using namespace util;
 typedef int vertex; // vertices are 32 bytes
 typedef int edge; // edges are 32 bytes
 typedef unordered_multimap<int, int> mmap;
+//typedef pair<vertex, vertex> vp;
 typedef pair<vertex, vertex> vp;
 typedef tuple<vertex, vertex, vertex> vt;
 typedef vector<vector<vertex> > Graph;
@@ -61,6 +62,9 @@ struct subcore {
 		parent = -1;
 		root = -1;
 		visible = true;
+		size = 0;
+		nedge = 0;
+		ed = -1;
 	}
 };
 struct triangleId {

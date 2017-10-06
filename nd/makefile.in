@@ -35,7 +35,7 @@ endif
 endif
 
 ifeq ($(DEBUG),yes)
-CFLAGS    += -g 
+CFLAGS    += -g
 CXXFLAGS    += -g 
 LDFLAGS   += -g 
 endif

@@ -22,7 +22,7 @@ static int really_read(std::istream& is, char* buf, size_t global_size) {
 }
 
 int pcmp(const void *v1, const void *v2) {
-	long long diff = (((Pair *)v1)->f - ((Pair *)v2)->f);
+	vertex diff = (((Pair *)v1)->f - ((Pair *)v2)->f);
 	if (diff != 0)
 		return diff;
 	else

@@ -23,11 +23,20 @@ inline void limitedIntersection (Graph& rightGraph, vertex b, vertex c, Graph& b
 			// d is rightGraph[c][j] = rightGraph[b][i] b - d and c - d indices
 			vertex bd = i;
 			vertex cd = j;
-			butterflyCounts[b][ba]++;
-			butterflyCounts[b][bd]++;
-			butterflyCounts[c][ca]++;
-			butterflyCounts[c][cd]++;
-			(*bCount)++;
+//			butterflyCounts[b][ba]++;
+//			butterflyCounts[b][bd]++;
+//			butterflyCounts[c][ca]++;
+//			butterflyCounts[c][cd]++;
+
+			double r = rand() / (double) RAND_MAX;
+			if (r <= 0.0153291545) { // discog-aff
+//			if (r <= 0.0006461333) { // discog-sty
+//			if (r <= 0.0001675083) { // edit-it-wiki
+				printf ("BFLY %d %d %d %d\n", b, c, rightGraph[b][ba], rightGraph[b][bd]);
+			}
+
+			fflush(stdout);
+//			(*bCount)++;
 			i++;
 			j++;
 		}
@@ -36,6 +45,7 @@ inline void limitedIntersection (Graph& rightGraph, vertex b, vertex c, Graph& b
 
 void countButterflies (Graph& rightGraph, Graph& leftGraph, Graph& butterflyCounts, long long* bCount) {
 
+	srand((unsigned) time(NULL));
 	timestamp t1;
 	int nedge = 0;
 	for (vertex i = 0; i < leftGraph.size(); i++) {
@@ -51,6 +61,33 @@ void countButterflies (Graph& rightGraph, Graph& leftGraph, Graph& butterflyCoun
 		}
 	}
 }
+
+
+
+
+void NEWcountButterflies (Graph& rightGraph, Graph& leftGraph, Graph& butterflyCounts, long long* bCount) {
+
+	timestamp t1;
+	int nedge = 0;
+	for (vertex i = 0; i < leftGraph.size(); i++) {
+		for (vertex j = 0; j < leftGraph[i].size(); j++) {
+			int v = i;
+			int u = leftGraph[i][j];
+			HashMap<bool> mp (false);
+			for (int nu : rightGraph[u])
+				mp[nu] = true;
+
+		}
+		nedge += leftGraph[i].size();
+		vertex a = i;
+		for (vertex j = 0; j < leftGraph[i].size(); j++) {
+			vertex b = leftGraph[i][j];
+			for (vertex k = j + 1; k < leftGraph[i].size(); k++) {
+			}
+		}
+	}
+}
+
 
 inline vertex getEdgeIndex (vertex a, vertex b, vector<vp>& el, vector<vertex>& xRight) {
 	for (vertex i = xRight[a]; i < xRight[a+1]; i++)
@@ -72,6 +109,9 @@ void wingDecomposition (Graph& leftGraph, Graph& rightGraph, edge nEdge, vector<
 		butterflyCounts[i].resize (rightGraph[i].size(), 0);
 	countButterflies (rightGraph, leftGraph, butterflyCounts, bCount); // counts butterflies for each edge
 
+	timestamp countingEnd;
+	cout << "sampling butterflies: " << countingEnd - countingStart << endl;
+	exit(1);
 //	FasterCountButterflies (rightGraph, leftGraph, butterflyCounts, bCount); // counts butterflies for each edge
 
 	vertex maxBc = 0;

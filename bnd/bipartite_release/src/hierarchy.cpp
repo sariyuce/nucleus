@@ -1,50 +1,56 @@
 #include "main.h"
 
-inline void assignToRoot (vertex* ch, vector<subcore>& skeleton) {
-	vector<vertex> acc;
-	vertex s = *ch;
+inline void assignToRoot (ll* ch, vector<subcore>& skeleton) {
+	vector<ll> acc;
+	ll s = *ch;
 	while (skeleton[s].root != -1) {
 		acc.push_back (s);
 		s = skeleton[s].root;
 	}
-	for (vertex i : acc)
+	for (auto i : acc)
 		skeleton[i].root = s;
 	*ch = s;
 }
 
-void buildHierarchy (vertex cn, vector<vp>& relations, vector<subcore>& skeleton, vertex* nSubcores, edge nEdge, vertex rightnVtx, vertex leftnVtx) {
+void buildHierarchy (vertex cn, vector<llp>& relations, vector<subcore>& skeleton, ll* nSubcores, edge nEdge, vertex rightnVtx, vertex leftnVtx) {
 
 	// bin the relations w.r.t. first's K
-	vector<vector<vp>> binnedRelations (cn + 1);
+	vector<vector<llp>> binnedRelations (cn + 1);
 
 	for (int i = 0; i < relations.size(); i++) {
-		vertex a = relations[i].first;
-		vertex b = relations[i].second;
+		ll a = relations[i].first;
+		ll b = relations[i].second;
 
+//		printf ("a: %d sksz: %d    %d/%d\n", a, skeleton.size(), i , relations.size());
 		assignToRepresentative (&a, skeleton);
+//		printf ("b: %d\n", b);
 		assignToRepresentative (&b, skeleton);
 
 		if (a == b)
 			continue;
 
-		vp c (a, b);
+		llp c (a, b);
 		binnedRelations[skeleton[a].K].push_back (c);
+//		printf ("push %lld %lld in to bR's %d\n", a, b, skeleton[a].K);
 	}
 
 	// process binnedRelations in reverse order
 	for (int i = binnedRelations.size() - 1; i >= 0; i--) {
-		vector<vp> mergeList;
-		for (vertex j = 0; j < binnedRelations[i].size(); j++) { // each binnedRelations[i] has K of skeleton[b].K
-			vertex a = binnedRelations[i][j].first;
-			vertex root = binnedRelations[i][j].second;
+		vector<llp> mergeList;
+//		for (auto j = 0; j < binnedRelations[i].size(); j++) { // each binnedRelations[i] has K of skeleton[b].K
+//		printf ("process i: %d\n", i);
+		for (llp br : binnedRelations[i]) {
+			ll a = br.first; // binnedRelations[i][j].first;
+			ll root = br.second; // binnedRelations[i][j].second;
 			assignToRoot (&root, skeleton);
 			if (a != root) {
+//				printf ("a: %d, root: %d\n", a, root);
 				if (skeleton[a].K < skeleton[root].K) {
 					skeleton[root].parent = a;
 					skeleton[root].root = a;
 				}
 				else { // skeleton[root].K == skeleton[a].K
-					vp c = (root < a) ? make_pair (root, a) : make_pair (a, root);
+					llp c = (root < a) ? make_pair (root, a) : make_pair (a, root);
 					mergeList.push_back (c);
 				}
 			}
@@ -52,8 +58,8 @@ void buildHierarchy (vertex cn, vector<vp>& relations, vector<subcore>& skeleton
 
 		// handle merges
 		for (auto sc : mergeList) {
-			vertex child = sc.first;
-			vertex parent = sc.second;
+			ll child = sc.first;
+			ll parent = sc.second;
 			assignToRepresentative (&child, skeleton);
 			assignToRepresentative (&parent, skeleton);
 			if (child != parent) {
@@ -71,9 +77,10 @@ void buildHierarchy (vertex cn, vector<vp>& relations, vector<subcore>& skeleton
 	*nSubcores += skeleton.size();
 
 	// root core
-	vertex nid = skeleton.size();
+	ll nid = skeleton.size();
+//	printf ("sz before root: %d\n", skeleton.size());
 	subcore sc (0);
-	for (size_t i = 0; i < skeleton.size(); i++)
+	for (auto i = 0; i < skeleton.size(); i++)
 		if (skeleton[i].parent == -1)
 			skeleton[i].parent = nid;
 

@@ -3,6 +3,58 @@
 
 #include "larray.h"
 #include <vector>
+#include <unordered_map>
+
+
+using namespace std;
+
+
+struct Bucket_element
+{
+    int id;
+    long long value;
+    Bucket_element * next;
+    Bucket_element * prev;
+    Bucket_element(int id, long long value);
+};
+
+struct Bucket
+{
+    long long max_value;
+    long long current_min_value;
+//    std::vector<Bucket_element*> buckets;
+    unordered_map<long long, Bucket_element*> buckets;
+
+    HashMap<Bucket_element*> elements;
+    Bucket();
+    ~Bucket();
+    void Initialize(long long max_value);
+    void Insert(int id, long long value);
+    void Update(int id, long long new_value);
+    void DecVal(int id);
+    void DecTo (int id, long long val);
+    void IncVal(int id);
+    // returns -1 if empty
+    int PopMin(int* ret_id, long long* ret_value);
+    // grab the current value of id
+    long long CurrentValue(int id);
+    void Free();
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 struct Naive_Bucket_element
 {

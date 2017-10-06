@@ -232,6 +232,7 @@ void ReadRegularBinary(char *filename, vector<vector<vertex>>& graph, edge* nEdg
 	in.read((char*)&nVtx, sizeof(vertex));
 	in.read((char*)nEdge, sizeof(edge));
 
+	printf ("nVtx: %d   nEdge:%d\n", nVtx, *nEdge);
 	graph.resize (nVtx);
 	edge *pxadj = (edge*) malloc (sizeof(edge) * nVtx);
 	really_read(in, (char*)pxadj, sizeof(edge) * nVtx);
@@ -286,6 +287,7 @@ void ReadWeightedBinary(char *filename, Wraph& wraph, edge* nEdge) {
 	in.read((char*)&nVtx, sizeof(vertex));
 	in.read((char*)nEdge, sizeof(edge));
 
+	printf ("nVtx: %d   nEdge:%d\n", nVtx, *nEdge);
 	wraph.resize (nVtx);
 	edge *pxadj = (edge*) malloc (sizeof(edge) * nVtx);
 	really_read(in, (char*)pxadj, sizeof(edge) * nVtx);

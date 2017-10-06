@@ -19,10 +19,10 @@ inline long long NEWnChoosek(long long n, int k) {
 }
 
 
-long long countButterflies (Graph& rightGraph, Graph& leftGraph, vertex* terflyCounts, long long* bCount) {
+//long long countButterflies (Graph& rightGraph, Graph& leftGraph, long long* butterflyCounts, long long* bCount) {
+long long countButterflies (Graph& rightGraph, Graph& leftGraph, long long* butterflyCounts, long long* bCount) {
 
-
-	long long* butterflyCounts = (long long *) calloc (sizeof(long long), rightGraph.size());
+//	long long* butterflyCounts = (long long *) calloc (sizeof(long long), rightGraph.size());
 	timestamp t1;
 	long long maxBc = 0;
 	long long ee = 0;
@@ -43,14 +43,16 @@ long long countButterflies (Graph& rightGraph, Graph& leftGraph, vertex* terflyC
 			long long count = it->second;
 			if (x != i && count > 1) {
 				long long c = NEWnChoosek (count, 2);
+				printf ("c: %lld\n", c);
 				ee += c;
 				butterflyCounts[i] += c;
 				butterflyCounts[x] += c;
 			}
 		}
-		if (butterflyCounts[i] > maxBc)
-			maxBc = butterflyCounts[i];
-//		*bCount += ee;
+
+//		if (butterflyCounts[i] > maxBc)
+//			maxBc = butterflyCounts[i];
+
 		(*bCount) += butterflyCounts[i];
 		timestamp t3;
 	}
@@ -61,21 +63,16 @@ long long countButterflies (Graph& rightGraph, Graph& leftGraph, vertex* terflyC
 	printf ("ee: %lld\n", ee);
 	printf ("bFly: %lld, Left: %d, Right: %d\n", *bCount, leftGraph.size(), rightGraph.size());
 
-	long long aa = 0;
-	for (vertex i = 0; i < rightGraph.size(); i++) {
-		aa += butterflyCounts[i];
-	}
-	printf ("aa: %lld\n", aa);
-
+	exit(1);
 
 	return maxBc;
 }
-
+//#define HASHBUCKET
 void tipDecomposition (Graph& leftGraph, Graph& rightGraph, edge nEdge, vector<vertex>& K, bool hierarchy, vertex* maxbicore, string vfile, FILE* fp, long long* bCount) {
 
 	timestamp countingStart;
 
-	vertex* butterflyCounts = (vertex *) calloc (sizeof(vertex), rightGraph.size());
+	long long* butterflyCounts = (long long*) calloc (sizeof(long long), rightGraph.size());
 	long long maxBc = countButterflies (rightGraph, leftGraph, butterflyCounts, bCount); // counts butterflies for each vertex on the right
 
 	timestamp peelingStart;
@@ -87,8 +84,15 @@ void tipDecomposition (Graph& leftGraph, Graph& rightGraph, edge nEdge, vector<v
 
 	// peeling
 	K.resize (rightGraph.size(), -1);
+
+#ifndef HASHBUCKET
 	Naive_Bucket nBucket;
 	nBucket.Initialize (maxBc+1, rightGraph.size());
+#else
+	Bucket nBucket;
+	nBucket.Initialize (maxBc+1);
+#endif
+
 	long long nb = 0;
 	for (size_t i = 0; i < rightGraph.size(); i++) {
 		nb += butterflyCounts[i];
@@ -99,7 +103,7 @@ void tipDecomposition (Graph& leftGraph, Graph& rightGraph, edge nEdge, vector<v
 	}
 
 	printf ("nb : %lld\n", nb);
-	vertex bf_u = 0;
+
 
 
 	// required for hierarchy
@@ -116,8 +120,16 @@ void tipDecomposition (Graph& leftGraph, Graph& rightGraph, edge nEdge, vector<v
 		component.resize (rightGraph.size(), -1);
 	}
 
+	long long bf_u = 0;
 	while (true) {
-		vertex u, val;
+
+		vertex u;
+#ifdef HASHBUCKET
+		long long val;
+#else
+		int val;
+#endif
+
 		if (nBucket.PopMin(&u, &val) == -1) // if the bucket is empty
 			break;
 
@@ -130,24 +142,26 @@ void tipDecomposition (Graph& leftGraph, Graph& rightGraph, edge nEdge, vector<v
 		bf_u = K[u] = val;
 
 		// combine neigs of neigs of i in distance-2 neighbors
-		HashMap<int> dup (0);
+		HashMap<long long> dup (0);
 		for (auto v : rightGraph[u])
 			for (auto w : leftGraph[v])
 				dup[w]++;
 
 		for (auto it = dup.begin(); it != dup.end(); it++) {
 			int x = it->first;
-			int count = it->second;
+			long long count = it->second;
 			if (x != u && count > 1) {
 				if (K[x] == -1) {
-					int decreaseAmount = nChoosek (count, 2);
+					long long decreaseAmount = NEWnChoosek (count, 2);
 					if (nBucket.CurrentValue(x) - decreaseAmount <= val)
 						nBucket.DecTo (x, val);
 					else
 						nBucket.DecTo (x, nBucket.CurrentValue(x) - decreaseAmount);
 				}
+#ifndef HASHBUCKET
 				else if (hierarchy)
 					createSkeleton (u, {x}, &nSubcores, K, skeleton, component, unassigned, relations);
+#endif
 			}
 		}
 
@@ -159,6 +173,7 @@ void tipDecomposition (Graph& leftGraph, Graph& rightGraph, edge nEdge, vector<v
 	nBucket.Free();
 	*maxbicore = bf_u;
 
+	printf ("maxBF: %ld\n", bf_u);
 	timestamp peelingEnd;
 	cout << "Only peeling time: " << peelingEnd - peelingStart << endl;
 	print_time (fp, "Only peeling time: ", peelingEnd - peelingStart);
@@ -186,7 +201,7 @@ void tipDecomposition (Graph& leftGraph, Graph& rightGraph, edge nEdge, vector<v
 
 }
 
-
+/*
 
 
 // rightGraph is primary, leftGraph is secondary
@@ -288,5 +303,5 @@ void oldtipDecomposition (Graph& leftGraph, Graph& rightGraph, edge nEdge, vecto
 		print_time (fp, "Total time, including the density computations: ", totalEnd - peelingStart);
 	}
 }
-
+*/
 

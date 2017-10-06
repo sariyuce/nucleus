@@ -45,14 +45,54 @@ struct wv {
 };
 typedef vector<vector<wv>> Wraph;
 
+typedef long long ll;
+typedef pair<ll, ll> llp;
+
+
+
+
+
+
+
+// User defined class, Point
+class vd
+{
+public:
+   int v;
+   long long deg;
+   vd (int va, long long dega)
+   {
+	   v = va;
+	   deg = dega;
+   }
+
+};
+
+// To compare two points
+class myComparator
+{
+public:
+    int operator() (const vd& p1, const vd& p2)
+    {
+        return p1.deg > p2.deg;
+    }
+};
+
+
+
+
+
+
+
+
 
 struct subcore {
 	bool visible;
 	vertex rank;
 	vertex K;
-	vertex parent;
-	vertex root;
-	vector<vertex> children;
+	ll parent;
+	ll root;
+	vector<ll> children;
 	vertex primarySize;
 	vertex secondarySize;
 	edge nEdge;
@@ -63,7 +103,7 @@ struct subcore {
 		rank = 0;
 		parent = -1;
 		root = -1;
-//		visible = true;
+		visible = true;
 //		primarySize = secondarySize = -1;
 //		ed = -1;
 //		children.clear();
@@ -175,11 +215,11 @@ inline void findRepresentative(vertex* child, vector<subcore>& skeleton) {
 	*child = u;
 }
 
-inline void assignToRepresentative(vertex* ch, vector<subcore>& skeleton) { // 2-pass path compression
-	vertex u = *ch;
-	vector<int> vs;
+inline void assignToRepresentative(ll* ch, vector<subcore>& skeleton) { // 2-pass path compression
+	ll u = *ch;
+	vector<ll> vs;
 	while (skeleton[u].parent != -1) {
-		int n = skeleton[u].parent;
+		ll n = skeleton[u].parent;
 		if (skeleton[n].K == skeleton[u].K) {
 			vs.push_back(u);
 			u = n;
@@ -187,7 +227,7 @@ inline void assignToRepresentative(vertex* ch, vector<subcore>& skeleton) { // 2
 			break;
 	}
 	*ch = u;
-	for (vertex i : vs) {
+	for (ll i : vs) {
 		if (i != u)
 			skeleton[i].parent = u;
 	}
@@ -202,23 +242,24 @@ inline void neighborsOfNeighbors(vector<vertex>& vset, Graph& graph, vector<vert
 	hashUniquify(allNeighbors);
 }
 
-inline void store(vertex uComp, vertex vComp, vector<vertex>& unassigned,
-		vector<vp>& relations) {
-	vp c(vComp, uComp);
+inline void store(ll uComp, ll vComp, vector<ll>& unassigned,
+		vector<llp>& relations) {
+	llp c(vComp, uComp);
 	if (uComp == -1) // it is possible that u didn't get an id yet
 		unassigned.push_back(relations.size()); // keep those indices to process after the loop, below
 	relations.push_back(c);
 }
 
-inline void merge(vertex u, vertex v, vector<vertex>& component,
-		vector<subcore>& skeleton, int* nSubcores) {
+inline void merge(vertex u, vertex v, vector<ll>& component,
+		vector<subcore>& skeleton, ll* nSubcores) {
 
 	if (component[u] == -1) {
 		component[u] = component[v];
 		skeleton.erase(skeleton.end() - 1);
-	} else { // merge component[u] and component[v] nodes
-		vertex child = component[u];
-		vertex parent = component[v];
+	}
+	else { // merge component[u] and component[v] nodes
+		ll child = component[u];
+		ll parent = component[v];
 		assignToRepresentative(&child, skeleton);
 		assignToRepresentative(&parent, skeleton);
 		if (child != parent) {
@@ -234,9 +275,9 @@ inline void merge(vertex u, vertex v, vector<vertex>& component,
 }
 
 inline void createSkeleton(vertex u, initializer_list<vertex> neighbors,
-		vertex* nSubcores, vector<vertex>& K, vector<subcore>& skeleton,
-		vector<vertex>& component, vector<vertex>& unassigned,
-		vector<vp>& relations) {
+		ll* nSubcores, vector<vertex>& K, vector<subcore>& skeleton,
+		vector<ll>& component, vector<ll>& unassigned,
+		vector<llp>& relations) {
 	vertex smallest = -1, minK = INT_MAX;
 	for (auto i : neighbors)
 		if (K[i] != -1 && K[i] < minK) {
@@ -252,14 +293,14 @@ inline void createSkeleton(vertex u, initializer_list<vertex> neighbors,
 		store(component[u], component[smallest], unassigned, relations);
 }
 
-inline void updateUnassigned (vertex t, vector<vertex>& component, vertex* cid, vector<vp>& relations, vector<vertex>& unassigned) {
+inline void updateUnassigned (vertex t, vector<ll>& component, ll* cid, vector<llp>& relations, vector<ll>& unassigned) {
 	if (component[t] == -1) { // if e didn't get a component, give her a new one
 		component[t] = *cid;
 		++(*cid);
 	}
 
 	// update the unassigned components that are in the relations
-	for (vertex i : unassigned)
+	for (ll i : unassigned)
 		relations[i] = make_pair (relations[i].first, component[t]);
 }
 
@@ -497,15 +538,13 @@ void writeToRegularBinary (string filename, vertex nVtx, edge nEdge, Graph& grap
 
 void writeToWeightedRegularBinary (string filename, vertex nVtx, edge nEdge, Wraph& wraph);
 
-
-
-
 void tipDecomposition (Graph& leftGraph, Graph& rightGraph, edge nEdge, vector<vertex>& K, bool hierarchy, vertex* maxbicore, string vfile, FILE* fp, long long* bCount);
 void oldtipDecomposition (Graph& leftGraph, Graph& rightGraph, edge nEdge, vector<vertex>& K, bool hierarchy, vertex* maxbicore, string vfile, FILE* fp, long long* bCount);
 
 void wingDecomposition (Graph& leftGraph, Graph& rightGraph, edge nEdge, vector<vertex>& K, bool hierarchy, vector<vp>& el, vector<vertex>& xRight, vertex* maxbicore, string vfile, FILE* fp, long long* bCount);
 void oldwingDecomposition (Graph& leftGraph, Graph& rightGraph, edge nEdge, vector<vertex>& K, bool hierarchy, vector<vp>& el, vector<vertex>& xRight, vertex* maxbicore, string vfile, FILE* fp, long long* bCount);
-void buildHierarchy (vertex cn, vector<vp>& relations, vector<subcore>& skeleton, vertex* nSubcores, edge nEdge, vertex rightnVtx, vertex leftnVtx = -1);
+void buildHierarchy (vertex cn, vector<llp>& relations, vector<subcore>& skeleton, ll* nSubcores, edge nEdge, vertex rightnVtx, vertex leftnVtx = -1);
+//void buildHierarchy (vertex cn, vector<vp>& relations, vector<subcore>& skeleton, vertex* nSubcores, edge nEdge, vertex rightnVtx, vertex leftnVtx = -1);
 void presentNuclei (string variant, vector<subcore>& skeleton, vector<vertex>& component, edge nEdge, helpers& ax, string vfile, FILE* gp, Graph& leftGraph, Graph& rightGraph, vector<vertex>* xRight);
 
 void unweighted_projection (Graph& left, Graph& right, string filename);

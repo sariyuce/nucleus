@@ -47,7 +47,7 @@ bool pullChildrenSets (FILE* fp, vector<vertex>& children, HashMap<vertex>& orde
 		int d;
 		double f;
 		// check line 163 to see what's what
-		fscanf (fp, "%d %d %d %d %lf %d", &d, &d, &d, &d, &f, &d); // id, K, |V|, |E|, ed, LEAF?
+		fscanf (fp, "%d %d %d %d %lf %d %d", &d, &d, &d, &d, &f, &d, &d); // id, K, |V|, |E|, ed, LEAF?
 		while (fscanf (fp, "%d", &d) != EOF)
 			if (d != -1)
 				vset.push_back (d);
@@ -78,7 +78,9 @@ bool hashUniquify (vector<vertex>& vertices) {
 inline void dummyLine (subcore* sc, FILE* fp, vertex ind) {
 	sc->size = -1;
 	sc->ed = -1;
-	fprintf(fp, "%d %d %d %d %lf %d ", ind, sc->K, -1, -1, -1, sc->children.empty()?1:0);
+	fprintf(fp, "%d -1 -1 -1 %d ", ind,
+			sc->K,
+			sc->children.empty()?1:0);
 	fprintf(fp, "-1\n");
 }
 
@@ -206,7 +208,7 @@ void reportSubgraph (int variant, vertex ind, HashMap<vertex>& orderInFile, vect
 	if (vset.size() > 1)
 		skeleton[ind].ed = (double) edge_count / (skeleton[ind].size * (skeleton[ind].size - 1) / 2);
 
-	fprintf(fp, "%d %d %d %d %lf %d ", ind, skeleton[ind].K, skeleton[ind].size, skeleton[ind].nedge, skeleton[ind].ed, skeleton[ind].children.empty()?1:0);
+	fprintf(fp, "%d %d %d %d %lf %d %d", ind, skeleton[ind].K, skeleton[ind].size, skeleton[ind].nedge, skeleton[ind].ed, skeleton[ind].children.empty()?1:0, skeleton[ind].parent);
 	for (size_t i = 0; i < vset.size(); i++)
 		fprintf(fp, "%d ", vset[i]);
 	fprintf(fp, "-1\n");
@@ -255,6 +257,13 @@ void presentNuclei (int variant, vector<subcore>& skeleton, vector<vertex>& comp
 	string nFile = vfile + "_NUCLEI";
 	FILE* fp = fopen (nFile.c_str(), "w+");
 	vector<subcore> backup (skeleton);
+
+	for (size_t i = 0; i < skeleton.size(); i++)
+                if (skeleton[i].children.size() > 1)
+			printf ("parent!!\n");
+
+	exit (1);
+
 	HashMap<vertex> orderInFile (-1); // key is the skeleton index, value is the order
 	vertex o = 0; // order of subcores in file
 

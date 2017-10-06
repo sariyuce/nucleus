@@ -1,5 +1,75 @@
 #include "main.h"
 
+static int really_read(std::istream& is, char* buf, size_t global_size) {
+	char* temp2 = buf;
+	while (global_size != 0) {
+		is.read(temp2, global_size);
+		size_t s = is.gcount();
+		if (!is)
+			return -1;
+
+		global_size -= s;
+		temp2 += s;
+	}
+	return 0;
+}
+
+struct wv {
+    int n;
+    double w;
+};
+typedef vector<vector<wv>> Wraph;
+
+void ReadWeightedBinary(char *filename, Wraph& wraph, edge* nEdge) {
+
+	ifstream in (filename);
+	int vtxsize; //in bytes
+	int edgesize; //in bytes
+
+	//reading header
+	in.read((char *)&vtxsize, sizeof(int));
+	in.read((char *)&edgesize, sizeof(int));
+
+	if (!in) {
+		cerr<<"IOError"<<std::endl;
+		return;
+	}
+
+	if (vtxsize != sizeof(vertex)) {
+		cerr<<"Incompatible VertexSize."<<endl;
+		return;
+	}
+
+	if (edgesize != sizeof(edge)) {
+		cerr<<"Incompatible EdgeSize."<<endl;
+		return;
+	}
+
+	//reading should be fine from now on.
+	vertex nVtx;
+	in.read((char*)&nVtx, sizeof(vertex));
+	in.read((char*)nEdge, sizeof(edge));
+
+	printf ("nVtx: %d   nEdge:%d\n", nVtx, *nEdge);
+	wraph.resize (nVtx);
+	edge *pxadj = (edge*) malloc (sizeof(edge) * nVtx);
+	really_read(in, (char*)pxadj, sizeof(edge) * nVtx);
+	for (vertex i = 0; i < nVtx; i++) {
+		wraph[i].resize (pxadj[i]);
+		really_read (in, (char*)&(wraph[i][0]), sizeof(wv) * pxadj[i]);
+	}
+
+	free (pxadj);
+//	debug
+	cout << nVtx << " " << *nEdge << endl;
+//	for (int i = 0; i < nVtx; i++) {
+//		for (int j = 0; j < graph[i].size(); j++)
+//			cout << graph[i][j] << " ";
+//		cout << endl;
+//	}
+
+	return;
+}
 int main (int argc, char *argv[]) {
 
 	if (argc < 3) {
@@ -19,10 +89,26 @@ int main (int argc, char *argv[]) {
 	bool hierarchy = atoi (argv[3]) == 1 ? true : false;
 
 	// read the graph
+
+//	edge nEdge;
+//	Wraph wg;
+//	ReadWeightedBinary (filename, wg, &nEdge);
+
+
+#ifdef PROJ
+	Graph graph;
+	graph.resize (wg.size());
+	for (int i = 0; i < wg.size(); i++) {
+		graph[i].resize (wg[i].size());
+		for (int j = 0; j < wg[i].size(); j++) {
+			graph[i][j] = wg[i][j].n;
+		}
+	}
+#else
 	edge nEdge;
 	Graph graph;
 	ReadGraph<vertex, edge> (filename, graph, &nEdge);
-
+#endif
 	string vfile = gname + "_" + nds;
 	string out_file;
 
