@@ -1,8 +1,6 @@
-MODE=gcc
 OPT=yes
 DEBUG=no
 
-ifeq ($(MODE),gcc)
 # ------- LINUX ----------
 ccc = gcc
 CC        = gcc
@@ -11,27 +9,9 @@ LD         = g++
 CFLAGS     = $(FLAGS) -Wstrict-prototypes
 CXXFLAGS   = $(FLAGS) -std=c++14
 LDFLAGS    = $(FLAGS) 
-endif
-
-ifeq ($(MODE),icc)
-# ------- LINUX ----------
-ccc        = icc
-CXX=icpc
-CFLAGS     =
-CXXFLAGS   =
-LDFLAGS    =
-LD=icpc
-endif
 
 ifeq ($(WARN),yes)
 FLAGS      = -Wall -W -Wextra
-endif
-
-ifeq ($(MODE),gcc) #remove pragma warning when compiled with gcc
-ifeq ($(MIC),no)
-CFLAGS   += -Wno-unknown-pragmas
-CXXFLAGS += -Wno-unknown-pragmas
-endif
 endif
 
 ifeq ($(DEBUG),yes)
@@ -51,7 +31,6 @@ RANLIB     = ranlib
 
 INC        = 
 LIBS       = -lm
-
 
 .SUFFIXES:
 .SUFFIXES: .o .cpp

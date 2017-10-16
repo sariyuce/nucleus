@@ -34,8 +34,9 @@ using namespace util;
 #define LOWERBOUND 0 // show subgraphs with at least this size
 #define PRIME 251231 // for hash function
 
-typedef int vertex; //vertices are 32 bytes
-typedef int edge; //edges are 32 bytes
+typedef int vertex; //vertices are 4 bytes
+typedef int edge; //edges are 4 bytes
+typedef long long lol;
 typedef unordered_multimap<int, int> mmap;
 typedef pair<vertex, vertex> vp;
 typedef vector<vector<vertex> > Graph;
@@ -44,47 +45,8 @@ struct wv {
     double w;
 };
 typedef vector<vector<wv>> Wraph;
-
-typedef long long ll;
+typedef int ll;
 typedef pair<ll, ll> llp;
-
-
-
-
-
-
-
-// User defined class, Point
-class vd
-{
-public:
-   int v;
-   long long deg;
-   vd (int va, long long dega)
-   {
-	   v = va;
-	   deg = dega;
-   }
-
-};
-
-// To compare two points
-class myComparator
-{
-public:
-    int operator() (const vd& p1, const vd& p2)
-    {
-        return p1.deg > p2.deg;
-    }
-};
-
-
-
-
-
-
-
-
 
 struct subcore {
 	bool visible;
@@ -104,9 +66,6 @@ struct subcore {
 		parent = -1;
 		root = -1;
 		visible = true;
-//		primarySize = secondarySize = -1;
-//		ed = -1;
-//		children.clear();
 	}
 };
 
@@ -125,7 +84,6 @@ inline void hash_combine(std::size_t & seed, const T & v)
     std::hash<T> hasher;
     seed ^= hasher(v) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
 }
-
 
 namespace std
 {
@@ -188,12 +146,8 @@ inline bool hashUniquify(vector<vertex>& ch, bool fl = true, string variant = "N
 						(variant == "CORE" && i > VERTEXUPPERBOUND) ||
 						(variant == "TRUSS" && i > VERTEXUPPERBOUND)))
 			return false;
-
-//		if (i % 100000 == 0)
-//			printf ("i : %d\n", i);
 	}
 
-//	printf ("ch.size: %d\n", ch.size());
 	if (fl)
 		sort(ch.begin(), ch.end());
 	return true;
@@ -304,90 +258,6 @@ inline void updateUnassigned (vertex t, vector<ll>& component, ll* cid, vector<l
 		relations[i] = make_pair (relations[i].first, component[t]);
 }
 
-inline void indicesIntersection (vector<vertex>& a, vector<vertex>& b,
-		vector<vertex>& res, vertex g) {
-	size_t i = 0, j = 0;
-	while (i < a.size() && j < b.size()) {
-		if (a[i] < b[j])
-			i++;
-		else if (b[j] < a[i])
-			j++;
-		else {
-//			if (a[i] != g)
-			{
-				res.push_back(i);
-				res.push_back(j);
-			}
-			i++;
-			j++;
-		}
-	}
-}
-
-inline void indicesIntersectionOld (vector<vertex>& a, vector<vertex>& b,
-		vector<vertex>& res, vertex g) {
-	size_t i = 0, j = 0;
-	while (i < a.size() && j < b.size()) {
-		if (a[i] < b[j])
-			i++;
-		else if (b[j] < a[i])
-			j++;
-		else {
-			if (a[i] != g) {
-				res.push_back(i);
-				res.push_back(j);
-			}
-			i++;
-			j++;
-		}
-	}
-}
-
-inline int nChoosek(int n, int k) {
-	if (k > n)
-		return 0;
-	if (k * 2 > n)
-		k = n - k;
-	if (k == 0)
-		return 1;
-
-	int result = n;
-	for (int i = 2; i <= k; ++i) {
-		result *= (n - i + 1);
-		result /= i;
-	}
-	return result;
-}
-
-
-inline void intersectionM1 (vector<vertex>& a, vector<vertex>& b, vector<vertex>& c) {
-	size_t i = 0, j = 0;
-	while (i < a.size() && j < b.size()) {
-
-		bool fl = false;
-		if (b[j] == -1) {
-			j++;
-			fl = true;
-		}
-		if (a[i] == -1) {
-			i++;
-			fl = true;
-		}
-		if (fl)
-			continue;
-
-		if (a[i] < b[j])
-			i++;
-		else if (b[j] < a[i])
-			j++;
-		else {
-			c.push_back(a[i]);
-			i++;
-			j++;
-		}
-	}
-}
-
 inline void intersection (vector<vertex>& a, vector<vertex>& b, vector<vertex>& c) {
 	size_t i = 0, j = 0;
 	while (i < a.size() && j < b.size()) {
@@ -433,13 +303,10 @@ inline void ff_vertex_ind_density (string file, Graph& graph) {
     fclose (fp);
     fclose (tp);
     string paste = "paste " + file + " " + temp + " > " + file + temp;
-//    cout << paste << endl;
     system (paste.c_str());
     string mv = "mv " + file + temp + " " + file;
-//    cout << mv << endl;
     system (mv.c_str());
     string rm = "rm " + temp;
-//    cout << rm << endl;
     system (rm.c_str());
 }
 
@@ -451,7 +318,6 @@ inline void ff_edge_ind_density (string file, Graph& graph) {
     int u, v;
     int ln = 0;
     double db;
-
 
     while (1) {
     	fscanf (fp, "%d %d %d %d %d %lf %d %d", &u, &u, &u, &u, &u, &db, &u, &u);
@@ -477,13 +343,10 @@ inline void ff_edge_ind_density (string file, Graph& graph) {
     fclose (fp);
     fclose (tp);
     string paste = "paste " + file + " " + temp + " > " + file + temp;
-//    cout << paste << endl;
     system (paste.c_str());
     string mv = "mv " + file + temp + " " + file;
-//    cout << mv << endl;
     system (mv.c_str());
     string rm = "rm " + temp;
-//    cout << rm << endl;
     system (rm.c_str());
 }
 
@@ -530,25 +393,21 @@ inline vertex getEdgeId (vertex u, vertex v, vector<vertex>& xel, vector<vp>& el
 }
 
 template <typename VtxType, typename EdgeType>
-void ReadBipartiteGraph(char *filename, EdgeType* nEdge, vector<vector<VtxType>>& leftGraph, vector<vector<VtxType>>& rightGraph);
-void ReadRegularGraph (char *filename, Graph& graph, int* nEdge);
-void ReadWeightedGraph (char *filename, Wraph& wraph, int* nEdges);
+void readBipartite (char *filename, EdgeType* nEdge, vector<vector<VtxType>>& leftGraph, vector<vector<VtxType>>& rightGraph);
+void readWeightedBinary(char *filename, Wraph& wraph, edge* nEdge);
+void writeRegularBinary (string filename, vertex nVtx, edge nEdge, Graph& graph);
+void writeWeightedRegularBinary (string filename, vertex nVtx, edge nEdge, Wraph& wraph);
 
-void writeToRegularBinary (string filename, vertex nVtx, edge nEdge, Graph& graph);
+void tipDecomposition (Graph& leftGraph, Graph& rightGraph, edge nEdge, vector<vertex>& K, bool hierarchy, lol* maxbicore, string vfile, FILE* fp, lol* bCount);
+void wingDecomposition (Graph& leftGraph, Graph& rightGraph, edge nEdge, vector<vertex>& K, bool hierarchy, lol* maxbicore, string vfile, FILE* fp, lol* bCount);
+void wingDecompositionHrc (Graph& leftGraph, Graph& rightGraph, edge nEdge, vector<vertex>& K, bool hierarchy, lol* maxbicore, string vfile, FILE* fp, lol* bCount);
 
-void writeToWeightedRegularBinary (string filename, vertex nVtx, edge nEdge, Wraph& wraph);
-
-void tipDecomposition (Graph& leftGraph, Graph& rightGraph, edge nEdge, vector<vertex>& K, bool hierarchy, vertex* maxbicore, string vfile, FILE* fp, long long* bCount);
-void oldtipDecomposition (Graph& leftGraph, Graph& rightGraph, edge nEdge, vector<vertex>& K, bool hierarchy, vertex* maxbicore, string vfile, FILE* fp, long long* bCount);
-
-void wingDecomposition (Graph& leftGraph, Graph& rightGraph, edge nEdge, vector<vertex>& K, bool hierarchy, vector<vp>& el, vector<vertex>& xRight, vertex* maxbicore, string vfile, FILE* fp, long long* bCount);
-void oldwingDecomposition (Graph& leftGraph, Graph& rightGraph, edge nEdge, vector<vertex>& K, bool hierarchy, vector<vp>& el, vector<vertex>& xRight, vertex* maxbicore, string vfile, FILE* fp, long long* bCount);
 void buildHierarchy (vertex cn, vector<llp>& relations, vector<subcore>& skeleton, ll* nSubcores, edge nEdge, vertex rightnVtx, vertex leftnVtx = -1);
-//void buildHierarchy (vertex cn, vector<vp>& relations, vector<subcore>& skeleton, vertex* nSubcores, edge nEdge, vertex rightnVtx, vertex leftnVtx = -1);
 void presentNuclei (string variant, vector<subcore>& skeleton, vector<vertex>& component, edge nEdge, helpers& ax, string vfile, FILE* gp, Graph& leftGraph, Graph& rightGraph, vector<vertex>* xRight);
 
 void unweighted_projection (Graph& left, Graph& right, string filename);
 void weighted_projection (Graph& left, Graph& right, string filename);
+
+void base_kcore (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* maxCore, string vfile, FILE* fp);
 void weighted_base_kcore (Wraph& wraph, int nEdge, vector<vertex>& K, bool hierarchy, int* maxCore, const char* vfile, FILE* fp);
-void base_kcore (Graph& graph, int nEdge, vector<vertex>& K, bool hierarchy, int* maxCore, string vfile, FILE* fp);
-void base_ktruss (Graph& graph, edge nEdge, vector<vertex>& K, bool hierarchy, vertex* maxtruss, string vfile, FILE* fp);
+void base_ktruss (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* maxtruss, string vfile, FILE* fp);

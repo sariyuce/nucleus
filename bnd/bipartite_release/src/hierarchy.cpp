@@ -20,31 +20,22 @@ void buildHierarchy (vertex cn, vector<llp>& relations, vector<subcore>& skeleto
 	for (int i = 0; i < relations.size(); i++) {
 		ll a = relations[i].first;
 		ll b = relations[i].second;
-
-//		printf ("a: %d sksz: %d    %d/%d\n", a, skeleton.size(), i , relations.size());
 		assignToRepresentative (&a, skeleton);
-//		printf ("b: %d\n", b);
 		assignToRepresentative (&b, skeleton);
-
 		if (a == b)
 			continue;
-
 		llp c (a, b);
 		binnedRelations[skeleton[a].K].push_back (c);
-//		printf ("push %lld %lld in to bR's %d\n", a, b, skeleton[a].K);
 	}
 
 	// process binnedRelations in reverse order
 	for (int i = binnedRelations.size() - 1; i >= 0; i--) {
 		vector<llp> mergeList;
-//		for (auto j = 0; j < binnedRelations[i].size(); j++) { // each binnedRelations[i] has K of skeleton[b].K
-//		printf ("process i: %d\n", i);
 		for (llp br : binnedRelations[i]) {
 			ll a = br.first; // binnedRelations[i][j].first;
 			ll root = br.second; // binnedRelations[i][j].second;
 			assignToRoot (&root, skeleton);
 			if (a != root) {
-//				printf ("a: %d, root: %d\n", a, root);
 				if (skeleton[a].K < skeleton[root].K) {
 					skeleton[root].parent = a;
 					skeleton[root].root = a;
@@ -78,7 +69,6 @@ void buildHierarchy (vertex cn, vector<llp>& relations, vector<subcore>& skeleto
 
 	// root core
 	ll nid = skeleton.size();
-//	printf ("sz before root: %d\n", skeleton.size());
 	subcore sc (0);
 	for (auto i = 0; i < skeleton.size(); i++)
 		if (skeleton[i].parent == -1)
