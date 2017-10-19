@@ -56,7 +56,7 @@ void tipDecomposition (Graph& leftGraph, Graph& rightGraph, edge nEdge, vector<v
 	fprintf (fp, "# bflys: %lld\t\t maxBc: %lld\n", *bCount, maxBc);
 	print_time (fp, "Counting butterflies per vertex time: ", c2 - c1);
 
-	// peeling
+	// Peeling
 	timestamp p1;
 	K.resize (rightGraph.size(), -1);
 	Naive_Bucket nBucket;
@@ -85,8 +85,7 @@ void tipDecomposition (Graph& leftGraph, Graph& rightGraph, edge nEdge, vector<v
 
 	vertex bf_u = 0;
 	while (true) {
-		vertex u;
-		int val;
+		vertex u, val;
 		if (nBucket.PopMin(&u, &val) == -1) // if the bucket is empty
 			break;
 

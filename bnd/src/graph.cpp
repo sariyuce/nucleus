@@ -109,7 +109,6 @@ void readWeightedBinary(char *filename, Wraph& wraph, edge* nEdge) {
 		return;
 	}
 
-	//reading should be fine from now on.
 	vertex nVtx;
 	in.read((char*)&nVtx, sizeof(vertex));
 	in.read((char*)nEdge, sizeof(edge));

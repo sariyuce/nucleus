@@ -48,7 +48,9 @@ It's a leaf in the hierarchy and its parent is the subgraph with the id of 7. Fo
 
 
 
-
+Todos:
+- fix VtxType and EdgeType to support lols
+- support lols by making everything vertex or edge type
 
 
 
