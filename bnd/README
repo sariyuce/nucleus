@@ -23,9 +23,8 @@ It means the subgraph with id 7 has K value of 52, and it has 5 primary (right) 
 It means the subgraph with id 8 has K value of 11, and it has 4 primary (selected side is mentioned at the top of this *_WING_Hierarchy file) vertices, 5 secondary vertices, 19 edges with 0.95 edge density. The subgraph is a NOT leaf in the hierarchy and its parent is the subgraph with the id of 7. Following 19 pairs of numbers are the edges; first id is the primary vertex, second is the secondary vertex.
 
 - Example: "./binucleus southern_woman.mtx WING YES" does wing decomposition and hierarchy construction
-		
-- Extra tips:
-	- To get the K values of vertices/edges, compile with 'K_VALUES=yes make'
+	
+- To get the K values of vertices/edges, compile with 'K_VALUES=yes make'
 	
 - Please cite this paper if you use the code:
     "Peeling Bipartite Networks for Dense Subgraph Discovery"
