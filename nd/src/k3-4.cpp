@@ -53,6 +53,7 @@ inline void threeWay (vector<vertex>& x, vector<vertex>& y, vector<vertex>& z, v
 }
 
 inline vertex getTriangleId (vertex u, vertex v, vertex w, vector<vertex>& xtris, vector<vp>& el, vector<vertex>& xel, Graph& orientedTris, Graph& graph) {
+
 	// given the neighbor triangle u, v, w; get el-id by smallest and middle, then get tris id by largest's index in orientedTris[el-id] : xtris[el-id]+index
 	vertex a, b, m = maxOriented (u, v, w, graph);
 	shake (m, u, v, w, &a, &b, graph);
@@ -81,6 +82,7 @@ inline vertex getTriangleId (vertex u, vertex v, vertex w, vector<vertex>& xtris
 }
 
 void create_triangleList (Graph& orientedGraph, vector<vp>& el, Graph& orientedTris, vector<vt>& tris, vector<vertex>& xtris, Graph& FC) {
+
 	xtris.push_back(0);
 	for (size_t i = 0; i < el.size(); i++) {
 		vertex u = get<0>(el[i]);
@@ -99,6 +101,7 @@ void create_triangleList (Graph& orientedGraph, vector<vp>& el, Graph& orientedT
 
 // per triangle
 lol count4cliques (Graph& graph, Graph& orientedGraph, vector<vp>& el, vector<vertex>& xel, Graph& orientedTris, vector<vt>& tris, vector<vertex>& xtris, Graph& FC) {
+
 	lol fc = 0;
 	for (auto t : tris) {
 		vertex i = 0, j = 0, k = 0;
@@ -136,8 +139,7 @@ lol count4cliques (Graph& graph, Graph& orientedGraph, vector<vp>& el, vector<ve
 
 void base_k34 (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* max34, string vfile, FILE* fp) {
 
-	timestamp peelingStart;
-
+	timestamp t1;
 	vertex nVtx = graph.size();
 
 	// Create directed graph from low degree vertices to higher degree vertices AND prepare a CSR-like structure to index the edges
@@ -152,15 +154,19 @@ void base_k34 (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vert
 	vector<vertex> xtris; // like xel: indices in tris that starts the triangle list for an edge
 	vector<vector<vertex>> FC (nEdge); // 4-clique counts of each triangle in the orientedTris structure
 	create_triangleList (orientedGraph, el, orientedTris, tris, xtris, FC);
+	timestamp t2;
 
+	print_time (fp, "Triangle enumeration: ", t2 - t1);
+
+	timestamp f1;
 	// 4-clique counting for each triangle
 	lol fc = count4cliques (graph, orientedGraph, el, xel, orientedTris, tris, xtris, FC);
-
 	fprintf (fp, "# 4-cliques: %lld\n", fc);
-	timestamp fcEnd;
-	print_time (fp, "4-clique counting: ", fcEnd - peelingStart);
+	timestamp f2;
+	print_time (fp, "4-clique counting: ", f2 - f1);
 
 	// Peeling
+	timestamp p1;
 	K.resize (tris.size(), -1);
 	Naive_Bucket nBucket;
 	nBucket.Initialize (nEdge, tris.size()); // maximum 4-clique count of a triangle is nVtx
@@ -240,24 +246,28 @@ void base_k34 (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vert
 	nBucket.Free();
 	*max34 = fc_t; // fc_t is fc of the last popped triangle
 
-	timestamp peelingEnd;
-	print_time (fp, "Peeling time: ", peelingEnd - peelingStart);
+	timestamp p2;
 
-#ifdef K_VALUES
-	for (int i = 0; i < K.size(); i++)
-		printf ("K[%d]: %d\n", i, K[i]);
-#endif
-
-	if (hierarchy) {
+	if (!hierarchy) {
+		print_time (fp, "Only peeling time: ", p2 - p1);
+		print_time (fp, "Total time: ", (p2 - p1) + (f2 - f1) + (t2 - t1));
+	}
+	else {
+		print_time (fp, "Only peeling + on-the-fly hierarchy construction time: ", p2 - p1);
+		timestamp b1;
 		buildHierarchy (*max34, relations, skeleton, &nSubcores, nEdge, nVtx);
-		timestamp nucleusEnd;
+		timestamp b2;
 
-		print_time (fp, "3-4 nucleus decomposition time with hierarchy construction: ", nucleusEnd - peelingStart);
+		print_time (fp, "Building hierarchy time: ", b2 - b1);
+		print_time (fp, "Total 3,4 nucleus decomposition time (excluding density computation): ", (p2 - p1) + (f2 - f1) + (t2 - t1) + (b2 - b1));
+
 		fprintf (fp, "# subcores: %d\t\t # subsubcores: %d\t\t |V|: %d\n", nSubcores, skeleton.size(), graph.size());
 
+		timestamp d1;
 		helpers hp (&tris);
 		presentNuclei (34, skeleton, component, graph, nEdge, hp, vfile, fp);
-		timestamp totalEnd;
-		print_time (fp, "Total time, including the density computations: ", totalEnd - peelingStart);
+		timestamp d2;
+
+		print_time (fp, "Total 3,4 nucleus decomposition time: ", (p2 - p1) + (f2 - f1) + (t2 - t1) + (b2 - b1) + (d2 - d1));
 	}
 }

@@ -18,6 +18,7 @@ Naive_Bucket::~Naive_Bucket() {
 	if (values != NULL)
 		free (values);
 }
+
 void Naive_Bucket::Free () {
 	free (buckets);
 	buckets = NULL;
@@ -26,12 +27,12 @@ void Naive_Bucket::Free () {
 	free (values);
 	values = NULL;
 }
+
 void Naive_Bucket::Initialize(int max_v, int nb_element) {
 	int i;
 	max_value = max_v;
 	buckets = (Naive_Bucket_element **) malloc(sizeof(Naive_Bucket_element *) * (max_value+1));
 	elements = (Naive_Bucket_element *) malloc(sizeof(Naive_Bucket_element) * nb_element);
-	//    printf("nb_element: %d\n", nb_element);
 	values = (int *) malloc(sizeof(int) * nb_element);
 	nb_elements = nb_element;
 	if (buckets == NULL || elements == NULL || values == NULL) {
@@ -81,7 +82,6 @@ int Naive_Bucket::CurrentValue(int id) {
 }
 
 void Naive_Bucket::DecVal(int id) {
-//	printf ("%d is decremented to %d\n", id, values[id]-1);
 	int old_value = values[id];
 	// adjust the prev and next pointers
 	if (elements[id].prev == NULL)

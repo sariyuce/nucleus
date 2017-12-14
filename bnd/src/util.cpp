@@ -1,7 +1,6 @@
 #include "main.h"
 
 // finding the subgraphs and their densities
-
 inline void tipDensity(vector<vertex>& vset, Graph& rightGraph, subcore* sc) {
 
 	vector<vertex> allNeighbors;
@@ -32,7 +31,7 @@ inline void wingDensity(vector<vertex>& eset, vector<vp>& el, subcore* sc) {
 	sc->secondarySize = lefties.size();
 }
 
-inline bool pullChildrenSets (string variant, FILE* fp, vector<int>& children, HashMap<int>& orderInFile, vector<vertex>& vset,
+inline bool pullChildrenSets (string variant, FILE* fp, vector<vertex>& children, HashMap<vertex>& orderInFile, vector<vertex>& vset,
 		vector<subcore>& skeleton, Graph& rightGraph, bool edgeList, vector<vertex>* xRight) {
 
 	int limit = INT_MAX;
@@ -40,9 +39,9 @@ inline bool pullChildrenSets (string variant, FILE* fp, vector<int>& children, H
 		limit = VERTEXUPPERBOUND;
 	else if (variant == "WING")
 		limit = EDGEUPPERBOUND;
+
 	char c;
 	for (auto eda : children) {
-
 		if (skeleton[eda].nEdge == -1)
 			return false;
 
@@ -99,7 +98,6 @@ inline void dummyLine (subcore* sc, FILE* fp, vertex ind) {
 	sc->parent = -19;
 	fprintf(fp, "%lld %d %d %d %d %lf %d %lld ", ind, sc->K, sc->primarySize, sc->secondarySize, sc->nEdge, sc->ed,
 			sc->children.empty()?1:0, sc->parent);
-
 	fprintf(fp, "-1\n");
 }
 
@@ -131,8 +129,8 @@ inline void rearrange (vector<subcore>& skeleton) { // rearrange children and pa
 	}
 }
 
-// find the r-cliques whose component is ind, append the vertices in those cliques to the vertices of its all children, sort, compute its density
-void reportSubgraph (string variant, int index, HashMap<int>& orderInFile, vector<int>& component, helpers& ax,
+// find the vertices/edges whose component is index, append the vertices/edges in those to the vertices/edges of its all children, sort, compute its density
+void reportSubgraph (string variant, vertex index, HashMap<vertex>& orderInFile, vector<vertex>& component, helpers& ax,
 		vector<subcore>& skeleton, Graph& leftGraph, Graph& rightGraph, edge nEdge, FILE* fp, FILE* gp, vector<vertex>* xRight = NULL) {
 
 	if (skeleton[index].parent == -1) {
@@ -175,12 +173,14 @@ void reportSubgraph (string variant, int index, HashMap<int>& orderInFile, vecto
 		skeleton[index].secondarySize = -1;
 	}
 
-	bool highlight = (skeleton[index].children.empty() && skeleton[index].ed >= THRESHOLD) ? true : false;
-	fprintf(fp, "%lld %d %d %d %d %.2lf %d %lld\t", index, skeleton[index].K, skeleton[index].primarySize, skeleton[index].secondarySize, skeleton[index].nEdge,
-					skeleton[index].ed,	skeleton[index].children.empty()?1:0, skeleton[index].parent);
+	bool highlight = (skeleton[index].children.empty() && skeleton[index].ed >= THRESHOLD &&
+			skeleton[index].primarySize >= LOWERBOUND && skeleton[index].secondarySize >= LOWERBOUND) ? true : false;
 	if (highlight)
 		fprintf(gp, "id: %lld  K: %d  |PV|: %d  |SV|: %d  |E|: %d  ed: %.2lf  LEAF?: %d  parent id: %lld\t", index, skeleton[index].K, skeleton[index].primarySize, skeleton[index].secondarySize, skeleton[index].nEdge,
 							skeleton[index].ed,	skeleton[index].children.empty()?1:0, skeleton[index].parent);
+	fprintf(fp, "%lld %d %d %d %d %.2lf %d %lld\t", index, skeleton[index].K, skeleton[index].primarySize, skeleton[index].secondarySize, skeleton[index].nEdge,
+					skeleton[index].ed,	skeleton[index].children.empty()?1:0, skeleton[index].parent);
+
 
 	if (variant == "WING" || variant == "TRUSS")
 		for (size_t i = 0; i < vset.size(); i++) {
@@ -198,7 +198,6 @@ void reportSubgraph (string variant, int index, HashMap<int>& orderInFile, vecto
 	fprintf(fp, "-1\n");
 	if (highlight)
 		fprintf(gp, "-1\n");
-
 }
 
 inline void bfsHierarchy (vector<subcore>& skeleton, stack<int>& scs) {

@@ -2,6 +2,15 @@
 
 int main(int argc, char *argv[]) {
 
+	timestamp t1;
+	if (argc < 3) {
+		fprintf(stderr, "usage: %s "
+				"\n <filename>"
+				"\n <nucleus type: LEFT_TIP, RIGHT_TIP, WING4>"
+				"\n <hierarchy?: YES or NO>\n", argv[0]);
+		exit(1);
+	}
+
 	char *filename = argv[1];
 	string tmp (argv[1]);
 	string gname = tmp.substr (tmp.find_last_of("/") + 1);
@@ -15,10 +24,9 @@ int main(int argc, char *argv[]) {
 		exit(1);
 	}
 
-	// read the graph, gives sorted edges in left and rightGraph
+	// read the graph, give sorted edges in left and rightGraph
 	edge nEdge = 0;
 	Graph leftGraph, rightGraph;
-
 	string hrc;
 #ifdef EXPS
 	Graph gr;
@@ -47,7 +55,6 @@ int main(int argc, char *argv[]) {
 
 	string vfile = gname + "_" + nd;
 	string out_file;
-
 
 	bool hierarchy = (hrc == "YES" ? true : false);
 	if (hierarchy)
@@ -125,8 +132,11 @@ int main(int argc, char *argv[]) {
 	fclose (kf);
 #endif
 
-	fclose (fp);
+	timestamp t2;
 	printf ("%s\t|L|: %d\t|R|: %d\t|E|: %d\tmaxK: %d nButterflies: %d\n", gname.c_str(), leftGraph.size(), rightGraph.size(), nEdge, maxK, bCount);
+	print_time (fp, "End-to-end Time: ", t2 - t1);
+	fclose (fp);
+
 
 	return 0;
 }

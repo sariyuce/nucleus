@@ -1,6 +1,7 @@
 #include "main.h"
 
 #define MAXLINE 1000000
+//#define WRITE_BINARY
 
 typedef struct asdf {
 	int f;
@@ -126,7 +127,6 @@ void readChaco (char *filename, Graph& graph, EdgeType* nEdge) {
 		hashUniquify (graph[i]);
 
 	fclose (matfp);
-//	writeBinary (filename, nVtx, *nEdge, graph);
 }
 
 template <typename VtxType, typename EdgeType>
@@ -139,7 +139,6 @@ void readMM (char *filename, Graph& graph, EdgeType* nEdge) {
 	do {
 		fgets(line, 1000000, matfp);
 	} while (line[0] == '%');
-
 
 	VtxType nVtx;
 	stringstream ss (line);
@@ -161,10 +160,9 @@ void readMM (char *filename, Graph& graph, EdgeType* nEdge) {
 		}
 	}
 
-	// onnz is # of edges
 	qsort(coords, index, sizeof(pprr), pcmp);
 
-	VtxType onnz = 1;
+	VtxType onnz = 1; // onnz is # of edges
 	for(EdgeType i = 1; i < index; i++) {
 		if(coords[i].f != coords[onnz-1].f || coords[i].s != coords[onnz-1].s) {
 			coords[onnz].f = coords[i].f;
@@ -187,7 +185,6 @@ void readMM (char *filename, Graph& graph, EdgeType* nEdge) {
 
 	fclose (matfp);
 
-//	writeBinary (filename, nVtx, *nEdge, graph);
 }
 
 template <typename VtxType, typename EdgeType>
@@ -227,7 +224,6 @@ void readOut (char *filename, Graph& graph, EdgeType* nEdge) {
 		sort (w.begin(), w.end());
 	fclose (matfp);
 
-//	writeBinary (filename, nVtx, *nEdge, graph);
 }
 
 template <typename VtxType, typename EdgeType>
@@ -240,10 +236,15 @@ void readGraph (char *filename, vector<vector<VtxType>>& graph, EdgeType* nEdge)
 		readBinary<VtxType, EdgeType> (filename, graph, nEdge);
 	else if (filetype == ".graph")
 		readChaco<VtxType, EdgeType> (filename, graph, nEdge);
-	else if (tmp.find("out") != string::npos)
+	else if (tmp.find("out") == 0)
 		readOut<VtxType, EdgeType> (filename, graph, nEdge);
 	else // .mtx or .txt
 		readMM<VtxType, EdgeType> (filename, graph, nEdge);
+
+#ifdef WRITE_BINARY
+	if (ext != ".bin")
+		writeBipartiteBinary (filename, nVtx, *nEdge, graph);
+#endif
 
 	return;
 }

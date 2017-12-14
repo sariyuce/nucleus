@@ -130,19 +130,19 @@ void tipDecomposition (Graph& leftGraph, Graph& rightGraph, edge nEdge, vector<v
 		print_time (fp, "Total time: ", (p2 - p1) + (c2 - c1));
 	}
 	else {
-		print_time (fp, "Peeling + on-the-fly hierarchy construction time: ", p2 - p1);
+		print_time (fp, "Only peeling + on-the-fly hierarchy construction time: ", p2 - p1);
 		timestamp b1;
 		buildHierarchy (*maxbicore, relations, skeleton, &nSubcores, nEdge, rightGraph.size(), leftGraph.size());
 		timestamp b2;
 
 		print_time (fp, "Building hierarchy time: ", b2 - b1);
-		print_time (fp, "Total time (excluding density computation): ", (p2 - p1) + (c2 - c1) + (b2 - b1));
+		print_time (fp, "Total TIP time (excluding density computation): ", (p2 - p1) + (c2 - c1) + (b2 - b1));
 
 		timestamp d1;
 		helpers dummy;
 		presentNuclei ("TIP", skeleton, component, nEdge, dummy, vfile, leftGraph, rightGraph, NULL, fp);
 		timestamp d2;
 
-		print_time (fp, "Total time: ", (p2 - p1) + (c2 - c1) + (b2 - b1) + (d2 - d1));
+		print_time (fp, "Total TIP time: ", (p2 - p1) + (c2 - c1) + (b2 - b1) + (d2 - d1));
 	}
 }

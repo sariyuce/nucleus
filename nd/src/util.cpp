@@ -19,9 +19,10 @@ inline vertex commons (vector<vertex>& a, vector<vertex>& b) {
 
 bool pullChildrenSets (FILE* fp, vector<vertex>& children, HashMap<vertex>& orderInFile, vector<vertex>& vset, vector<subcore>& skeleton) {
 
+	int limit = UPPERBOUND;
 	char c;
 	for (vertex eda : children) {
-		if (skeleton[eda].size == -19)
+		if (skeleton[eda].size == -1)
 			return false;
 
 		if (orderInFile.hasDefaultValue (eda)) {
@@ -48,22 +49,26 @@ bool pullChildrenSets (FILE* fp, vector<vertex>& children, HashMap<vertex>& orde
 		double f;
 		// check line 163 to see what's what
 		fscanf (fp, "%d %d %d %d %lf %d %d", &d, &d, &d, &d, &f, &d, &d); // id, K, |V|, |E|, ed, LEAF?
-		while (fscanf (fp, "%d", &d) != EOF)
-			if (d != -1)
+		while (fscanf (fp, "%d", &d) != EOF) {
+			if (d != -1) {
 				vset.push_back (d);
+				if (vset.size() > limit)
+					return false;
+			}
 			else
 				break;
+		}
 		fseek (fp, 0, SEEK_END);
 	}
 	return true;
 }
 
-inline void dummyLine (subcore* sc, FILE* fp, vertex ind) {
+inline void dummyLine (subcore* sc, FILE* fp, vertex index) {
 	sc->size = -1;
 	sc->ed = -1;
-	fprintf(fp, "%d -1 -1 -1 %d ", ind,
-			sc->K,
-			sc->children.empty()?1:0);
+	sc->nEdge = -1;
+	sc->parent = -1;
+	fprintf(fp, "%d %d %d %d %lf %d %d ", index,	sc->K, sc->size, sc->nEdge, sc->ed, sc->children.empty()?1:0, sc->parent);
 	fprintf(fp, "-1\n");
 }
 
@@ -78,42 +83,6 @@ inline void removeChild (vertex i, vector<subcore>& backup) {
 	}
 }
 
-inline double color (double ed) {
-	double a = (1 - ed) / 0.25;
-	int X = floor(a);
-	int Y = floor(255 * (a-X));
-	if (X < 4)
-		return (3 - X) + (255 - (double) Y) / 255;
-	else
-		return 0;
-}
-
-void nestedCircles (vector<subcore>& skeleton, vertex ind, FILE* fp, string cfl) {
-	double parent_color = color(skeleton[ind].ed);
-	fprintf(fp, "{\"color\": %lf, \"fl\": \"%s\", \"index\": \"%d\", \"name\": \"%ld %.2lf (%d)\", \"size\": %ld",
-			parent_color, cfl.c_str(), ind, skeleton[ind].size, skeleton[ind].ed, skeleton[ind].K, skeleton[ind].size);
-	if (skeleton[ind].children.size() == 1) {
-		fprintf(fp, ", \"children\": [\n");
-		int ch = skeleton[ind].children[0];
-		// ghost child
-		fprintf(fp, "{\"color\": %lf, \"fl\": \"\", \"name\": \"\", \"size\": %ld}, ",
-				parent_color, skeleton[skeleton[ch].parent].size - skeleton[ch].size);
-		// real child
-		nestedCircles (skeleton, ch, fp, cfl);
-		fprintf(fp, "\n]\n");
-	}
-	else if (skeleton[ind].children.size() > 1) {
-		fprintf(fp, ", \n\"children\": [\n");
-		size_t i;
-		for (i = 0; i < skeleton[ind].children.size() - 1; i++) {
-			nestedCircles (skeleton, skeleton[ind].children[i], fp, cfl);
-			fprintf(fp, ",\n");
-		}
-		nestedCircles (skeleton, skeleton[ind].children[i], fp, cfl);
-		fprintf(fp, "\n]");
-	}
-	fprintf(fp, "}\n");
-}
 
 void rearrange (vector<subcore>& skeleton) { // rearrange children and parents based on visibility
 
@@ -130,14 +99,14 @@ void rearrange (vector<subcore>& skeleton) { // rearrange children and parents b
 	}
 }
 
-// find the r-cliques whose component is ind, append the vertices in those cliques to the vertices of its all children, sort, compute its density
-void reportSubgraph (int variant, vertex ind, HashMap<vertex>& orderInFile, vector<vertex>& component, helpers& ax, vector<subcore>& skeleton, Graph& graph, edge nEdge, FILE* fp) {
+// find the r-cliques whose component is index, append the vertices in those cliques to the vertices of its all children, sort, compute its density
+void reportSubgraph (int variant, vertex index, HashMap<vertex>& orderInFile, vector<vertex>& component, helpers& ax, vector<subcore>& skeleton, Graph& graph, edge nEdge, FILE* fp, FILE* gp) {
 
-	if (skeleton[ind].parent == -1) {
-		skeleton[ind].size = graph.size();
-		skeleton[ind].nedge = nEdge;
-		skeleton[ind].ed = 0;
-		fprintf(fp, "%d %d %d %d %lf %d ", ind, skeleton[ind].K, skeleton[ind].size, skeleton[ind].nedge, skeleton[ind].ed, skeleton[ind].children.empty()?1:0);
+	if (skeleton[index].parent == -1) {
+		skeleton[index].size = graph.size();
+		skeleton[index].nEdge = nEdge;
+		skeleton[index].ed = 0;
+		fprintf(fp, "%d %d %d %d %lf %d ", index, skeleton[index].K, skeleton[index].size, skeleton[index].nEdge, skeleton[index].ed, skeleton[index].children.empty()?1:0);
 		fprintf(fp, "-1\n");
 		return;
 	}
@@ -145,19 +114,19 @@ void reportSubgraph (int variant, vertex ind, HashMap<vertex>& orderInFile, vect
 	vector<vertex> vset;
 	if (variant == 12 || variant == 13 || variant == 14) {
 		for (vertex i = 0; i < component.size(); i++)
-			if (component[i] == ind)
+			if (component[i] == index)
 				vset.push_back (i);
 	}
 	else if (variant == 23 || variant == 24) {
 		for (vertex i = 0; i < component.size(); i++)
-			if (component[i] == ind) {
+			if (component[i] == index) {
 				vset.push_back (get<0>((*ax.el)[i]));
 				vset.push_back (get<1>((*ax.el)[i]));
 			}
 	}
 	else if (variant == 34) {
 		for (vertex i = 0; i < component.size(); i++)
-			if (component[i] == ind) {
+			if (component[i] == index) {
 				vset.push_back (get<0>((*ax.tris)[i]));
 				vset.push_back (get<1>((*ax.tris)[i]));
 				vset.push_back (get<2>((*ax.tris)[i]));
@@ -165,15 +134,15 @@ void reportSubgraph (int variant, vertex ind, HashMap<vertex>& orderInFile, vect
 	}
 
 	bool pass = true;
-	pass = pullChildrenSets (fp, skeleton[ind].children, orderInFile, vset, skeleton);
+	pass = pullChildrenSets (fp, skeleton[index].children, orderInFile, vset, skeleton);
 	if (!pass) {
-		dummyLine (&skeleton[ind], fp, ind);
+		dummyLine (&skeleton[index], fp, index);
 		return;
 	}
 
 	pass = hashUniquify (vset);
 	if (!pass) {
-		dummyLine (&skeleton[ind], fp, ind);
+		dummyLine (&skeleton[index], fp, index);
 		return;
 	}
 
@@ -184,18 +153,29 @@ void reportSubgraph (int variant, vertex ind, HashMap<vertex>& orderInFile, vect
 			edge_count += commons (vset, graph[vset[i]]);
 
 	edge_count /= 2;
-	skeleton[ind].nedge = edge_count;
-	skeleton[ind].size = vset.size();
+	skeleton[index].nEdge = edge_count;
+	skeleton[index].size = vset.size();
 	if (vset.size() > 1)
-		skeleton[ind].ed = (double) edge_count / (skeleton[ind].size * (skeleton[ind].size - 1) / 2);
+		skeleton[index].ed = (double) edge_count / (skeleton[index].size * (skeleton[index].size - 1) / 2);
 
-	fprintf(fp, "%d %d %d %d %lf %d %d ", ind, skeleton[ind].K, skeleton[ind].size, skeleton[ind].nedge, skeleton[ind].ed, skeleton[ind].children.empty()?1:0, skeleton[ind].parent);
-	for (size_t i = 0; i < vset.size(); i++)
+	bool highlight = (skeleton[index].children.empty() && skeleton[index].ed >= THRESHOLD && skeleton[index].size >= LOWERBOUND) ? true : false;
+	if (highlight)
+		fprintf(gp, "id: %lld  K: %d  |V|: %d  |E|: %d  ed: %.2lf  LEAF?: %d  parent id: %lld\t", index, skeleton[index].K, skeleton[index].size, skeleton[index].nEdge,
+							skeleton[index].ed,	skeleton[index].children.empty()?1:0, skeleton[index].parent);
+
+	fprintf(fp, "%d %d %d %d %lf %d %d\t", index, skeleton[index].K, skeleton[index].size, skeleton[index].nEdge, skeleton[index].ed, skeleton[index].children.empty()?1:0, skeleton[index].parent);
+	for (size_t i = 0; i < vset.size(); i++) {
 		fprintf(fp, "%d ", vset[i]);
+		if (highlight)
+			fprintf(gp, "%d ", vset[i]);
+	}
 	fprintf(fp, "-1\n");
+	if (highlight)
+		fprintf(gp, "-1\n");
 }
 
 void bfsHierarchy (vector<subcore>& skeleton, stack<vertex>& scs) {
+
 	rearrange (skeleton);
 	queue<vertex> bfsorder; // we are doing bfs on the hierarchy tree and push the dequeued nodes to the stack
 	bfsorder.push(skeleton.size() - 1);
@@ -206,21 +186,6 @@ void bfsHierarchy (vector<subcore>& skeleton, stack<vertex>& scs) {
 		for (vertex r : skeleton[s].children)
 			bfsorder.push (r);
 	}
-}
-
-inline void findRepresentative (vertex* child, vector<subcore>& skeleton) {
-	vertex u = *child;
-	if (skeleton[u].parent != -1) {
-		vertex pr = skeleton[u].parent;
-		while (skeleton[u].K == skeleton[pr].K) {
-			u = pr;
-			if (skeleton[u].parent != -1)
-				pr = skeleton[u].parent;
-			else
-				break;
-		}
-	}
-	*child = u;
 }
 
 void presentNuclei (int variant, vector<subcore>& skeleton, vector<vertex>& component, Graph& graph, edge nEdge, helpers& ax, string vfile, FILE* gp) {
@@ -261,23 +226,9 @@ void presentNuclei (int variant, vector<subcore>& skeleton, vector<vertex>& comp
 		subcoreStack.pop();
 		if (backup[i].visible) {
 			orderInFile[i] = o++;
-			reportSubgraph (variant, i, orderInFile, component, ax, skeleton, graph, nEdge, fp);
+			reportSubgraph (variant, i, orderInFile, component, ax, skeleton, graph, nEdge, fp, gp);
 			removeChild (i, backup);
 		}
 	}
 	fclose (fp);
-
-	for (size_t i = 0; i < skeleton.size(); i++)
-		if (skeleton[i].visible) {
-			if (skeleton[i].size <= UPPERBOUND && skeleton[i].ed >= THRESHOLD)
-				printf ("%d: K: %d |V|: %d |E|: %d ed: %.5lf pr: %d (%s)\n", i, skeleton[i].K, skeleton[i].size, skeleton[i].nedge, skeleton[i].ed, skeleton[i].parent, skeleton[i].children.empty()?"LEAF":"INTERMEDIATE");
-			fprintf (gp, "%d: K: %d |V|: %d |E|: %d ed: %.5lf pr: %d (%s)\n", i, skeleton[i].K, skeleton[i].size, skeleton[i].nedge, skeleton[i].ed, skeleton[i].parent, skeleton[i].children.empty()?"LEAF":"INTERMEDIATE");
-			fflush (gp);
-		}
-
-	// build the json file for visualization -- based on the interactive nested circles
-	string cfl = vfile + "_circle.json";
-	FILE* ncp = fopen (cfl.c_str(), "w");
-	nestedCircles (skeleton, skeleton.size() - 1, ncp, cfl);
-	fclose (ncp);
 }

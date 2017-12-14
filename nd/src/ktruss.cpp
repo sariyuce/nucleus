@@ -1,6 +1,7 @@
 #include "main.h"
 
 inline int checkConnectedness (Graph& graph, Graph& orientedGraph, Graph& TC, vertex u, vertex v, vector<vertex>* xel = NULL) {
+
 	vertex a = u, b = v;
 	if (less_than (b, a, graph))
 		swap (a, b);
@@ -17,6 +18,7 @@ inline int checkConnectedness (Graph& graph, Graph& orientedGraph, Graph& TC, ve
 
 // per edge
 lol countTriangles (Graph& graph, Graph& orientedGraph, Graph& TC) {
+
 	lol tc = 0;
 #ifdef SAVE_TRIS
 	FILE* fp = fopen ("tris", "w");
@@ -46,8 +48,7 @@ lol countTriangles (Graph& graph, Graph& orientedGraph, Graph& TC) {
 
 void base_ktruss (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* maxtruss, string vfile, FILE* fp) {
 
-	timestamp peelingStart;
-
+	timestamp t1;
 	vertex nVtx = graph.size();
 
 	// Create directed graph from low degree vertices to higher degree vertices AND prepare a CSR-like structure to index the edges
@@ -78,10 +79,11 @@ void base_ktruss (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, v
 #endif
 
 	fprintf (fp, "# triangles: %lld\n", tric);
-	timestamp tcEnd;
-	print_time (fp, "Triangle counting: ", tcEnd - peelingStart);
+	timestamp t2;
+	print_time (fp, "Triangle counting: ", t2 - t1);
 
 	// Peeling
+	timestamp p1;
 	K.resize (nEdge, -1);
 	Naive_Bucket nBucket;
 	nBucket.Initialize (nVtx, nEdge); // maximum triangle count of an edge is nVtx
@@ -151,32 +153,37 @@ void base_ktruss (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, v
 	}
 
 	nBucket.Free();
-	*maxtruss = tc_e; // tc_e is tc of the last popped edge
+	*maxtruss = tc_e;
 
-	timestamp peelingEnd;
-	print_time (fp, "Peeling time: ", peelingEnd - peelingStart);
+	timestamp p2;
 
-#ifdef K_VALUES
-	for (int i = 0; i < K.size(); i++)
-		printf ("K[%d]: %d\n", i, K[i]);
-#endif
-
-	if (hierarchy) {
+	if (!hierarchy) {
+		print_time (fp, "Only peeling time: ", p2 - p1);
+		print_time (fp, "Total time: ", (p2 - p1) + (t2 - t1));
+	}
+	else {
+		print_time (fp, "Only peeling + on-the-fly hierarchy construction time: ", p2 - p1);
+		timestamp b1;
 		buildHierarchy (*maxtruss, relations, skeleton, &nSubcores, nEdge, nVtx);
-		timestamp nucleusEnd;
+		timestamp b2;
 
-		print_time (fp, "2-3 nucleus decomposition time with hierarchy construction: ", nucleusEnd - peelingStart);
+		print_time (fp, "Building hierarchy time: ", b2 - b1);
+		print_time (fp, "Total 2,3 nucleus decomposition time (excluding density computation): ", (p2 - p1) + (t2 - t1) + (b2 - b1));
+
 		fprintf (fp, "# subcores: %d\t\t # subsubcores: %d\t\t |V|: %d\n", nSubcores, skeleton.size(), graph.size());
 
+		timestamp d1;
 		helpers hp (&el);
 		presentNuclei (23, skeleton, component, graph, nEdge, hp, vfile, fp);
-		timestamp totalEnd;
-		print_time (fp, "Total time, including the density computations: ", totalEnd - peelingStart);
+		timestamp d2;
+
+		print_time (fp, "Total 2,3 nucleus decomposition time: ", (p2 - p1) + (t2 - t1) + (b2 - b1) + (d2 - d1));
 	}
 }
 
 // per edge
 lol storeCountTriangles (Graph& graph, Graph& orientedGraph, Graph& TC, vector<vertex>& xel, Graph& tris) {
+
 	lol tc = 0;
 	for (vertex i = 0; i < orientedGraph.size(); i++) {
 		for (vertex j = 0; j < orientedGraph[i].size(); j++) {
@@ -207,8 +214,7 @@ lol storeCountTriangles (Graph& graph, Graph& orientedGraph, Graph& TC, vector<v
 
 void base_ktruss_storeTriangles (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* maxtruss, string vfile, FILE* fp) {
 
-	timestamp peelingStart;
-
+	timestamp t1;
 	vertex nVtx = graph.size();
 
 	// Create directed graph from low degree vertices to higher degree vertices AND prepare a CSR-like structure to index the edges
@@ -226,12 +232,13 @@ void base_ktruss_storeTriangles (Graph& graph, bool hierarchy, edge nEdge, vecto
 	lol tric = storeCountTriangles (graph, orientedGraph, TC, xel, tris);
 
 	fprintf (fp, "# triangles: %lld\n", tric);
-	timestamp tcEnd;
-	print_time (fp, "Triangle storing and counting: ", tcEnd - peelingStart);
+	timestamp t2;
+	print_time (fp, "Triangle storing and counting: ", t2 - t1);
 
 
 	// Peeling
-	K.resize (el.size(), -1);
+	timestamp p1;
+	K.resize (nEdge, -1);
 	Naive_Bucket nBucket;
 	nBucket.Initialize (nVtx, nEdge);
 	vertex id = 0;
@@ -270,7 +277,6 @@ void base_ktruss_storeTriangles (Graph& graph, bool hierarchy, edge nEdge, vecto
 			printf ("e: %d    val: %d    counter: %d  nEdge: %d\n", e, val, monitor, nEdge);
 		monitor++;
 #endif
-
 		if (hierarchy) {
 			unassigned.clear();
 			subcore sc (val);
@@ -297,28 +303,31 @@ void base_ktruss_storeTriangles (Graph& graph, bool hierarchy, edge nEdge, vecto
 	}
 
 	nBucket.Free();
-
 	*maxtruss = tc_e; // tc_e is tc of the last popped edge
 
-	timestamp peelingEnd;
-	print_time (fp, "Peeling time: ", peelingEnd - peelingStart);
+	timestamp p2;
 
-#ifdef K_VALUES
-	for (int i = 0; i < K.size(); i++)
-		printf ("K[%d]: %d\n", i, K[i]);
-#endif
-
-	if (hierarchy) {
+	if (!hierarchy) {
+		print_time (fp, "Only peeling time: ", p2 - p1);
+		print_time (fp, "Total time: ", (p2 - p1) + (t2 - t1));
+	}
+	else {
+		print_time (fp, "Only peeling + on-the-fly hierarchy construction time: ", p2 - p1);
+		timestamp b1;
 		buildHierarchy (*maxtruss, relations, skeleton, &nSubcores, nEdge, nVtx);
-		timestamp nucleusEnd;
+		timestamp b2;
 
-		print_time (fp, "2-3 nucleus decomposition (storing triangles) time with hierarchy construction: ", nucleusEnd - peelingStart);
+		print_time (fp, "Building hierarchy time: ", b2 - b1);
+		print_time (fp, "Total 2,3 nucleus decomposition (with stored triangles) time (excluding density computation): ", (p2 - p1) + (t2 - t1) + (b2 - b1));
+
 		fprintf (fp, "# subcores: %d\t\t # subsubcores: %d\t\t |V|: %d\n", nSubcores, skeleton.size(), graph.size());
 
+		timestamp d1;
 		helpers hp (&el);
 		presentNuclei (23, skeleton, component, graph, nEdge, hp, vfile, fp);
-		timestamp totalEnd;
-		print_time (fp, "Total time (storing triangles), including the density computations: ", totalEnd - peelingStart);
+		timestamp d2;
+
+		print_time (fp, "Total 2,3 nucleus decomposition (with stored triangles) time: ", (p2 - p1) + (t2 - t1) + (b2 - b1) + (d2 - d1));
 	}
 }
 

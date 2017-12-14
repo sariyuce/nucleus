@@ -5,14 +5,13 @@
 - 'make' to compile
 
 - './binucleus <graph> <algorithm> <hierarchy?>" to run;
-		 <graph> is the bipartite input graph in matrix market (first line should be |E| |LeftV| |RightV|) [1], SNAP [2] or Chaco [3] format. It can be a binary file as well (See [4]).
+		 <graph> is the bipartite input graph in matrix market (.mtx or .txt suffix) [1], SNAP [2] (out. prefix) or Chaco [3] (.graph suffix) format. It can be a binary file as well (See [4]).
 		 <algorithm> is LEFT_TIP, RIGHT_TIP or WING. LEFT or RIGHT indicates the position of vertices in the input file; for "45 51" edge in the input file, 45 is a left vertex and 51 is a right vertex.
 		 <hierarchy> is YES or NO. YES computes the hierarchy, subgraphs, and densities. NO computes only K values.
 
 - When <hierarchy> is YES, there are 2 output files
-		- <graph>_<algorithm>_Hierarchy: Runtimes, statistics, and significantly dense subgraphs, i.e., subgraph is a leaf and its density is at least THRESHOLD value (which is set to 0.0 in main.h)
-		- <graph>_<algorithm>_NUCLEI: Each line is a subgraph, first 8 numbers are: subgraph id, K value, |LeftV|, |RightV|, |E|,
-		 edge density, 1 (0) if the nucleus is (not) a leaf in the hierarchy, and parent subgraph id. Following numbers are vertices
+		- <graph>_<algorithm>_Hierarchy: Runtimes, statistics, and significantly dense subgraphs, i.e., subgraph is a leaf, its size on each side is larger or equal to LOWERBOUND (set to 0 in main.h), and its density is at least THRESHOLD value (set to 0.0 in main.h)
+		- <graph>_<algorithm>_NUCLEI: Each line is a subgraph, first 8 numbers are: subgraph id, K value, |LeftV|, |RightV|, |E|, edge density, 1 (0) if the nucleus is (not) a leaf in the hierarchy, and parent subgraph id. Following numbers are vertices
 		 (if algorithm is LEFT_TIP or RIGHT_TIP), or edges (if it is WING). Upper limits for *TIPs is 200 vertices (VERTEXUPPERBOUND in main.h) and for WING it's 3000 edges (EDGEUPPERBOUND in main.h)
 
 - In a *_RIGHT_TIP_Hierarchy file, consider the following line;
@@ -51,8 +50,8 @@ It means the subgraph with id 8 has K value of 11, and it has 4 primary (selecte
   		- ./binucleus southern_woman.mtx MEASURE_CORE_RIGHT southern_woman.mtx_BUILD_RIGHT_W_projection.bin_RUN_WEIGHTED_CORE_NUCLEI 
 
 
-[1] Matrix market format for a 2,3 biclique:
-
+[1] Matrix market has ".txt" or ".mtx" suffix. Its format for a 2,3 biclique:
+% First line is |E|, |Left Vertices|, |Right Vertices|
 6 2 3
 0 0
 0 1
@@ -61,7 +60,7 @@ It means the subgraph with id 8 has K value of 11, and it has 4 primary (selecte
 1 1
 1 2
 
-[2] SNAP format for a 2,3 biclique:
+[2] SNAP format has "out." prefix. Its format for a 2,3 biclique:
 
 0 0
 0 1
@@ -70,16 +69,15 @@ It means the subgraph with id 8 has K value of 11, and it has 4 primary (selecte
 1 1
 1 2
 
-[3] Chaco format for a 2,3 biclique:
-
+[3] Chaco format has ".graph" suffix. Its format for a 2,3 biclique:
+% First line is |E|, |Left Vertices|, |Right Vertices|
 % n-th line is a neighbor list of the left vertex with id n-2
 6 2 3
 0 1 2
 0 1 2
 
 
-[4] Activate WRITE_BINARY macro in graph.cpp to write binary graph files -- recommended for large graphs
-
+[4] Activate WRITE_BINARY macro in graph.cpp to write binary graph files with ".bin" suffix -- recommended for large graphs
 
 
 Todos:

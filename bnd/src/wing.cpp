@@ -169,7 +169,7 @@ void wingDecomposition (Graph& leftGraph, Graph& rightGraph, edge nEdge, vector<
 
 	timestamp p2;
 	print_time (fp, "Only peeling time: ", p2 - p1);
-	print_time (fp, "Total time: ", (p2 - p1) + (c2 - c1) + (pr2 - pr1));
+	print_time (fp, "Total WING time: ", (p2 - p1) + (c2 - c1) + (pr2 - pr1));
 }
 
 inline void indicesIntersectionHrc (vector<vertex>& a, vector<vertex>& b, vector<vertex>& res, vertex g) {
@@ -303,18 +303,18 @@ void wingDecompositionHrc (Graph& leftGraph, Graph& rightGraph, edge nEdge, vect
 	*maxbicore = bf_e;
 
 	timestamp p2;
-	print_time (fp, "Peeling + on-the-fly hierarchy construction time: ", p2 - p1);
+	print_time (fp, "Only peeling + on-the-fly hierarchy construction time: ", p2 - p1);
 	timestamp b1;
 	buildHierarchy (*maxbicore, relations, skeleton, &nSubcores, nEdge, rightGraph.size(), leftGraph.size());
 	timestamp b2;
 
 	print_time (fp, "Building hierarchy time: ", b2 - b1);
-	print_time (fp, "Total time (excluding density computation): ", (pr2 - pr1) + (c2 - c1) + (p2 - p1) + (b2 - b1));
+	print_time (fp, "Total WING time (excluding density computation): ", (pr2 - pr1) + (c2 - c1) + (p2 - p1) + (b2 - b1));
 
 	timestamp d1;
 	helpers hp (&right_el);
 	presentNuclei ("WING", skeleton, component, nEdge, hp, vfile, leftGraph, rightGraph, &xRight, fp);
 	timestamp d2;
 
-	print_time (fp, "Total time: ", (pr2 - pr1) + (c2 - c1) + (p2 - p1) + (b2 - b1) + (d2 - d1));
+	print_time (fp, "Total WING time: ", (pr2 - pr1) + (c2 - c1) + (p2 - p1) + (b2 - b1) + (d2 - d1));
 }

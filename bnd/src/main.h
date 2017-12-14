@@ -171,23 +171,6 @@ inline void findRepresentative(vertex* child, vector<subcore>& skeleton) {
 	*child = u;
 }
 
-inline void assignToRepresentative(int* ch, vector<subcore>& skeleton) { // 2-pass path compression
-	int u = *ch;
-	vector<int> vs;
-	while (skeleton[u].parent != -1) {
-		int n = skeleton[u].parent;
-		if (skeleton[n].K == skeleton[u].K) {
-			vs.push_back(u);
-			u = n;
-		} else
-			break;
-	}
-	*ch = u;
-	for (int i : vs) {
-		if (i != u)
-			skeleton[i].parent = u;
-	}
-}
 
 inline void neighborsOfNeighbors(vector<vertex>& vset, Graph& graph, vector<vertex>& allNeighbors, edge* nEdge) {
 	for (vertex i = 0; i < vset.size(); i++) {
@@ -198,67 +181,6 @@ inline void neighborsOfNeighbors(vector<vertex>& vset, Graph& graph, vector<vert
 	hashUniquify(allNeighbors);
 }
 
-inline void store(int uComp, int vComp, vector<int>& unassigned,
-		vector<llp>& relations) {
-	llp c(vComp, uComp);
-	if (uComp == -1) // it is possible that u didn't get an id yet
-		unassigned.push_back(relations.size()); // keep those indices to process after the loop, below
-	relations.push_back(c);
-}
-
-inline void merge(vertex u, vertex v, vector<int>& component,
-		vector<subcore>& skeleton, int* nSubcores) {
-
-	if (component[u] == -1) {
-		component[u] = component[v];
-		skeleton.erase(skeleton.end() - 1);
-	}
-	else { // merge component[u] and component[v] nodes
-		int child = component[u];
-		int parent = component[v];
-		assignToRepresentative(&child, skeleton);
-		assignToRepresentative(&parent, skeleton);
-		if (child != parent) {
-			if (skeleton[child].rank > skeleton[parent].rank)
-				swap(child, parent);
-			skeleton[child].parent = parent;
-			skeleton[child].visible = false;
-			if (skeleton[parent].rank == skeleton[child].rank)
-				skeleton[parent].rank++;
-			*nSubcores--;
-		}
-	}
-}
-
-inline void createSkeleton(vertex u, initializer_list<vertex> neighbors,
-		int* nSubcores, vector<vertex>& K, vector<subcore>& skeleton,
-		vector<int>& component, vector<int>& unassigned,
-		vector<llp>& relations) {
-	vertex smallest = -1, minK = INT_MAX;
-	for (auto i : neighbors)
-		if (K[i] != -1 && K[i] < minK) {
-			smallest = i;
-			minK = K[i];
-		}
-	if (smallest == -1)
-		return;
-
-	if (K[smallest] == K[u])
-		merge(u, smallest, component, skeleton, nSubcores);
-	else
-		store(component[u], component[smallest], unassigned, relations);
-}
-
-inline void updateUnassigned (vertex t, vector<int>& component, int* cid, vector<llp>& relations, vector<int>& unassigned) {
-	if (component[t] == -1) { // if e didn't get a component, give her a new one
-		component[t] = *cid;
-		++(*cid);
-	}
-
-	// update the unassigned components that are in the relations
-	for (int i : unassigned)
-		relations[i] = make_pair (relations[i].first, component[t]);
-}
 
 inline void intersection (vector<vertex>& a, vector<vertex>& b, vector<vertex>& c) {
 	size_t i = 0, j = 0;
@@ -404,6 +326,8 @@ void tipDecomposition (Graph& leftGraph, Graph& rightGraph, edge nEdge, vector<v
 void wingDecomposition (Graph& leftGraph, Graph& rightGraph, edge nEdge, vector<vertex>& K, bool hierarchy, lol* maxbicore, FILE* fp, lol* bCount);
 void wingDecompositionHrc (Graph& leftGraph, Graph& rightGraph, edge nEdge, vector<vertex>& K, bool hierarchy, lol* maxbicore, string vfile, FILE* fp, lol* bCount);
 
+void createSkeleton (vertex u, initializer_list<vertex> neighbors, vertex* nSubcores, vector<vertex>& K,	vector<subcore>& skeleton, vector<int>& component, vector<int>& unassigned, vector<llp>& relations);
+void updateUnassigned (vertex t, vector<int>& component, int* cid, vector<llp>& relations, vector<int>& unassigned);
 void buildHierarchy (vertex cn, vector<llp>& relations, vector<subcore>& skeleton, int* nSubcores, edge nEdge, vertex rightnVtx, vertex leftnVtx = -1);
 void presentNuclei (string variant, vector<subcore>& skeleton, vector<vertex>& component, edge nEdge, helpers& ax, string vfile, Graph& leftGraph, Graph& rightGraph, vector<vertex>* xRight, FILE* fp);
 

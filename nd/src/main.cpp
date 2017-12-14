@@ -2,6 +2,7 @@
 
 int main (int argc, char *argv[]) {
 
+	timestamp t1;
 	if (argc < 3) {
 		fprintf(stderr, "usage: %s "
 				"\n <filename>"
@@ -15,12 +16,17 @@ int main (int argc, char *argv[]) {
 	string gname = tmp.substr (tmp.find_last_of("/") + 1);
 
 	string nd (argv[2]);
-	string hrc (argv[3]);
+	if (!(nd == "12" || nd == "13" || nd == "14" || nd == "23" || nd == "24" || nd == "34")) {
+		printf ("Invalid algorithm, options are 12, 13, 14, 23, 24, and 34\n");
+		exit(1);
+	}
 
+	// read the graph, give sorted edges in graph
 	edge nEdge = 0;
 	Graph graph;
 	readGraph<vertex, edge> (filename, graph, &nEdge);
 
+	string hrc (argv[3]);
 	string vfile = gname + "_" + nd;
 	string out_file;
 
@@ -32,10 +38,6 @@ int main (int argc, char *argv[]) {
 
 	FILE* fp = fopen (out_file.c_str(), "w");
 
-	timestamp peelingTime (0, 0);
-
-	timestamp t1;
-
 	vertex maxK; // maximum K value in the graph
 	vector<vertex> K;
 
@@ -45,18 +47,26 @@ int main (int argc, char *argv[]) {
 		base_k13 (graph, hierarchy, nEdge/2, K, &maxK, vfile, fp);
 	else if (nd == "14")
 		base_k14 (graph, hierarchy, nEdge/2, K, &maxK, vfile, fp);
-	else if (nd == "23")
+	else if (nd == "23") {
 		base_ktruss (graph, hierarchy, nEdge/2, K, &maxK, vfile, fp);
 //		base_ktruss_storeTriangles (graph, hierarchy, nEdge/2, K, &maxK, vfile, fp);
+	}
 	else if (nd == "24")
 		base_k24 (graph, hierarchy, nEdge/2, K, &maxK, vfile, fp);
 	else if (nd == "34")
 		base_k34 (graph, hierarchy, nEdge/2, K, &maxK, vfile, fp);
 
-	timestamp t2;
+#ifdef K_VALUES
+	string kfile = vfile + "_K_values";
+	FILE* kf = fopen (kfile.c_str(), "w");
+	for (vertex i = 0; i < K.size(); i++)
+		fprintf (kf, "K[%d]: %lld\n", i, K[i]);
+	fclose (kf);
+#endif
 
+	timestamp t2;
 	printf ("%s\t|V|: %d\t|E|: %d\tmaxK for %s-nucleus: %d\n", gname.c_str(), graph.size(), nEdge, nd.c_str(), maxK);
-	print_time (fp, "Total Time: ", t2 - t1);
+	print_time (fp, "End-to-end Time: ", t2 - t1);
 	fclose (fp);
 
 	return 0;

@@ -29,8 +29,9 @@
 using namespace std;
 using namespace util;
 
-#define UPPERBOUND 200 // compute densities of subgraphs with at most this size, set to INT_MAX to compute all -- takes a lot of time
-#define THRESHOLD 0.2
+#define LOWERBOUND 0
+#define UPPERBOUND 500 // compute densities of subgraphs with at most this size, set to INT_MAX to compute all -- takes a lot of time
+#define THRESHOLD 0.0
 #define PRIME 251231 // for hash function
 
 typedef long long lol;
@@ -50,7 +51,7 @@ struct subcore {
 	vertex root;
 	vector<vertex> children;
 	vertex size;
-	edge nedge;
+	edge nEdge;
 	double ed;
 
 	subcore (vertex k) {
@@ -60,7 +61,7 @@ struct subcore {
 		root = -1;
 		visible = true;
 		size = 0;
-		nedge = 0;
+		nEdge = 0;
 		ed = -1;
 	}
 };
@@ -100,6 +101,21 @@ namespace std
     };
 }
 
+
+inline void findRepresentative (vertex* child, vector<subcore>& skeleton) {
+	vertex u = *child;
+	if (skeleton[u].parent != -1) {
+		vertex pr = skeleton[u].parent;
+		while (skeleton[u].K == skeleton[pr].K) {
+			u = pr;
+			if (skeleton[u].parent != -1)
+				pr = skeleton[u].parent;
+			else
+				break;
+		}
+	}
+	*child = u;
+}
 
 inline bool hashUniquify (vector<vertex>& vertices) {
 	HashMap<bool> hermap (false);
@@ -192,6 +208,7 @@ inline void intersection (vector<vertex>& a, vector<vertex>& b, vector<vertex>& 
 
 template <typename VtxType, typename EdgeType>
 void readGraph (char *filename, vector<vector<VtxType>>& graph, EdgeType* nEdge);
+
 void base_kcore (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* maxCore, string vfile, FILE* fp);
 void base_k13 (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* maxCore, string vfile, FILE* fp);
 void base_k14 (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* maxCore, string vfile, FILE* fp);
@@ -199,8 +216,8 @@ void base_ktruss (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, v
 void base_ktruss_storeTriangles (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* maxtruss, string vfile, FILE* fp);
 void base_k24 (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* max24, string vfile, FILE* fp);
 void base_k34 (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* max34, string vfile, FILE* fp);
-void createSkeleton (vertex u, initializer_list<vertex> neighbors, vertex* nSubcores, vector<vertex>& K, vector<subcore>& skeleton,
-		vector<vertex>& component, vector<vertex>& unassigned, vector<vp>& relations);
+
+void createSkeleton (vertex u, initializer_list<vertex> neighbors, vertex* nSubcores, vector<vertex>& K, vector<subcore>& skeleton,	vector<vertex>& component, vector<vertex>& unassigned, vector<vp>& relations);
 void updateUnassigned (vertex t, vector<vertex>& component, vertex* cid, vector<vp>& relations, vector<vertex>& unassigned);
 void buildHierarchy (vertex cn, vector<vp>& relations, vector<subcore>& skeleton, vertex* nSubcores, edge nEdge, vertex nVtx);
 void presentNuclei (int variant, vector<subcore>& skeleton, vector<vertex>& component, Graph& graph, edge nEdge, helpers& ax, string vfile, FILE* gp);

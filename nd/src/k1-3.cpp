@@ -2,6 +2,7 @@
 
 // per vertex
 lol countTriangles (Graph& graph, Graph& orientedGraph, vector<vertex>& TC) {
+
 	lol tc = 0;
 	for (size_t i = 0; i < orientedGraph.size(); i++) {
 		for (size_t j = 0; j < orientedGraph[i].size(); j++) {
@@ -22,8 +23,7 @@ lol countTriangles (Graph& graph, Graph& orientedGraph, vector<vertex>& TC) {
 
 void base_k13 (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* max13, string vfile, FILE* fp) {
 
-	timestamp peelingStart;
-
+	timestamp t1;
 	vertex nVtx = graph.size();
 
 	// Create directed graph from low degree vertices to higher degree vertices
@@ -35,19 +35,19 @@ void base_k13 (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vert
 	lol tric = countTriangles (graph, orientedGraph, TC);
 
 	fprintf (fp, "# triangles: %lld\n", tric);
-	timestamp tcEnd;
-	print_time (fp, "Triangle storing and counting: ", tcEnd - peelingStart);
+	timestamp t2;
+	print_time (fp, "Triangle counting: ", t2 - t1);
 
 	// Peeling
+	timestamp p1;
 	K.resize (nVtx, -1);
 	Naive_Bucket nBucket;
 	nBucket.Initialize (nEdge, nVtx); // maximum triangle count of a vertex is nEdge
-	for (vertex i = 0; i < graph.size(); i++) {
+	for (vertex i = 0; i < graph.size(); i++)
 		if (TC[i] > 0)
 			nBucket.Insert (i, TC[i]);
 		else
 			K[i] = 0;
-	}
 
 	vertex tc_u = 0;
 
@@ -100,26 +100,30 @@ void base_k13 (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vert
 	}
 
 	nBucket.Free();
-	*max13 = tc_u; // tc_u is tc of last popped vertex
+	*max13 = tc_u;
 
-	timestamp peelingEnd;
-	print_time (fp, "Peeling time: ", peelingEnd - peelingStart);
+	timestamp p2;
 
-#ifdef K_VALUES
-	for (int i = 0; i < K.size(); i++)
-		printf ("K[%d]: %d\n", i, K[i]);
-#endif
-
-	if (hierarchy) {
+	if (!hierarchy) {
+		print_time (fp, "Only peeling time: ", p2 - p1);
+		print_time (fp, "Total time: ", (p2 - p1) + (t2 - t1));
+	}
+	else {
+		print_time (fp, "Only peeling + on-the-fly hierarchy construction time: ", p2 - p1);
+		timestamp b1;
 		buildHierarchy (*max13, relations, skeleton, &nSubcores, nEdge, nVtx);
-		timestamp nucleusEnd;
+		timestamp b2;
 
-		print_time (fp, "1-3 nucleus decomposition time with hierarchy construction: ", nucleusEnd - peelingStart);
+		print_time (fp, "Building hierarchy time: ", b2 - b1);
+		print_time (fp, "Total 1,3 nucleus decomposition time (excluding density computation): ", (p2 - p1) + (t2 - t1) + (b2 - b1));
+
 		fprintf (fp, "# subcores: %d\t\t # subsubcores: %d\t\t |V|: %d\n", nSubcores, skeleton.size(), graph.size());
 
+		timestamp d1;
 		helpers hp;
 		presentNuclei (13, skeleton, component, graph, nEdge, hp, vfile, fp);
-		timestamp totalEnd;
-		print_time (fp, "Total time, including the density computations: ", totalEnd - peelingStart);
+		timestamp d2;
+
+		print_time (fp, "Total 1,3 nucleus decomposition time: ", (p2 - p1) + (t2 - t1) + (b2 - b1) + (d2 - d1));
 	}
 }

@@ -414,7 +414,7 @@ void readBipartite (char *filename, EdgeType* nEdge, vector<vector<VtxType>>& le
 			fprintf (pp, "%s %d\n", (it->first).c_str(), it->second);
 		fclose (pp);
 	}
-	else if (st.find("out") != string::npos) { // SNAP format
+	else if (st.find("out") == 0) { // SNAP format
 		readBipartiteOut<VtxType> (filename, nEdge, leftGraph, rightGraph);
 	}
 	else // MatrixMarket format

@@ -3,10 +3,6 @@
 
 #include "larray.h"
 #include <vector>
-#include <unordered_map>
-
-using namespace std;
-
 
 struct Naive_Bucket_element
 {

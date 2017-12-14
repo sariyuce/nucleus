@@ -28,6 +28,12 @@ CXXFLAGS    += -O2 -DNDEBUG
 LDFLAGS   += -DNDEBUG
 endif
 
+ifeq ($(K_VALUES),yes)
+CFLAGS    += -D K_VALUES
+CXXFLAGS    += -D K_VALUES
+LDFLAGS   += -D K_VALUES
+endif
+
 AR         = ar rv
 RANLIB     = ranlib
 

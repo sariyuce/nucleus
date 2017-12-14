@@ -2,8 +2,6 @@
 #define BG_LARRAY_H_
 #include <sparsehash/dense_hash_map> // or sparse_hash_set, dense_hash_map, ...
 #include <google/dense_hash_map>
-#include <tr1/unordered_map>
-
 #include "limits.h"
 using google::dense_hash_map;
 
