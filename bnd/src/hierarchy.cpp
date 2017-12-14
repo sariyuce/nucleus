@@ -1,6 +1,7 @@
 #include "main.h"
 
 inline void assignToRoot (int* ch, vector<subcore>& skeleton) {
+
 	vector<int> acc;
 	int s = *ch;
 	while (skeleton[s].root != -1) {

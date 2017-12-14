@@ -84,7 +84,7 @@ void base_kcore (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, lo
 
 void weighted_base_kcore (Wraph& wraph, bool hierarchy, edge nEdge, vector<vertex>& K, lol* maxCore, string vfile, FILE* fp) {
 
-	util::timestamp peelingStart;
+	timestamp peelingStart;
 	size_t nVtx = wraph.size();
 	double max_degree = 0;
 	for (size_t i = 0; i < nVtx; i++) {
@@ -162,8 +162,7 @@ void weighted_base_kcore (Wraph& wraph, bool hierarchy, edge nEdge, vector<verte
 	}
 
 	na_bs.Free();
-	*maxCore = degree_of_u; // degree_of_u is degree of last popped vertex
-	util::timestamp t33;
+	*maxCore = degree_of_u; // degree_of_u is degree of the last popped vertex
 	Graph graph (wraph.size());
 	for (int i = 0; i < wraph.size(); i++) {
 		for (int j = 0; j < wraph[i].size(); j++)

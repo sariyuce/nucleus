@@ -58,9 +58,6 @@ int main(int argc, char *argv[]) {
 	FILE* fp;
 	if (nd.find ("BUILD") == string::npos)
 		fp = fopen (out_file.c_str(), "w");
-	timestamp peelingTime (0, 0);
-
-	timestamp t1;
 
 	lol bCount = 0; // number of butterflies
 	lol maxK; // maximum K value in the graph
@@ -119,8 +116,6 @@ int main(int argc, char *argv[]) {
 		printf ("densities updated\n");
 	}
 #endif
-
-	timestamp t2;
 
 #ifdef K_VALUES
 	string kfile = vfile + "_K_values";

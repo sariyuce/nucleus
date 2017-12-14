@@ -33,8 +33,7 @@ struct Naive_Bucket
 	void Update(int id, int new_value);
 	void DecTo(int id, int val);
 	void DecVal(int id);
-	/*returns -1 if empty*/
-	int PopMin(int* ret_id, int* ret_value);
+	int PopMin(int* ret_id, int* ret_value); /* returns -1 if empty */
 	int CurrentValue(int id);
 };
 

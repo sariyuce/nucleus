@@ -1,6 +1,7 @@
 #include "main.h"
 
 #define MAXLINE 1000000
+//#define WRITE_BINARY
 
 typedef struct asdf {
 	int f;
@@ -122,8 +123,6 @@ void readWeightedBinary(char *filename, Wraph& wraph, edge* nEdge) {
 		really_read (in, (char*)&(wraph[i][0]), sizeof(wv) * pxadj[i]);
 	}
 }
-
-
 
 
 
@@ -368,7 +367,6 @@ void readBipartiteOut (char *filename, EdgeType* nEdge, vector<vector<VtxType>>&
 
 	fclose (fp);
 
-//	writeBipartiteBinary (filename, nEdge, leftGraph, rightGraph);
 }
 
 template <typename VtxType, typename EdgeType>
@@ -378,11 +376,11 @@ void readBipartite (char *filename, EdgeType* nEdge, vector<vector<VtxType>>& le
 	int idx = st.find_last_of(".");
 	string ext = st.substr(idx);
 
-	if (ext == ".bin")
+	if (ext == ".bin") // Binary format
 		readBipartiteBinary<VtxType, VtxType> (filename, leftGraph, rightGraph, nEdge);
-	else if (ext == ".graph") // Chaco
+	else if (ext == ".graph") // Chaco format
 		readBipartiteChaco<VtxType> (filename, nEdge, leftGraph, rightGraph);
-	else if (ext == ".amazon") { //
+	else if (ext == ".amazon") { // For the user product data in Amazon ratings, each line has user id and product id (http://jmcauley.ucsd.edu/data/amazon/)
 		FILE* fp = fopen (st.c_str(), "r");
 		FILE* gp = fopen ("user_product.out", "w");
 		char user[1000];
@@ -416,25 +414,20 @@ void readBipartite (char *filename, EdgeType* nEdge, vector<vector<VtxType>>& le
 			fprintf (pp, "%s %d\n", (it->first).c_str(), it->second);
 		fclose (pp);
 	}
-	else if (st.find("out") != string::npos) {
+	else if (st.find("out") != string::npos) { // SNAP format
 		readBipartiteOut<VtxType> (filename, nEdge, leftGraph, rightGraph);
 	}
-	else // MatrixMarket
+	else // MatrixMarket format
 		readBipartiteMM<VtxType> (filename, nEdge, leftGraph, rightGraph);
+
+
+#ifdef WRITE_BINARY
+	if (ext != ".bin")
+		writeBipartiteBinary (filename, nEdge, leftGraph, rightGraph);
+#endif
 
 	printf ("|Left|: %d		|Right|: %d		|Edge|: %d\n", leftGraph.size(), rightGraph.size(), *nEdge);
 }
 
 template void readBipartite (char *filename, edge* nEdge, Graph& leftGraph, Graph& rightGraph);
-
-
-
-
-
-
-
-
-
-
-
 

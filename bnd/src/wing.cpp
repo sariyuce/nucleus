@@ -35,6 +35,7 @@ inline void limitedIntersection (Graph& rightGraph, vertex b, vertex c, Graph& b
 }
 
 void countButterflies (Graph& rightGraph, Graph& leftGraph, Graph& butterflyCounts, lol* bCount) {
+
 	for (vertex i = 0; i < leftGraph.size(); i++) {
 		vertex a = i;
 		for (vertex j = 0; j < leftGraph[i].size(); j++) {
@@ -49,6 +50,7 @@ void countButterflies (Graph& rightGraph, Graph& leftGraph, Graph& butterflyCoun
 }
 
 inline vertex getEdgeIndex (vertex a, vertex b, vector<vp>& el, vector<vertex>& xRight) {
+
 	for (vertex i = xRight[a]; i < xRight[a+1]; i++)
 		if (el[i].second == b)
 			return i - xRight[a];
@@ -171,6 +173,7 @@ void wingDecomposition (Graph& leftGraph, Graph& rightGraph, edge nEdge, vector<
 }
 
 inline void indicesIntersectionHrc (vector<vertex>& a, vector<vertex>& b, vector<vertex>& res, vertex g) {
+
 	size_t i = 0, j = 0;
 	while (i < a.size() && j < b.size()) {
 		if (a[i] < b[j])

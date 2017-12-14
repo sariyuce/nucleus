@@ -3,6 +3,7 @@
 // finding the subgraphs and their densities
 
 inline void tipDensity(vector<vertex>& vset, Graph& rightGraph, subcore* sc) {
+
 	vector<vertex> allNeighbors;
 	edge nEdgesSubgraph = 0;
 	neighborsOfNeighbors(vset, rightGraph, allNeighbors, &nEdgesSubgraph);
@@ -90,6 +91,7 @@ inline bool pullChildrenSets (string variant, FILE* fp, vector<int>& children, H
 }
 
 inline void dummyLine (subcore* sc, FILE* fp, vertex ind) {
+
 	sc->primarySize = -1;
 	sc->secondarySize = -1;
 	sc->nEdge = -1;
@@ -102,6 +104,7 @@ inline void dummyLine (subcore* sc, FILE* fp, vertex ind) {
 }
 
 inline void removeChild (int i, vector<subcore>& backup) {
+
 	if (backup[i].parent != -1) {
 		int pr = backup[i].parent;
 		for (auto j = 0; j < backup[pr].children.size(); j++)
@@ -172,13 +175,12 @@ void reportSubgraph (string variant, int index, HashMap<int>& orderInFile, vecto
 		skeleton[index].secondarySize = -1;
 	}
 
-	bool highlight = (skeleton[index].children.empty() && skeleton[index].ed >= 0.5) ? true : false;
+	bool highlight = (skeleton[index].children.empty() && skeleton[index].ed >= THRESHOLD) ? true : false;
 	fprintf(fp, "%lld %d %d %d %d %.2lf %d %lld\t", index, skeleton[index].K, skeleton[index].primarySize, skeleton[index].secondarySize, skeleton[index].nEdge,
 					skeleton[index].ed,	skeleton[index].children.empty()?1:0, skeleton[index].parent);
 	if (highlight)
 		fprintf(gp, "id: %lld  K: %d  |PV|: %d  |SV|: %d  |E|: %d  ed: %.2lf  LEAF?: %d  parent id: %lld\t", index, skeleton[index].K, skeleton[index].primarySize, skeleton[index].secondarySize, skeleton[index].nEdge,
 							skeleton[index].ed,	skeleton[index].children.empty()?1:0, skeleton[index].parent);
-
 
 	if (variant == "WING" || variant == "TRUSS")
 		for (size_t i = 0; i < vset.size(); i++) {
@@ -200,6 +202,7 @@ void reportSubgraph (string variant, int index, HashMap<int>& orderInFile, vecto
 }
 
 inline void bfsHierarchy (vector<subcore>& skeleton, stack<int>& scs) {
+
 	rearrange (skeleton);
 	queue<int> bfsorder; // we are doing bfs on the hierarchy tree and push the dequeued nodes to the stack
 	bfsorder.push(skeleton.size() - 1);
@@ -258,12 +261,9 @@ void presentNuclei (string variant, vector<subcore>& skeleton, vector<int>& comp
 }
 
 
-
-
-
 // building the projections
-
 inline void add (vector<wv>& node, double weight, int u) {
+
 	for (int i = 0; i < node.size(); i++) {
 		if (node[i].n == u) {
 			node[i].w += weight;
@@ -280,6 +280,7 @@ inline void add (vector<wv>& node, double weight, int u) {
 bool wgc (wv i, wv j) { return (i.n < j.n); }
 
 void weighted_projection (Graph& left, Graph& right, string filename) {
+
 	Wraph wg;
 	wg.resize (left.size());
 	for (int i = 0; i < right.size(); i++) {

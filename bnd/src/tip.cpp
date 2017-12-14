@@ -1,6 +1,7 @@
 #include "main.h"
 
 inline lol nChoosek(lol n, int k) {
+
 	if (k > n)
 		return 0;
 	if (k * 2 > n)
@@ -18,7 +19,6 @@ inline lol nChoosek(lol n, int k) {
 
 lol countButterflies (Graph& rightGraph, Graph& leftGraph, lol* butterflyCounts, lol* bCount) {
 
-	timestamp t1;
 	lol maxBc = 0;
 	HashMap<lol> dup (0);
 	vertex i = 0;
@@ -145,5 +145,4 @@ void tipDecomposition (Graph& leftGraph, Graph& rightGraph, edge nEdge, vector<v
 
 		print_time (fp, "Total time: ", (p2 - p1) + (c2 - c1) + (b2 - b1) + (d2 - d1));
 	}
-
 }

@@ -31,7 +31,7 @@ using namespace util;
 
 //#define K_VALUES // prints the K values in *_K_VALUES file
 //#define EXPS // for the projection experiments
-#define THRESHOLD 0.5
+#define THRESHOLD 0.0 // subgraph density threshold
 #define VERTEXUPPERBOUND 200 // for TIP variants, compute densities of subgraphs with at most this size, set to INT_MAX to compute all -- takes a lot of time
 #define EDGEUPPERBOUND 3000 // for WING, compute densities of subgraphs with at most this size, set to INT_MAX to compute all -- takes a lot of time
 #define LOWERBOUND 0 // show subgraphs with at least this size
@@ -407,7 +407,6 @@ void wingDecompositionHrc (Graph& leftGraph, Graph& rightGraph, edge nEdge, vect
 void buildHierarchy (vertex cn, vector<llp>& relations, vector<subcore>& skeleton, int* nSubcores, edge nEdge, vertex rightnVtx, vertex leftnVtx = -1);
 void presentNuclei (string variant, vector<subcore>& skeleton, vector<vertex>& component, edge nEdge, helpers& ax, string vfile, Graph& leftGraph, Graph& rightGraph, vector<vertex>* xRight, FILE* fp);
 
-//void unweighted_projection (Graph& left, Graph& right, string filename);
 void weighted_projection (Graph& left, Graph& right, string filename);
 
 void base_kcore (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, lol* maxCore, string vfile, FILE* fp);

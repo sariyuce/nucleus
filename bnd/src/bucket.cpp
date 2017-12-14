@@ -18,6 +18,7 @@ Naive_Bucket::~Naive_Bucket() {
 	if (values != NULL)
 		free (values);
 }
+
 void Naive_Bucket::Free () {
 	free (buckets);
 	buckets = NULL;
@@ -26,6 +27,7 @@ void Naive_Bucket::Free () {
 	free (values);
 	values = NULL;
 }
+
 void Naive_Bucket::Initialize(int max_v, int nb_element) {
 	int i;
 	max_value = max_v;

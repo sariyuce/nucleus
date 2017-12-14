@@ -1,33 +1,37 @@
 - Install sparsehash library to compile the code, https://code.google.com/p/sparsehash/.
+
 - Edit makefile to point to sparsehash library
+
 - 'make' to compile
+
 - './binucleus <graph> <algorithm> <hierarchy?>" to run;
-		 <graph> is the bipartite input graph in matrix market (first line should be |E| |LeftV| |RightV|), SNAP or Chaco format
-		 <algorithm> is LEFT_TIP, RIGHT_TIP or WING. LEFT or RIGHT indicates the set of vertices in the input file
-		 <hierarchy> is YES to compute the hierarchy, subgraphs, and densities; NO computes only K values
+		 <graph> is the bipartite input graph in matrix market (first line should be |E| |LeftV| |RightV|) [1], SNAP [2] or Chaco [3] format. It can be a binary file as well (See [4]).
+		 <algorithm> is LEFT_TIP, RIGHT_TIP or WING. LEFT or RIGHT indicates the position of vertices in the input file; for "45 51" edge in the input file, 45 is a left vertex and 51 is a right vertex.
+		 <hierarchy> is YES or NO. YES computes the hierarchy, subgraphs, and densities. NO computes only K values.
 
 - When <hierarchy> is YES, there are 2 output files
-		- <graph>_<algorithm>_Hierarchy: Runtimes, statistics, and significantly dense subgraphs (leaf and >THRESHOLD density, which is set to 0.5 in main.h)
+		- <graph>_<algorithm>_Hierarchy: Runtimes, statistics, and significantly dense subgraphs, i.e., subgraph is a leaf and its density is at least THRESHOLD value (which is set to 0.0 in main.h)
 		- <graph>_<algorithm>_NUCLEI: Each line is a subgraph, first 8 numbers are: subgraph id, K value, |LeftV|, |RightV|, |E|,
 		 edge density, 1 (0) if the nucleus is (not) a leaf in the hierarchy, and parent subgraph id. Following numbers are vertices
-		 (if algorithm is LEFT_TIP or RIGHT_TIP), or edges (if it is WING). Upper limits for *TIPs is 200 vertices (VERTEXUPPERBOUND in main.h) and
-		 for WING it's 3000 edges (EDGEUPPERBOUND in main.h)
+		 (if algorithm is LEFT_TIP or RIGHT_TIP), or edges (if it is WING). Upper limits for *TIPs is 200 vertices (VERTEXUPPERBOUND in main.h) and for WING it's 3000 edges (EDGEUPPERBOUND in main.h)
 
-- In a *_RIGHT_TIP_Hierarchy file; "id: 7  K: 52  |PV|: 5  |SV|: 18  |E|: 52  ed: 0.58  LEAF?: 1  parent id: 6	5 6 7 8 9 -1"
-means the subgraph with id 7 has K value of 52, and it has 5 primary (right) vertices, 18 secondary (left) vertices, 52 edges with 0.58 edge density. It's a leaf in the hierarchy
-and its parent is the subgraph with the id of 6. Following five numbers are the vertex ids in the primary set.
+- In a *_RIGHT_TIP_Hierarchy file, consider the following line;
+"id: 7  K: 52  |PV|: 5  |SV|: 18  |E|: 52  ed: 0.58  LEAF?: 1  parent id: 6	5 6 7 8 9 -1"
+It means the subgraph with id 7 has K value of 52, and it has 5 primary (right) vertices, 18 secondary (left) vertices, 52 edges with 0.58 edge density (52/(5*18)). The subgraph is a leaf in the hierarchy and its parent is the subgraph with the id of 6. Following five numbers are the vertex ids in the primary set.
 
-- In a *_WING_Hierarchy file; "id: 8  K: 12  |PV|: 4  |SV|: 5  |E|: 20  ed: 1.00  LEAF?: 1  parent id: 7       3 1  3 2  3 3  3 4  3 6  5 1  5 2  5 3  5 4  5 6  6 1  6 2  6 3  6 4  6 6  8 1  8 2  8 3  8 4  8 6  -1"
-means the subgraph with id 8 has K value of 12, and it has 4 primary (side is mentioned at the top of this file) vertices, 5 secondary vertices, 20 edges with 1.00 edge density. 
-It's a leaf in the hierarchy and its parent is the subgraph with the id of 7. Following 20 pairs of numbers are the edges; first id is the primary vertex, second is the secondary vertex.
+- In a *_WING_Hierarchy file, consider the following line;
+"id: 8  K: 11 |PV|: 4  |SV|: 5  |E|: 19  ed: 0.95  LEAF?: 0  parent id: 7       3 2  3 3  3 4  3 6  5 1  5 2  5 3  5 4  5 6  6 1  6 2  6 3  6 4  6 6  8 1  8 2  8 3  8 4  8 6  -1"
+It means the subgraph with id 8 has K value of 11, and it has 4 primary (selected side is mentioned at the top of this *_WING_Hierarchy file) vertices, 5 secondary vertices, 19 edges with 0.95 edge density. The subgraph is a NOT leaf in the hierarchy and its parent is the subgraph with the id of 7. Following 19 pairs of numbers are the edges; first id is the primary vertex, second is the secondary vertex.
 
 - Example: "./binucleus southern_woman.mtx WING YES" does wing decomposition and hierarchy construction
-
+		
+- Extra tips:
+	- To get the K values of vertices/edges, compile with 'K_VALUES=yes make'
+	
 - Please cite this paper if you use the code:
-
     "Peeling Bipartite Networks for Dense Subgraph Discovery"
      A. Erdem Sariyuce, Ali Pinar
-     arXiv:1611.02756
+     International Conference on Web Search and Data Mining (WSDM), 2018
 
 - Contact a.erdemsariyuce@gmail.com for any questions/comments
 
@@ -35,6 +39,7 @@ It's a leaf in the hierarchy and its parent is the subgraph with the id of 7. Fo
 - If you're NOT looking for the projection experiments, ignore the rest.
 
 - 'EXPS=yes make' to compile for the projection experiments
+
 - Example:	Running truss decomposition on left projection of the input bipartite graph southern_woman.mtx:
 		- ./binucleus southern_woman.mtx BUILD_LEFT // constructs the weighted (and unweighted) projection 'southern_woman.mtx_BUILD_LEFT_W_projection.bin'
   		- ./binucleus southern_woman.mtx_BUILD_LEFT_W_projection.bin RUN_TRUSS YES // runs truss decomposition on the projection
@@ -45,6 +50,35 @@ It's a leaf in the hierarchy and its parent is the subgraph with the id of 7. Fo
   		- ./binucleus southern_woman.mtx_BUILD_RIGHT_W_projection.bin RUN_WEIGHTED_CORE YES
   		- ./binucleus southern_woman.mtx MEASURE_CORE_RIGHT southern_woman.mtx_BUILD_RIGHT_W_projection.bin_RUN_WEIGHTED_CORE_NUCLEI 
 
+
+[1] Matrix market format for a 2,3 biclique:
+
+6 2 3
+0 0
+0 1
+0 2
+1 0
+1 1
+1 2
+
+[2] SNAP format for a 2,3 biclique:
+
+0 0
+0 1
+0 2
+1 0
+1 1
+1 2
+
+[3] Chaco format for a 2,3 biclique:
+
+% n-th line is a neighbor list of the left vertex with id n-2
+6 2 3
+0 1 2
+0 1 2
+
+
+[4] Activate WRITE_BINARY macro in graph.cpp to write binary graph files -- recommended for large graphs
 
 
 
