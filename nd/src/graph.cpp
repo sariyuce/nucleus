@@ -1,7 +1,7 @@
 #include "main.h"
 
 #define MAXLINE 1000000
-//#define WRITE_BINARY
+#define WRITE_BINARY
 
 typedef struct asdf {
 	int f;
@@ -242,8 +242,11 @@ void readGraph (char *filename, vector<vector<VtxType>>& graph, EdgeType* nEdge)
 		readMM<VtxType, EdgeType> (filename, graph, nEdge);
 
 #ifdef WRITE_BINARY
-	if (ext != ".bin")
-		writeBipartiteBinary (filename, nVtx, *nEdge, graph);
+	if (filetype != ".bin") {
+		vertex nVtx = graph.size();
+		writeBinary (filename, nVtx, *nEdge, graph);
+		printf ("Binary graph is written\n");
+	}
 #endif
 
 	return;

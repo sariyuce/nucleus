@@ -27,6 +27,7 @@ It means the subgraph with id 8 has K value of 11, and it has 4 primary (selecte
 - To get the K values of vertices/edges, compile with 'K_VALUES=yes make'
 	
 - Please cite this paper if you use the code:
+
     "Peeling Bipartite Networks for Dense Subgraph Discovery"
      A. Erdem Sariyuce, Ali Pinar
      International Conference on Web Search and Data Mining (WSDM), 2018

@@ -1,7 +1,7 @@
 #include "main.h"
 
 #define MAXLINE 1000000
-#define WRITE_BINARY
+//#define WRITE_BINARY
 
 typedef struct asdf {
 	int f;
@@ -272,8 +272,6 @@ void readBipartiteChaco (char *filename, EdgeType* nEdge, vector<vector<VtxType>
 		hashUniquify (rightGraph[i]);
 
 	fclose (fp);
-
-	//	writeBipartiteBinary (filename, nEdge, leftGraph, rightGraph);
 }
 
 template <typename VtxType, typename EdgeType>
@@ -310,8 +308,6 @@ void readBipartiteMM (char *filename, EdgeType* nEdge, vector<vector<VtxType>>& 
 		hashUniquify (rightGraph[i]);
 
 	fclose (fp);
-
-	//	writeBipartiteBinary (filename, nEdge, leftGraph, rightGraph);
 }
 
 template <typename VtxType, typename EdgeType>
@@ -422,8 +418,10 @@ void readBipartite (char *filename, EdgeType* nEdge, vector<vector<VtxType>>& le
 
 
 #ifdef WRITE_BINARY
-	if (ext != ".bin")
+	if (ext != ".bin") {
 		writeBipartiteBinary (filename, *nEdge, leftGraph, rightGraph);
+		printf ("Binary bipartite graph is written\n");
+	}
 #endif
 
 	printf ("|Left|: %d		|Right|: %d		|Edge|: %d\n", leftGraph.size(), rightGraph.size(), *nEdge);

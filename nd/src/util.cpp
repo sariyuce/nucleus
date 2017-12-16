@@ -161,7 +161,7 @@ void reportSubgraph (int variant, vertex index, HashMap<vertex>& orderInFile, ve
 	bool highlight = (skeleton[index].children.empty() && skeleton[index].ed >= THRESHOLD && skeleton[index].size >= LOWERBOUND) ? true : false;
 	if (highlight)
 		fprintf(gp, "id: %lld  K: %d  |V|: %d  |E|: %d  ed: %.2lf  LEAF?: %d  parent id: %lld\t", index, skeleton[index].K, skeleton[index].size, skeleton[index].nEdge,
-							skeleton[index].ed,	skeleton[index].children.empty()?1:0, skeleton[index].parent);
+				skeleton[index].ed,	skeleton[index].children.empty()?1:0, skeleton[index].parent);
 
 	fprintf(fp, "%d %d %d %d %lf %d %d\t", index, skeleton[index].K, skeleton[index].size, skeleton[index].nEdge, skeleton[index].ed, skeleton[index].children.empty()?1:0, skeleton[index].parent);
 	for (size_t i = 0; i < vset.size(); i++) {

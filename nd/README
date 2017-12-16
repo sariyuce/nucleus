@@ -35,9 +35,6 @@ It means the subgraph with id 17 has K value of 2, and it has 7 vertices, 18 edg
 - Contact a.erdemsariyuce@gmail.com for any questions/comments
     
 
-    
-    
-
 [1] Matrix market has ".txt" or ".mtx" suffix. Its format for a 4 clique:
 % First line is |V|, |E|
 4 6

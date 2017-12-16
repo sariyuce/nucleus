@@ -64,9 +64,9 @@ void base_ktruss (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, v
 	lol tric;
 #ifndef LOAD_TRIS
 	// Compute
- 	tric = countTriangles (graph, orientedGraph, TC);
+	tric = countTriangles (graph, orientedGraph, TC);
 #else
- 	// Load
+	// Load
 	FILE* aa = fopen ("tris", "r");
 	int a, b, t;
 	tric = 0;

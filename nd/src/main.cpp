@@ -49,7 +49,7 @@ int main (int argc, char *argv[]) {
 		base_k14 (graph, hierarchy, nEdge/2, K, &maxK, vfile, fp);
 	else if (nd == "23") {
 		base_ktruss (graph, hierarchy, nEdge/2, K, &maxK, vfile, fp);
-//		base_ktruss_storeTriangles (graph, hierarchy, nEdge/2, K, &maxK, vfile, fp);
+		//		base_ktruss_storeTriangles (graph, hierarchy, nEdge/2, K, &maxK, vfile, fp);
 	}
 	else if (nd == "24")
 		base_k24 (graph, hierarchy, nEdge/2, K, &maxK, vfile, fp);

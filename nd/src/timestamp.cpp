@@ -143,42 +143,42 @@ public:
 	}
 
 	const timestamp& operator += (const timestamp& b)
-    		{
+    				{
 		this->seconds += b.seconds;
 		this->microseconds += b.microseconds;
 
 		this->fixme();
 		return *this;
-    		}
+    				}
 
 	const timestamp& operator -= (const timestamp& b)
-    		{
+    				{
 		this->seconds -= b.seconds;
 		this->microseconds -= b.microseconds;
 
 		this->fixme();
 		return *this;
-    		}
+    				}
 
 	friend std::ostream& ::operator<< (std::ostream&, const util::timestamp&);
 
 	timestamp operator/ (const int i) const
-    		{
+    				{
 		timestamp t (this->seconds / i, (1000000*(this->seconds%i)+this->microseconds)/i);
 
 		t.fixme();
 		return t;
-    		}
+    				}
 
 	const timestamp& operator/= (const int i)
-    		{
+    				{
 		//do not invert the following two lines!
 		this->microseconds = (1000000*(this->seconds%i)+this->microseconds)/i;
 		this->seconds = this->seconds/i;
 
 		this->fixme(); //I don't think that fixem() is necessary
 		return *this;
-    		}
+    				}
 
 	void print ()
 	{
