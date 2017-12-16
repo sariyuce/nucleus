@@ -42,7 +42,7 @@ inline bool pullChildrenSets (string variant, FILE* fp, vector<vertex>& children
 
 	char c;
 	for (auto eda : children) {
-		if (skeleton[eda].nEdge == -1)
+		if (skeleton[eda].primarySize == -1)
 			return false;
 
 		if (orderInFile.hasDefaultValue (eda)) {
@@ -148,6 +148,14 @@ void reportSubgraph (string variant, vertex index, HashMap<vertex>& orderInFile,
 		if (component[i] == index)
 			vset.push_back (i);
 	bool pass = true;
+	if (variant == "TRUSS") {
+		vector<int> newvset;
+		for (auto v : vset) {
+			newvset.push_back (get<0>((*ax.el)[v]));
+			newvset.push_back (get<1>((*ax.el)[v]));
+		}
+		vset = newvset;
+	}
 	bool edgeList = (variant == "WING");
 	pass = pullChildrenSets (variant, fp, skeleton[index].children, orderInFile, vset, skeleton, rightGraph, edgeList, xRight);
 
@@ -167,7 +175,7 @@ void reportSubgraph (string variant, vertex index, HashMap<vertex>& orderInFile,
 	else if (variant == "WING")
 		wingDensity (vset, *(ax.el), &(skeleton[index]));
 	else {
-		skeleton[index].nEdge = -1;
+		skeleton[index].nEdge = -1; // bug
 		skeleton[index].ed = -1;
 		skeleton[index].primarySize = vset.size();
 		skeleton[index].secondarySize = -1;
@@ -182,7 +190,7 @@ void reportSubgraph (string variant, vertex index, HashMap<vertex>& orderInFile,
 					skeleton[index].ed,	skeleton[index].children.empty()?1:0, skeleton[index].parent);
 
 
-	if (variant == "WING" || variant == "TRUSS")
+	if (variant == "WING")
 		for (size_t i = 0; i < vset.size(); i++) {
 			fprintf(fp, "%d %d  ", get<0>((*ax.el)[vset[i]]), get<1>((*ax.el)[vset[i]]));
 			if (highlight)

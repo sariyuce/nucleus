@@ -1,7 +1,7 @@
 #include "main.h"
 
 #define MAXLINE 1000000
-//#define WRITE_BINARY
+#define WRITE_BINARY
 
 typedef struct asdf {
 	int f;
@@ -114,7 +114,6 @@ void readWeightedBinary(char *filename, Wraph& wraph, edge* nEdge) {
 	in.read((char*)&nVtx, sizeof(vertex));
 	in.read((char*)nEdge, sizeof(edge));
 
-	printf ("nVtx: %d   nEdge:%d\n", nVtx, *nEdge);
 	wraph.resize (nVtx);
 	edge *pxadj = (edge*) malloc (sizeof(edge) * nVtx);
 	really_read(in, (char*)pxadj, sizeof(edge) * nVtx);
@@ -141,26 +140,26 @@ void readBipartiteBinary(char *filename, vector<vector<VtxType>>& leftGraph, vec
 	in.read((char *)&edgesize, sizeof(int));
 
 	if (!in) {
-			cerr<<"IOError"<<std::endl;
-			return;
+		cerr<<"IOError"<<std::endl;
+		return;
 	}
 
 	if (vtxsize != sizeof(VtxType)) {
-			cerr<<"Incompatible VertexSize."<<endl;
-			return;
+		cerr<<"Incompatible VertexSize."<<endl;
+		return;
 	}
 
 	if (edgesize != sizeof(EdgeType)) {
-			cerr<<"Incompatible EdgeSize."<<endl;
-			return;
+		cerr<<"Incompatible EdgeSize."<<endl;
+		return;
 	}
 
 	//reading should be fine from now on.
 	vertex leftVtx, rightVtx;
 	edge nn;
 	really_read (in, (char *)&leftVtx, sizeof(VtxType));
-	really_read(in, (char*)&rightVtx, sizeof(VtxType));
-	really_read(in, (char*)&nn, sizeof(EdgeType));
+	really_read (in, (char*)&rightVtx, sizeof(VtxType));
+	really_read (in, (char*)&nn, sizeof(EdgeType));
 	*nEdge = nn;
 
 	leftGraph.resize (leftVtx);
@@ -175,7 +174,7 @@ void readBipartiteBinary(char *filename, vector<vector<VtxType>>& leftGraph, vec
 
 	rightGraph.resize (rightVtx);
 	EdgeType *pxadj2 = (EdgeType*) malloc (sizeof(EdgeType) * rightVtx);
-	really_read(in, (char*)pxadj2, sizeof(EdgeType) * rightVtx);
+	really_read (in, (char*)pxadj2, sizeof(EdgeType) * rightVtx);
 	for (vertex i = 0; i < rightVtx; i++) {
 		rightGraph[i].resize (pxadj2[i]);
 		really_read (in, (char*)&(rightGraph[i][0]), sizeof(VtxType) * pxadj2[i]);
@@ -198,6 +197,7 @@ void writeBipartiteBinary (char* filename, EdgeType nEdge, vector<vector<VtxType
 	FILE* filep = fopen (fl.c_str(), "w");
 	int vtxt = sizeof (VtxType);
 	int edget = sizeof (EdgeType);
+
 	fwrite (&vtxt, sizeof(int), 1, filep);
 	fwrite (&edget, sizeof(int), 1, filep);
 
@@ -377,7 +377,7 @@ void readBipartite (char *filename, EdgeType* nEdge, vector<vector<VtxType>>& le
 	string ext = st.substr(idx);
 
 	if (ext == ".bin") // Binary format
-		readBipartiteBinary<VtxType, VtxType> (filename, leftGraph, rightGraph, nEdge);
+		readBipartiteBinary<VtxType, EdgeType> (filename, leftGraph, rightGraph, nEdge);
 	else if (ext == ".graph") // Chaco format
 		readBipartiteChaco<VtxType> (filename, nEdge, leftGraph, rightGraph);
 	else if (ext == ".amazon") { // For the user product data in Amazon ratings, each line has user id and product id (http://jmcauley.ucsd.edu/data/amazon/)
@@ -423,7 +423,7 @@ void readBipartite (char *filename, EdgeType* nEdge, vector<vector<VtxType>>& le
 
 #ifdef WRITE_BINARY
 	if (ext != ".bin")
-		writeBipartiteBinary (filename, nEdge, leftGraph, rightGraph);
+		writeBipartiteBinary (filename, *nEdge, leftGraph, rightGraph);
 #endif
 
 	printf ("|Left|: %d		|Right|: %d		|Edge|: %d\n", leftGraph.size(), rightGraph.size(), *nEdge);

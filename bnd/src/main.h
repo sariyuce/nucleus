@@ -171,7 +171,6 @@ inline void findRepresentative(vertex* child, vector<subcore>& skeleton) {
 	*child = u;
 }
 
-
 inline void neighborsOfNeighbors(vector<vertex>& vset, Graph& graph, vector<vertex>& allNeighbors, edge* nEdge) {
 	for (vertex i = 0; i < vset.size(); i++) {
 		vertex u = vset[i];
@@ -180,7 +179,6 @@ inline void neighborsOfNeighbors(vector<vertex>& vset, Graph& graph, vector<vert
 	}
 	hashUniquify(allNeighbors);
 }
-
 
 inline void intersection (vector<vertex>& a, vector<vertex>& b, vector<vertex>& c) {
 	size_t i = 0, j = 0;
@@ -224,46 +222,6 @@ inline void ff_vertex_ind_density (string file, Graph& graph) {
         fprintf (tp, " %d %d %d %lf\n", vs.size(), neigsOfvs.size(), nedge, vs.size() == 0 ? -1.0 : ((double) nedge / (vs.size() * neigsOfvs.size())));
     }
 
-    fclose (fp);
-    fclose (tp);
-    string paste = "paste " + file + " " + temp + " > " + file + temp;
-    system (paste.c_str());
-    string mv = "mv " + file + temp + " " + file;
-    system (mv.c_str());
-    string rm = "rm " + temp;
-    system (rm.c_str());
-}
-
-inline void ff_edge_ind_density (string file, Graph& graph) {
-	FILE* fp = fopen (file.c_str(), "r");
-	string temp = file + "_temp";
-	FILE* tp = fopen (temp.c_str(), "w");
-
-    int u, v;
-    int ln = 0;
-    double db;
-
-    while (1) {
-    	fscanf (fp, "%d %d %d %d %d %lf %d %d", &u, &u, &u, &u, &u, &db, &u, &u);
-        vector<int> vs;
-        bool exit_flag = false;
-        while (1) {
-            if (fscanf (fp, "%d", &u) == EOF)
-                exit_flag = true;
-            if (u == -1)
-                break;
-            fscanf (fp, "%d", &v);
-            vs.push_back(u);
-            vs.push_back(v);
-        }
-        if (exit_flag)
-        	break;
-        hashUniquify (vs);
-        vector<vertex> neigsOfvs;
-        int nedge = 0;
-        neighborsOfNeighbors (vs, graph, neigsOfvs, &nedge);
-        fprintf (tp, " %d %d %d %lf\n", vs.size(), neigsOfvs.size(), nedge, vs.size() == 0 ? -1.0 : ((double) nedge / (vs.size() * neigsOfvs.size())));
-    }
     fclose (fp);
     fclose (tp);
     string paste = "paste " + file + " " + temp + " > " + file + temp;

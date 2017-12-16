@@ -36,17 +36,19 @@ It means the subgraph with id 8 has K value of 11, and it has 4 primary (selecte
 
 - If you're NOT looking for the projection experiments, ignore the rest.
 
-- 'EXPS=yes make' to compile for the projection experiments
+- 'EXPS=yes make -e' to compile for the projection experiments
+
+- RUN_CORE, RUN_WEIGHTED_CORE, and RUN_TRUSS options are available to run on projected graphs
 
 - Example:	Running truss decomposition on left projection of the input bipartite graph southern_woman.mtx:
 		- ./binucleus southern_woman.mtx BUILD_LEFT // constructs the weighted (and unweighted) projection 'southern_woman.mtx_BUILD_LEFT_W_projection.bin'
   		- ./binucleus southern_woman.mtx_BUILD_LEFT_W_projection.bin RUN_TRUSS YES // runs truss decomposition on the projection
-  		- ./binucleus southern_woman.mtx MEASURE_TRUSS_LEFT southern_woman.mtx_BUILD_LEFT_W_projection.bin_RUN_CORE_NUCLEI // finds the bipartite subgraphs induced by the vertices in truss subgraphs and append each line in *NUCLEI file by the |PV|, |SV|, |E| and edge density. Truss subgraphs are define on left vertices here, and the bipartite subgraph induce on those vertices are computed in this step. 
+  		- ./binucleus southern_woman.mtx MEASURE_LEFT southern_woman.mtx_BUILD_LEFT_W_projection.bin_RUN_CORE_NUCLEI // finds the bipartite subgraphs induced by the vertices in truss subgraphs and append each line in *NUCLEI file by the |PV|, |SV|, |E| and edge density. Truss subgraphs are defined on left vertices here, and the bipartite subgraph induced on those vertices is computed in this step. 
 
 - Example: Running weighted core decomposition on right projection of the input bipartite graph southern_woman.mtx:
 		- ./binucleus southern_woman.mtx BUILD_RIGHT
   		- ./binucleus southern_woman.mtx_BUILD_RIGHT_W_projection.bin RUN_WEIGHTED_CORE YES
-  		- ./binucleus southern_woman.mtx MEASURE_CORE_RIGHT southern_woman.mtx_BUILD_RIGHT_W_projection.bin_RUN_WEIGHTED_CORE_NUCLEI 
+  		- ./binucleus southern_woman.mtx MEASURE_RIGHT southern_woman.mtx_BUILD_RIGHT_W_projection.bin_RUN_WEIGHTED_CORE_NUCLEI 
 
 
 [1] Matrix market has ".txt" or ".mtx" suffix. Its format for a 2,3 biclique:
