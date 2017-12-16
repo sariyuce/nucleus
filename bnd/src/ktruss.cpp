@@ -52,7 +52,7 @@ void base_ktruss (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, l
 		TC[i].resize (orientedGraph[i].size(), 0);
 
 	//	Triangle counting for each edge
- 	lol tric = countTriangles (graph, orientedGraph, TC);
+	lol tric = countTriangles (graph, orientedGraph, TC);
 	tric /= 3;
 	timestamp tcEnd;
 	print_time (fp, "Triangle counting: ", tcEnd - peelingStart);

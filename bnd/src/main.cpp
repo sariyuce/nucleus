@@ -12,9 +12,9 @@ int main(int argc, char *argv[]) {
 		}
 		else {
 			fprintf (stderr, "usage: %s "
-				"\n <filename>"
-				"\n <nucleus type: RUN_CORE, RUN_WEIGHTED_CORE, RUN_TRUSS>"
-				"\n <hierarchy?: YES or NO>\n", argv[0]);
+					"\n <filename>"
+					"\n <nucleus type: RUN_CORE, RUN_WEIGHTED_CORE, RUN_TRUSS>"
+					"\n <hierarchy?: YES or NO>\n", argv[0]);
 			exit(1);
 		}
 	}
@@ -123,10 +123,10 @@ int main(int argc, char *argv[]) {
 		base_ktruss (gr, hierarchy, nEdge, K, &maxK, vfile, fp); // run k-truss on the given projection graph
 	else if (nd == "RUN_WEIGHTED_CORE")
 		weighted_base_kcore (wg, hierarchy, nEdge, K, &maxK, vfile, fp); // run fractional core on the given weighted projection graph
-    else if (nd == "MEASURE_RIGHT") {
-    		string density_file (argv[3]);
+	else if (nd == "MEASURE_RIGHT") {
+		string density_file (argv[3]);
 		ff_vertex_ind_density (density_file, rightGraph); // database_conf
-    }
+	}
 	else if (nd == "MEASURE_LEFT") {
 		string density_file (argv[3]);
 		ff_vertex_ind_density (density_file, leftGraph); // condmat

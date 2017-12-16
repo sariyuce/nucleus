@@ -185,9 +185,9 @@ void reportSubgraph (string variant, vertex index, HashMap<vertex>& orderInFile,
 			skeleton[index].primarySize >= LOWERBOUND && skeleton[index].secondarySize >= LOWERBOUND) ? true : false;
 	if (highlight)
 		fprintf(gp, "id: %lld  K: %d  |PV|: %d  |SV|: %d  |E|: %d  ed: %.2lf  LEAF?: %d  parent id: %lld\t", index, skeleton[index].K, skeleton[index].primarySize, skeleton[index].secondarySize, skeleton[index].nEdge,
-							skeleton[index].ed,	skeleton[index].children.empty()?1:0, skeleton[index].parent);
+				skeleton[index].ed,	skeleton[index].children.empty()?1:0, skeleton[index].parent);
 	fprintf(fp, "%lld %d %d %d %d %.2lf %d %lld\t", index, skeleton[index].K, skeleton[index].primarySize, skeleton[index].secondarySize, skeleton[index].nEdge,
-					skeleton[index].ed,	skeleton[index].children.empty()?1:0, skeleton[index].parent);
+			skeleton[index].ed,	skeleton[index].children.empty()?1:0, skeleton[index].parent);
 
 
 	if (variant == "WING")
@@ -312,6 +312,6 @@ void weighted_projection (Graph& left, Graph& right, string filename) {
 	nedge /= 2;
 
 	string fn = filename + "_W_projection";
-    writeWeightedRegularBinary (fn, wg.size(), nedge, wg);
+	writeWeightedRegularBinary (fn, wg.size(), nedge, wg);
 }
 

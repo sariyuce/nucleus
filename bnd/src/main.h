@@ -44,8 +44,8 @@ typedef unordered_multimap<int, int> mmap;
 typedef pair<vertex, vertex> vp;
 typedef vector<vector<vertex> > Graph;
 struct wv {
-    int n;
-    double w;
+	int n;
+	double w;
 };
 typedef vector<vector<wv>> Wraph;
 typedef pair<int, int> llp;
@@ -83,22 +83,22 @@ struct helpers {
 template <class T>
 inline void hash_combine(std::size_t & seed, const T & v)
 {
-    std::hash<T> hasher;
-    seed ^= hasher(v) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+	std::hash<T> hasher;
+	seed ^= hasher(v) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
 }
 
 namespace std
 {
-    template<typename S, typename T> struct hash<pair<S, T>>
-    {
-        inline size_t operator()(const pair<S, T> & v) const
-        {
-            size_t seed = 0;
-            ::hash_combine(seed, v.first);
-            ::hash_combine(seed, v.second);
-            return seed;
-        }
-    };
+template<typename S, typename T> struct hash<pair<S, T>>
+{
+	inline size_t operator()(const pair<S, T> & v) const
+	{
+		size_t seed = 0;
+		::hash_combine(seed, v.first);
+		::hash_combine(seed, v.second);
+		return seed;
+	}
+};
 }
 
 inline bool less_than (vertex u, vertex v, Graph& graph) {
@@ -199,37 +199,37 @@ inline void ff_vertex_ind_density (string file, Graph& graph) {
 	FILE* fp = fopen (file.c_str(), "r");
 	string temp = file + "_temp";
 	FILE* tp = fopen (temp.c_str(), "w");
-    int t;
-    int ln = 0;
-    double db;
+	int t;
+	int ln = 0;
+	double db;
 
-    while (1) {
-        fscanf (fp, "%d %d %d %d %d %lf %d %d", &t, &t, &t, &t, &t, &db, &t, &t);
-        vector<int> vs;
-        bool exit_flag = false;
-        while (1) {
-            if (fscanf (fp, "%d", &t) == EOF)
-                exit_flag = true;
-            if (t == -1)
-                break;
-            vs.push_back(t);
-        }
-        if (exit_flag)
-        	break;
-        vector<vertex> neigsOfvs;
-        int nedge = 0;
-        neighborsOfNeighbors (vs, graph, neigsOfvs, &nedge);
-        fprintf (tp, " %d %d %d %lf\n", vs.size(), neigsOfvs.size(), nedge, vs.size() == 0 ? -1.0 : ((double) nedge / (vs.size() * neigsOfvs.size())));
-    }
+	while (1) {
+		fscanf (fp, "%d %d %d %d %d %lf %d %d", &t, &t, &t, &t, &t, &db, &t, &t);
+		vector<int> vs;
+		bool exit_flag = false;
+		while (1) {
+			if (fscanf (fp, "%d", &t) == EOF)
+				exit_flag = true;
+			if (t == -1)
+				break;
+			vs.push_back(t);
+		}
+		if (exit_flag)
+			break;
+		vector<vertex> neigsOfvs;
+		int nedge = 0;
+		neighborsOfNeighbors (vs, graph, neigsOfvs, &nedge);
+		fprintf (tp, " %d %d %d %lf\n", vs.size(), neigsOfvs.size(), nedge, vs.size() == 0 ? -1.0 : ((double) nedge / (vs.size() * neigsOfvs.size())));
+	}
 
-    fclose (fp);
-    fclose (tp);
-    string paste = "paste " + file + " " + temp + " > " + file + temp;
-    system (paste.c_str());
-    string mv = "mv " + file + temp + " " + file;
-    system (mv.c_str());
-    string rm = "rm " + temp;
-    system (rm.c_str());
+	fclose (fp);
+	fclose (tp);
+	string paste = "paste " + file + " " + temp + " > " + file + temp;
+	system (paste.c_str());
+	string mv = "mv " + file + temp + " " + file;
+	system (mv.c_str());
+	string rm = "rm " + temp;
+	system (rm.c_str());
 }
 
 inline bool incrementTCIfConnected (Graph& graph, Graph& orientedGraph, Graph& TC, vertex u, vertex v) {

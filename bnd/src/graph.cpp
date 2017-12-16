@@ -9,11 +9,11 @@ typedef struct asdf {
 } pprr;
 
 int pcmp(const void *v1, const void *v2) {
-        long long diff = (((pprr *)v1)->f - ((pprr *)v2)->f);
-        if (diff != 0)
-                return diff;
-        else
-                return (((pprr *)v1)->s - ((pprr *)v2)->s);
+	long long diff = (((pprr *)v1)->f - ((pprr *)v2)->f);
+	if (diff != 0)
+		return diff;
+	else
+		return (((pprr *)v1)->s - ((pprr *)v2)->s);
 }
 
 static int really_read(std::istream& is, char* buf, size_t global_size) {
@@ -273,7 +273,7 @@ void readBipartiteChaco (char *filename, EdgeType* nEdge, vector<vector<VtxType>
 
 	fclose (fp);
 
-//	writeBipartiteBinary (filename, nEdge, leftGraph, rightGraph);
+	//	writeBipartiteBinary (filename, nEdge, leftGraph, rightGraph);
 }
 
 template <typename VtxType, typename EdgeType>
@@ -311,7 +311,7 @@ void readBipartiteMM (char *filename, EdgeType* nEdge, vector<vector<VtxType>>& 
 
 	fclose (fp);
 
-//	writeBipartiteBinary (filename, nEdge, leftGraph, rightGraph);
+	//	writeBipartiteBinary (filename, nEdge, leftGraph, rightGraph);
 }
 
 template <typename VtxType, typename EdgeType>
