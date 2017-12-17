@@ -106,7 +106,7 @@ void readChaco (char *filename, Graph& graph, EdgeType* nEdge) {
 	// skip comments
 	do {
 		fgets(line, MAXLINE, matfp);
-	} while (line[0] == '%');
+	} while (line[0] == '%' || line[0] == '#');
 
 	VtxType nVtx, neig;
 	string s = line;
@@ -138,7 +138,7 @@ void readMM (char *filename, Graph& graph, EdgeType* nEdge) {
 	// skip comments
 	do {
 		fgets(line, 1000000, matfp);
-	} while (line[0] == '%');
+	} while (line[0] == '%' || line[0] == '#');
 
 	VtxType nVtx;
 	stringstream ss (line);
@@ -196,7 +196,7 @@ void readOut (char *filename, Graph& graph, EdgeType* nEdge) {
 	// skip comments
 	do {
 		fgets(line, 1000000, matfp);
-	} while (line[0] == '%');
+	} while (line[0] == '%' || line[0] == '#');
 
 	VtxType u, v;
 	string dum, sum;
@@ -229,20 +229,22 @@ void readOut (char *filename, Graph& graph, EdgeType* nEdge) {
 template <typename VtxType, typename EdgeType>
 void readGraph (char *filename, vector<vector<VtxType>>& graph, EdgeType* nEdge) {
 
-	string tmp (filename);
-	string filetype = tmp.substr (tmp.find_last_of("."));
+	string st (filename);
+	string gname = st.substr (st.find_last_of("/") + 1);
+	int idx = gname.find_last_of(".");
+	string ext = gname.substr(idx);
 
-	if (filetype == ".bin")
+	if (ext == ".bin")
 		readBinary<VtxType, EdgeType> (filename, graph, nEdge);
-	else if (filetype == ".graph")
+	else if (ext == ".graph")
 		readChaco<VtxType, EdgeType> (filename, graph, nEdge);
-	else if (tmp.find("out") == 0)
+	else if (gname.find("out") == 0)
 		readOut<VtxType, EdgeType> (filename, graph, nEdge);
 	else // .mtx or .txt
 		readMM<VtxType, EdgeType> (filename, graph, nEdge);
 
 #ifdef WRITE_BINARY
-	if (filetype != ".bin") {
+	if (ext != ".bin") {
 		vertex nVtx = graph.size();
 		writeBinary (filename, nVtx, *nEdge, graph);
 		printf ("Binary graph is written\n");

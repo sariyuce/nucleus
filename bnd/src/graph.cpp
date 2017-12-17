@@ -369,8 +369,9 @@ template <typename VtxType, typename EdgeType>
 void readBipartite (char *filename, EdgeType* nEdge, vector<vector<VtxType>>& leftGraph, vector<vector<VtxType>>& rightGraph) {
 
 	string st (filename);
-	int idx = st.find_last_of(".");
-	string ext = st.substr(idx);
+	string gname = st.substr (st.find_last_of("/") + 1);
+	int idx = gname.find_last_of(".");
+	string ext = gname.substr(idx);
 
 	if (ext == ".bin") // Binary format
 		readBipartiteBinary<VtxType, EdgeType> (filename, leftGraph, rightGraph, nEdge);
@@ -410,7 +411,7 @@ void readBipartite (char *filename, EdgeType* nEdge, vector<vector<VtxType>>& le
 			fprintf (pp, "%s %d\n", (it->first).c_str(), it->second);
 		fclose (pp);
 	}
-	else if (st.find("out") == 0) { // SNAP format
+	else if (gname.find("out") == 0) { // SNAP format
 		readBipartiteOut<VtxType> (filename, nEdge, leftGraph, rightGraph);
 	}
 	else // MatrixMarket format
