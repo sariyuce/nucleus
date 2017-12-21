@@ -60,7 +60,7 @@ int main (int argc, char *argv[]) {
 	string kfile = vfile + "_K_values";
 	FILE* kf = fopen (kfile.c_str(), "w");
 	for (vertex i = 0; i < K.size(); i++)
-		fprintf (kf, "K[%d]: %lld\n", i, K[i]);
+		fprintf (kf, "%lld\n", K[i]);
 	fclose (kf);
 #endif
 
