@@ -2,10 +2,6 @@
 
 // UTILITY FUNCTIONS, MIGHT BE NEEDED
 
-bool decOn1 (pair<int, int> i, pair<int, int> j) {
-	return (i.second > j.second);
-}
-
 inline void print_Ks (int nVtx, volatile vertex* T, const char* vfile, int H = -1) {
 	string st (vfile);
 	if (H == -1)
@@ -18,37 +14,6 @@ inline void print_Ks (int nVtx, volatile vertex* T, const char* vfile, int H = -
 	fclose (pp);
 }
 
-
-inline void print2_Hs (Graph& graph, int nEdge, int nVtx, volatile vertex* T, const char* vfile, int oc) {
-#ifdef CONSTRUCT
-	int mT = 0;
-	HashMap<bool> exists (false);
-	if (oc <= OC_LIMIT) {
-#endif
-		string st (vfile);
-		st += "_H_values_" + to_string (oc);
-		FILE* pp = fopen (st.c_str(), "w");
-		for (int i = 0; i < nVtx; i++) {
-#ifdef CONSTRUCT
-			exists[T[i]] = true;
-			if (T[i] > mT)
-				mT = T[i];
-#endif
-			fprintf (pp, "%d\n", T[i]);
-		}
-		fclose (pp);
-
-#ifdef CONSTRUCT
-		p_auxies ax;
-		string ss (vfile);
-		string out_file = ss + "_HIER_out";
-		string aa = ss + "_OC_" + to_string (oc);
-		FILE* ffp = fopen (out_file.c_str(), "w");
-		report_all_stuff2 (12, graph, nEdge, mT, ax, exists, T, aa.c_str(), ffp);
-	}
-#endif
-}
-
 inline void compute_KT (vertex* Reals, Graph& graph, vertex* T, int oc) {
 	int count = 0, score = 0;
 	for (vertex i = 0; i < graph.size(); i++) {
@@ -59,41 +24,7 @@ inline void compute_KT (vertex* Reals, Graph& graph, vertex* T, int oc) {
 				EdgeKendallTau (Reals, T, u, v, &count, &score);
 		}
 	}
-
 	printf ("H %d , KendallTau: %lf\n", oc, kt (count, score));
-}
-
-inline void simple_distanceCC (vertex* Reals, Graph& graph, vertex* T, int oc, bool* changed) {
-	double score = 0;
-	int count = 0;
-	for (vertex i = 0; i < graph.size(); i++)
-		if (T[i] > 0 && Reals[i] > 0) {
-			//			printf ("sc: %lf\n", (double) Reals[i] / T[i]);
-			//			score += (double) Reals[i] / T[i];
-			if (Reals[i] == T[i])
-				score++;
-			else {
-				printf ("%d: Reals: %d   K: %d -- %s\n", i, Reals[i], T[i], changed[i] ? "Changed" : "not Changed");
-				vector<vertex> ns;
-				for (int j = 0; j < graph[i].size(); j++)
-					ns.push_back (T[graph[i][j]]);
-				sort (ns.begin(), ns.end(), greater<int>());
-
-				int j = 0;
-				for (; j < ns.size();j++)
-					if (ns[j] < j+1)
-						break;
-				printf ("should be %d\n", j);
-				for (int k = j; k < j + 10; k++)
-					printf ("K: %d\n", ns[k]);
-			}
-
-			count++;
-		}
-
-	//	score /= count;
-
-	printf ("H %d , similarity: %lf = %d / %d\n", oc, score/count, (int) score, count);
 }
 
 inline void simple_distance (vertex* Reals, Graph& graph, vertex* T, int oc) {
@@ -427,87 +358,7 @@ void baseLocal12 (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* P, c
 }
 
 
-
-
-
-
-
-// this is faster than sort-based computation
-inline int TRY_mapInitialHI (vertex ind, vertex* adj, edge* xadj, vertex* P
-#ifdef SYNC
-		, vertex* Q
-#endif
-, bool* changed) {
-
-	HashMap<vertex> gmap (0);
-	vertex greaters = 0;
-	vertex equals = 0;
-	vertex H = 0;
-
-	for (vertex j = xadj[ind]; j < xadj[ind+1]; j++) {
-		vertex w = adj[j];
-		vertex sm = P[w];
-		if (sm == H + 1) {
-			if (equals > 0) {
-				equals--;
-				greaters++;
-				gmap[sm]++;
-			}
-			else { // equals = 0
-				H++;
-				vertex gH = 0;
-				if (!gmap.hasDefaultValue (H))
-					gH = gmap[H];
-				equals = gH + 1;
-				greaters -= gH;
-				gmap.erase (H);
-			}
-		}
-		else if (sm > H + 1) {
-			if  (equals > 0) {
-				equals--;
-				greaters++;
-				gmap[sm]++;
-			}
-			else { // equals = 0
-				greaters++;
-				H++;
-				vertex gH = 0;
-				if (!gmap.hasDefaultValue (H))
-					gH = gmap[H];
-				equals = gH;
-				greaters -= gH;
-				gmap[sm]++;
-				gmap.erase (H);
-			}
-		}
-	}
-
-	vertex oP = P[ind];
-#ifdef SYNC
-	Q[ind] = H;
-#else
-	P[ind] = H;
-#endif
-
-	if (H < oP) {
-		changed[ind] = true; // *THIS*
-		for (vertex k = xadj[ind]; k < xadj[ind+1]; k++) {
-			vertex w = adj[k];
-			if (P[w] >= P[ind])
-				changed[w] = true;
-		}
-	}
-	else
-		return 0;
-}
-
-
-
-
-
-
-// AND algorithm with the notification mechanism, each vertex is examined to see if active -- no collection in a batch
+// AND algorithm with the notification mechanism
 void nmLocal12 (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* P, const char* vfile) {
 #ifdef SYNC
 	printf ("No SYNC for notification-mechanism\n");
@@ -546,7 +397,7 @@ void nmLocal12 (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* P, con
 	bool changed[nVtx];
 	memset (changed, 255, sizeof(bool) * nVtx); // set all true
 
-#pragma omp parallel for schedule (dynamic, 1000)
+#pragma omp parallel for schedule (dynamic, 1)
 	for (vertex ind = 0; ind < nVtx; ind++) {
 #ifdef DEBUG_000
 		ccs[tn] += mapInitialHI (ind, adj, xadj, P);
@@ -575,7 +426,7 @@ void nmLocal12 (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* P, con
 		timestamp td1;
 		flag = false;
 
-#pragma omp parallel for schedule (dynamic, 1000)
+#pragma omp parallel for schedule (dynamic, 1)
 		for (vertex i = 0; i < nVtx; i++) {
 			vertex ind = i;
 			if (!changed[ind])
@@ -626,99 +477,73 @@ void nmLocal12 (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* P, con
 }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// AND algorithm with the notification mechanism, each vertex is examined to see if active -- no collection in a batch
-void TRY_NMpicore (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* P, const char* vfile) {
-#ifndef SYNC
+// AND algorithm with the notification mechanism and no wait in the outer while loop
+void NoWaitnmLocal12 (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* P, const char* vfile) {
+#ifdef SYNC
+	printf ("No SYNC for No Wait notification-mechanism\n");
+	exit(1);
+#else
 	timestamp t_begin;
 	P = (vertex *) calloc (nVtx, sizeof(vertex));
+	int nThreads = 1;
+	volatile int* counter;
+#pragma omp parallel
+	{
+		nThreads = omp_get_num_threads();
+		counter = (volatile int *) calloc (nThreads, sizeof(int));
+	}
 
 #pragma omp parallel for default (shared)
 	for (vertex i = 0; i < nVtx; i++)
 		P[i] = xadj[i+1] - xadj[i];
-
-#ifdef SYNC
-	printf ("it is SYNC\n");
-	vertex* Q = (vertex *) malloc (sizeof(vertex) * nVtx);
-#else
 	printf ("it is ASYNC\n");
-#endif
-
-	timestamp t_tc;
-	cout << "degreeFinding time: " << t_tc - t_begin << endl;
-
-	timestamp td (0, 0);
-	int oc = 0;
-	bool flag = true;
+	timestamp t_deg;
+	cout << "degreeFinding time: " << t_deg - t_begin << endl;
 
 	bool changed[nVtx];
 	memset (changed, 255, sizeof(bool) * nVtx); // set all true
-
 #pragma omp parallel for schedule (dynamic, 1000)
-	for (vertex ind = 0; ind < nVtx; ind++) {
-		TRY_mapInitialHI (ind, adj, xadj, P, changed);
-	}
-	oc++;
+	for (vertex ind = 0; ind < nVtx; ind++)
+		mapInitialHI (ind, adj, xadj, P);
+	timestamp t_init;
+	cout << "H 0 time: " << t_init - t_deg << endl;
+#ifdef DUMP_Hs
+	print_Ks (nVtx, P, vfile, oc);
+#endif
 
-	timestamp ts4;
+	bool flags[nThreads];
+#pragma omp parallel
+	{
+		int nt = omp_get_thread_num();
+		flags[nt] = true;
+		while (flags[nt]) {
+			flags[nt] = false;
+			counter[omp_get_thread_num()]++;
 
-
-	timestamp ts5;
-	cout << "H 0 time: " << ts5 - t_tc << endl;
-
-	while (flag) {
-		timestamp it1;
-		flag = false;
-#pragma omp parallel for schedule (dynamic, 1000)
-		for (vertex i = 0; i < nVtx; i++) {
-			vertex ind = i;
-			if (!changed[ind])
-				continue;
-			changed[ind] = false;
-			int a = efficientUpdateHI (ind, adj, xadj, P, changed);
-			if (a == 1)
-				flag = true;
+#pragma omp for nowait schedule (dynamic, 1000) // (static, nVtx/nThreads)
+			for (vertex ind = 0; ind < nVtx; ind++) {
+				if (!changed[ind])
+					continue;
+				changed[ind] = false;
+				int a = efficientUpdateHI (ind, adj, xadj, P, changed);
+				if (a == 1)
+					flags[nt] = true;
+			}
 		}
-
-
-		timestamp it3;
-		cout << "H " << oc << " time: " << it3 - it1 << endl;
-		oc++;
 	}
 
-	printf ("Converges at %d\n", oc);
+	for (int i = 0; i < nThreads; i++)
+		printf ("counter[%d]: %d\n", i, counter[i]);
 	timestamp t_end;
 	cout << "Total time: " << t_end - t_begin << endl;
 
-//	print_Ks (nVtx, P, vfile);
+#ifdef DUMP_K
+	print_Ks (nVtx, P, vfile);
+#endif
 	free (P);
-
 	return;
-#else
 #endif
 }
-
-
-
-
-
-
-
 
 
 
@@ -817,6 +642,4 @@ void fast12DegeneracyNumber (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, v
 	printf ("max K: %d\n", maxK);
 #endif
 }
-
-
 

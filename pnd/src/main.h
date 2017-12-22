@@ -22,11 +22,10 @@
 #include <omp.h>
 #include <tuple>
 #include <fstream>
-
+#include <string.h>
 #include "bucket.h"
 #include "timestamp.cpp"
 #include "larray.h"
-#include "ulib.h"
 
 
 #define APPROXIMATION_RATIO 0.90
@@ -577,10 +576,10 @@ inline bool hashUniquify (vector<vertex>& vertices) {
 	return true;
 }
 
+
 void baseLocal12 (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* P, const char* vfile);
 void nmLocal12 (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* P, const char* vfile);
-void TRY_NMpicore (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* P, const char* vfile);
-
+void NoWaitnmLocal12 (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* P, const char* vfile);
 void fast12DegeneracyNumber (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* P, const char* vfile);
 
 void pitruss (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* T, const char* vfile);

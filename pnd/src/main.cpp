@@ -197,6 +197,7 @@ int main(int argc, char *argv[]) {
 
 	else if (depth == 120) {
 		vfile += "_PI_CORE";
+
 		baseLocal12 (nVtx, nEdge, adj, xadj, P, vfile.c_str());
 	}
 	else if (depth == 1200) {
@@ -205,7 +206,8 @@ int main(int argc, char *argv[]) {
 	}
 	else if (depth == 12000) {
 		vfile += "_PI_CORE";
-		TRY_NMpicore (nVtx, nEdge, adj, xadj, P, vfile.c_str());
+		NoWaitnmLocal12 (nVtx, nEdge, adj, xadj, P, vfile.c_str());
+//		TRY_NMpicore (nVtx, nEdge, adj, xadj, P, vfile.c_str());
 	}
 	else if (depth == 121) {
 		vfile += "_K_CORE";
