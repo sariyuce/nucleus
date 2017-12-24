@@ -61,6 +61,7 @@ void base_ktruss (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, v
 	vector<vector<vertex> > TC (nVtx);
 	for (vertex i = 0; i < nVtx; i++)
 		TC[i].resize (orientedGraph[i].size(), 0);
+
 	lol tric;
 #ifndef LOAD_TRIS
 	// Compute
@@ -85,6 +86,7 @@ void base_ktruss (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, v
 	// Peeling
 	timestamp p1;
 	K.resize (nEdge, -1);
+	printf ("nEdge: %d\n", nEdge);
 	Naive_Bucket nBucket;
 	nBucket.Initialize (nVtx, nEdge); // maximum triangle count of an edge is nVtx
 	vertex id = 0;

@@ -25,7 +25,7 @@ int main (int argc, char *argv[]) {
 	edge nEdge = 0;
 	Graph graph;
 	readGraph<vertex, edge> (filename, graph, &nEdge);
-
+	printf ("nEdge: %d\n", nEdge);
 	string hrc (argv[3]);
 	string vfile = gname + "_" + nd;
 	string out_file;
@@ -42,19 +42,19 @@ int main (int argc, char *argv[]) {
 	vector<vertex> K;
 
 	if (nd == "12")
-		base_kcore (graph, hierarchy, nEdge/2, K, &maxK, vfile, fp);
+		base_kcore (graph, hierarchy, nEdge, K, &maxK, vfile, fp);
 	else if (nd == "13")
-		base_k13 (graph, hierarchy, nEdge/2, K, &maxK, vfile, fp);
+		base_k13 (graph, hierarchy, nEdge, K, &maxK, vfile, fp);
 	else if (nd == "14")
-		base_k14 (graph, hierarchy, nEdge/2, K, &maxK, vfile, fp);
+		base_k14 (graph, hierarchy, nEdge, K, &maxK, vfile, fp);
 	else if (nd == "23") {
-		base_ktruss (graph, hierarchy, nEdge/2, K, &maxK, vfile, fp);
+		base_ktruss (graph, hierarchy, nEdge, K, &maxK, vfile, fp);
 		//		base_ktruss_storeTriangles (graph, hierarchy, nEdge/2, K, &maxK, vfile, fp);
 	}
 	else if (nd == "24")
-		base_k24 (graph, hierarchy, nEdge/2, K, &maxK, vfile, fp);
+		base_k24 (graph, hierarchy, nEdge, K, &maxK, vfile, fp);
 	else if (nd == "34")
-		base_k34 (graph, hierarchy, nEdge/2, K, &maxK, vfile, fp);
+		base_k34 (graph, hierarchy, nEdge, K, &maxK, vfile, fp);
 
 #ifdef K_VALUES
 	string kfile = vfile + "_K_values";

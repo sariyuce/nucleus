@@ -1521,3 +1521,68 @@ void report_LCPS (int variant, Graph& graph, int cn, p_auxies& ax, HashMap<bool>
 }
 #endif
 
+
+
+
+
+
+
+
+// two loops, single lock
+void inefficient_count_triangles (vertex* T, vertex nVtx, vertex* adj, edge* xadj, vertex* ordered_adj, edge* ordered_xadj) { // HERE
+
+#pragma omp parallel for
+	for (vertex i = 0; i < nVtx; i++) {
+		for (edge j = ordered_xadj[i]; j < ordered_xadj[i+1]; j++) {
+			vertex a = ordered_adj[j];
+			edge x = j;
+			for (edge k = j + 1; k < ordered_xadj[i+1]; k++) {
+				edge y = k;
+				vertex b = ordered_adj[k];
+				vertex v = a, w = b;
+				if (lessThan (w, v, xadj))
+					swap (v, w);
+				edge l = -1;
+				for (edge m = ordered_xadj[v]; m < ordered_xadj[v+1]; m++) {
+					if (ordered_adj[m] == w) {
+						l = m;
+						break;
+					}
+				}
+				if (l != -1) {
+					edge z = l;
+					T[x]++;
+					T[y]++;
+				}
+			}
+		}
+	}
+
+#pragma omp parallel for default (shared)
+	for (vertex i = 0; i < nVtx; i++) {
+		for (edge j = xadj[i]; j < xadj[i+1]; j++) {
+			vertex a = adj[j];
+			vertex index = findInd (a, i, ordered_adj, ordered_xadj);
+			if (index != -1) {
+				edge x = index;
+				for (edge m = ordered_xadj[a]; m < ordered_xadj[a+1]; m++) {
+					if (lessThan (i, ordered_adj[m], xadj)) {
+						edge l = -1;
+						for (edge k = ordered_xadj[i]; k < ordered_xadj[i+1]; k++) {
+							if (ordered_adj[k] == ordered_adj[m]) {
+								l = k;
+								break;
+							}
+						}
+						if (l != -1) {
+							edge y = l;
+							edge z = m;
+							T[y]++;
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
