@@ -22,11 +22,10 @@
 #include <omp.h>
 #include <tuple>
 #include <fstream>
-
+#include <string.h>
 #include "bucket.h"
 #include "timestamp.cpp"
 #include "larray.h"
-#include "ulib.h"
 
 
 #define APPROXIMATION_RATIO 0.90
