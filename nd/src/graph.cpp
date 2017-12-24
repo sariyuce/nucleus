@@ -42,7 +42,9 @@ void writeBinary (char* filename, VtxType nVtx, EdgeType nEdge, vector<vector<Vt
 	fwrite (&edget, sizeof(int), 1, filep);
 
 	fwrite (&nVtx, sizeof(VtxType), 1, filep);
+	nEdge /= 2;
 	fwrite (&nEdge, sizeof(EdgeType), 1, filep);
+	nEdge *= 2;
 
 	for (VtxType i = 0; i < nVtx; i++) {
 		VtxType sz = graph[i].size();
@@ -86,6 +88,7 @@ void readBinary(char *filename, vector<vector<VtxType>>& graph, EdgeType* nEdge)
 	vertex nVtx;
 	in.read((char*)&nVtx, sizeof(VtxType));
 	in.read((char*)nEdge, sizeof(EdgeType));
+//	*nEdge *= 2;
 
 	printf ("nVtx: %d   nEdge:%d\n", nVtx, *nEdge);
 	graph.resize (nVtx);

@@ -148,15 +148,6 @@ void find_subtruss (vertex root, Graph& graph, vertex* T, vector<vertex>& xel, E
 	}
 }
 
-inline void print_Ks (edge nEdge, couple1* el, volatile vertex* T, const char* vfile) {
-	string st (vfile);
-	st += "_FINAL_H_values";
-	FILE* pp = fopen (st.c_str(), "w");
-	for (int i = 0; i < nEdge; i++)
-		fprintf (pp, "%d %d   %d\n", get<0>(el[i]), get<1>(el[i]), T[i]);
-	fclose (pp);
-}
-
 inline void print_Hs (Graph& graph, int nEdge, vector<vertex>& xel, EdgeList2& el, volatile vertex* T, const char* vfile, int oc) {
 #ifdef CONSTRUCT
 	int mT = 0;
@@ -233,7 +224,7 @@ inline void compute_KT (vertex* Reals, EdgeList2& el, Graph& tris, vertex* T, in
 
 // ESSENTIALS
 
-/* store edge-triangle graphs */
+/* STORES EDGE-TRIANGLE GRAPHS */
 
 void store_count_triangles (vertex* T, vector<vertex>* tris, vertex nVtx, edge nEdge, vertex* adj, edge* xadj, couple1* el, edge* xel, vertex* ordered_adj, edge* ordered_xadj) {
 
@@ -299,7 +290,7 @@ void store_count_triangles (vertex* T, vector<vertex>* tris, vertex nVtx, edge n
 }
 
 // this is faster than sort-based computation
-inline int mapInitialHI (edge ind, vector<vertex>* tris, vertex* P
+inline int mapInitialHI_ST (edge ind, vector<vertex>* tris, vertex* P
 #ifdef SYNC
 		, vertex* Q
 #endif
@@ -364,7 +355,7 @@ inline int mapInitialHI (edge ind, vector<vertex>* tris, vertex* P
 		return 0;
 }
 
-inline int regularUpdateHI (edge ind, vector<vertex>* tris, vertex* T
+inline int regularUpdateHI_ST (edge ind, vector<vertex>* tris, vertex* T
 #ifdef SYNC
 		, vertex* U
 #endif
@@ -422,7 +413,7 @@ inline void updateAndNotify (edge ind, vertex* P, int newP, vector<vertex>& neig
 	}
 }
 
-inline int efficientUpdateHI (edge ind, vector<vertex>* tris, vertex* T, bool* changed) {
+inline int efficientUpdateHI_ST (edge ind, vector<vertex>* tris, vertex* T, bool* changed) {
 
 	vertex previous_T = T[ind];
 	vertex greaterequals = 0;
@@ -462,7 +453,7 @@ inline int efficientUpdateHI (edge ind, vector<vertex>* tris, vertex* T, bool* c
 
 
 // stores the edge-triangle graph; basic AND and SND algorithms, no notification mechanism. compile with SYNC=yes to get the synchronous mode (SND)
-void pitruss (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* T, const char* vfile) {
+void baseLocal23_ST (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* T, const char* vfile) {
 
 	// Ordered (directed) graph creation
 	timestamp t_begin;
@@ -477,7 +468,7 @@ void pitruss (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* T, const
 	timestamp t_cog;
 	cout << "creating ordered graph: " << t_cog - t_begin << endl;
 
-	// Triangle counting for each edge
+	// Triangle counting and storing for each edge
 	T = (vertex *) calloc (nEdge, sizeof(vertex));
 
 #ifdef SYNC
@@ -499,7 +490,7 @@ void pitruss (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* T, const
 
 #pragma omp parallel for schedule (dynamic, 1000)
 	for (edge ind = 0; ind < nEdge; ind++) {
-		mapInitialHI (ind, tris, T
+		mapInitialHI_ST (ind, tris, T
 #ifdef SYNC
 				, U
 #endif
@@ -525,7 +516,7 @@ void pitruss (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* T, const
 
 #pragma omp parallel for schedule (dynamic, 1000)
 		for (edge ind = 0; ind < nEdge; ind++) {
-			int fl = regularUpdateHI (ind, tris, T
+			int fl = regularUpdateHI_ST (ind, tris, T
 #ifdef SYNC
 					, U
 #endif
@@ -549,7 +540,9 @@ void pitruss (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* T, const
 	timestamp t_end;
 	cout << "Total time: " << t_end - t_begin - td << endl;
 
-//	print_Ks (nEdge, el, T, vfile);
+#ifdef DUMP_K
+	print_Ks (nEdge, T, vfile);
+#endif
 
 	free (T);
 	free (el);
@@ -560,14 +553,17 @@ void pitruss (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* T, const
 	return;
 }
 
-// stores the edge-triangle graph; AND algorithm with the notification mechanism, each vertex is examined to see if active -- no collection in a batch
-void NMpitruss (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* T, const char* vfile) {
-#ifndef SYNC
-	// Ordered (directed) graph creation
+// stores the edge-triangle graph; AND algorithm with the notification mechanism
+void nmLocal23_ST (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* T, const char* vfile) {
+#ifdef SYNC
+	printf ("No SYNC for notification-mechanism\n");
+	exit(1);
+#else
 	timestamp t_begin;
+
+	// Ordered (directed) graph creation
 	couple1* el = (couple1 *) malloc (sizeof(couple1) * nEdge);
 	edge* xel = (edge *) malloc (sizeof(edge) * (nVtx+1));
-
 	vertex* ordered_adj = (vertex *) malloc (sizeof(vertex) * nEdge );
 	edge* ordered_xadj = (edge *) malloc (sizeof(edge) * (nVtx+1));;
 
@@ -576,7 +572,7 @@ void NMpitruss (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* T, con
 	timestamp t_cog;
 	cout << "creating ordered graph: " << t_cog - t_begin << endl;
 
-	// Triangle counting for each edge
+	// Triangle counting and storing for each edge
 	T = (vertex *) calloc (nEdge, sizeof(vertex));
 
 	vector<vertex> tris[nEdge];
@@ -591,51 +587,87 @@ void NMpitruss (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* T, con
 	int oc = 0;
 	bool flag = true;
 
+#ifdef DEBUG_000
+	timestamp ts1;
+	int nt = 1, tn = 0;
+#pragma omp parallel
+	{
+		nt = omp_get_num_threads();
+		tn = omp_get_thread_num();
+	}
+	int* ccs = (int *) calloc (nt, sizeof(int));
+	timestamp ts2;
+	td += ts2 - ts1;
+#endif
 
 #pragma omp parallel for schedule (dynamic, 1000)
 	for (edge ind = 0; ind < nEdge; ind++) {
-		mapInitialHI (ind, tris, T);
+#ifdef DEBUG_000
+		ccs[tn] += mapInitialHI_ST (ind, tris, T);
+#else
+		mapInitialHI_ST (ind, tris, T);
+#endif
 	}
-	oc++;
-
-	timestamp ts4;
-
 	bool changed[nEdge];
 	memset (changed, 255, sizeof(bool) * nEdge); // set all true
 
-	timestamp ts5;
-	cout << "H 0 time: " << ts5 - t_tc << endl;
+	timestamp t_init;
+	cout << "H 0 time: " << t_init - t_tc - td << endl;
+#ifdef DUMP_Hs
+	print_Ks (nEdge, T, vfile, oc);
+#endif
+	oc++;
 
 	while (flag) {
-		timestamp it1;
+		timestamp td1;
 		flag = false;
+
 #pragma omp parallel for schedule (dynamic, 1000)
-		for (edge i = 0; i < nEdge; i++) {
-			edge ind = i;
+		for (edge ind = 0; ind < nEdge; ind++) {
 			if (!changed[ind])
 				continue;
 			changed[ind] = false;
-			int a = efficientUpdateHI (ind, tris, T, changed);
+			int a = efficientUpdateHI_ST (ind, tris, T, changed);
+#ifdef DEBUG_000
+			ccs[tn] += a;
+#endif
 			if (a == 1)
 				flag = true;
 		}
 
-		timestamp it3;
-		cout << "H " << oc << " time: " << it3 - it1 << endl;
+		timestamp td2;
+#ifdef DEBUG_000
+		timestamp a1;
+		int degisenler = 0;
+		for(int i = 0; i < nt; i++)
+			degisenler += ccs[i];
+		memset (ccs, 0, nt * sizeof(int));
+		cout << "CHANGEDS: " << degisenler << endl;
+		timestamp a2;
+		td += a2 - a1;
+#endif
+
+#ifdef DUMP_Hs
+		print_Ks (nEdge, T, vfile, oc);
+#endif
+		timestamp td3;
+		td += td3 - td2;
+
+		cout << "H " << oc << " time: " << td2 - td1 << endl;
 		oc++;
 	}
 
 	printf ("Converges at %d\n", oc);
 	timestamp t_end;
-	cout << "Total time: " << t_end - t_begin << endl;
+	cout << "Total time: " << t_end - t_begin - td << endl;
 
-//	print_Ks (nEdge, el, T, vfile);
+#ifdef DUMP_K
+	print_Ks (nEdge, T, vfile);
+#endif
 
 	free (T);
 	free (el);
-
 	return;
-#else
 #endif
 }
 
@@ -648,9 +680,7 @@ void NMpitruss (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* T, con
 
 
 
-
-
-/* does NOT store edge-triangle graphs, space efficient but slower of course */
+/* DOES NOT STORE EDGE_TRIANGLE GRAPHS; SPACE-EFFICIENT (AND SLOWER) */
 
 inline vertex getEdgeId (vertex u, vertex v, edge* xel, couple1* el, vertex deg_u, vertex deg_v) {
 	vertex a = v, b = u;
@@ -660,64 +690,6 @@ inline vertex getEdgeId (vertex u, vertex v, edge* xel, couple1* el, vertex deg_
 		if (get<1>(el[i]) == b)
 			return i;
 	return -1;
-}
-
-// two loops, single lock
-void inefficient_count_triangles (vertex* T, vertex nVtx, vertex* adj, edge* xadj, vertex* ordered_adj, edge* ordered_xadj) { // HERE
-
-#pragma omp parallel for
-	for (vertex i = 0; i < nVtx; i++) {
-		for (edge j = ordered_xadj[i]; j < ordered_xadj[i+1]; j++) {
-			vertex a = ordered_adj[j];
-			edge x = j;
-			for (edge k = j + 1; k < ordered_xadj[i+1]; k++) {
-				edge y = k;
-				vertex b = ordered_adj[k];
-				vertex v = a, w = b;
-				if (lessThan (w, v, xadj))
-					swap (v, w);
-				edge l = -1;
-				for (edge m = ordered_xadj[v]; m < ordered_xadj[v+1]; m++) {
-					if (ordered_adj[m] == w) {
-						l = m;
-						break;
-					}
-				}
-				if (l != -1) {
-					edge z = l;
-					T[x]++;
-					T[y]++;
-				}
-			}
-		}
-	}
-
-#pragma omp parallel for default (shared)
-	for (vertex i = 0; i < nVtx; i++) {
-		for (edge j = xadj[i]; j < xadj[i+1]; j++) {
-			vertex a = adj[j];
-			vertex index = findInd (a, i, ordered_adj, ordered_xadj);
-			if (index != -1) {
-				edge x = index;
-				for (edge m = ordered_xadj[a]; m < ordered_xadj[a+1]; m++) {
-					if (lessThan (i, ordered_adj[m], xadj)) {
-						edge l = -1;
-						for (edge k = ordered_xadj[i]; k < ordered_xadj[i+1]; k++) {
-							if (ordered_adj[k] == ordered_adj[m]) {
-								l = k;
-								break;
-							}
-						}
-						if (l != -1) {
-							edge y = l;
-							edge z = m;
-							T[y]++;
-						}
-					}
-				}
-			}
-		}
-	}
 }
 
 // single loop, three locks
@@ -755,7 +727,7 @@ void count_triangles (vertex* T, vertex nVtx, edge* xadj, vertex* ordered_adj, e
 	}
 }
 
-inline int mapInitialHISpaceEfficient (edge ind, edge* xadj, vertex* adj, edge* xel, couple1* el, vertex* P
+inline int mapInitialHI (edge ind, edge* xadj, vertex* adj, edge* xel, couple1* el, vertex* P
 #ifdef SYNC
 		, vertex* Q
 #endif
@@ -835,7 +807,7 @@ inline int mapInitialHISpaceEfficient (edge ind, edge* xadj, vertex* adj, edge* 
 		return 0;
 }
 
-inline int regularUpdateHISpaceEfficient (edge ind, edge* xadj, vertex* adj, edge* xel, couple1* el, vertex* T
+inline int regularUpdateHI (edge ind, edge* xadj, vertex* adj, edge* xel, couple1* el, vertex* T
 #ifdef SYNC
 		, vertex* U
 #endif
@@ -900,7 +872,7 @@ inline int regularUpdateHISpaceEfficient (edge ind, edge* xadj, vertex* adj, edg
 	return 0;
 }
 
-inline int efficientUpdateHISpaceEfficient (edge ind, edge* xadj, vertex* adj, edge* xel, couple1* el, vertex* T, bool* changed) {
+inline int efficientUpdateHI (edge ind, edge* xadj, vertex* adj, edge* xel, couple1* el, vertex* T, bool* changed) {
 
 	vector<edge> neigs;
 	vertex previous_T = T[ind];
@@ -959,14 +931,14 @@ inline int efficientUpdateHISpaceEfficient (edge ind, edge* xadj, vertex* adj, e
 
 
 
-// does NOT store the edge-triangle graph; basic AND and SND algorithms, no notification mechanism. compile with SYNC=yes to get the synchronous mode (SND)
-void pitrussSpaceEfficient (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* T, const char* vfile) {
+// base AND and SND algorithms, no notification mechanism. compile with SYNC=yes to get the synchronous mode (SND)
+void baseLocal23 (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* T, const char* vfile) {
+
+	timestamp t_begin;
 
 	// Ordered (directed) graph creation
-	timestamp t_begin;
 	couple1* el = (couple1 *) malloc (sizeof(couple1) * nEdge);
 	edge* xel = (edge *) malloc (sizeof(edge) * (nVtx+1));
-
 	vertex* ordered_adj = (vertex *) malloc (sizeof(vertex) * nEdge );
 	edge* ordered_xadj = (edge *) malloc (sizeof(edge) * (nVtx+1));;
 
@@ -979,51 +951,71 @@ void pitrussSpaceEfficient (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, ve
 	T = (vertex *) calloc (nEdge, sizeof(vertex));
 
 #ifdef SYNC
+	printf ("it is SYNC\n");
 	vertex* U = (vertex *) calloc (nEdge, sizeof(vertex));
+#else
+	printf ("it is ASYNC\n");
 #endif
 
-//	inefficient_count_triangles (T, nVtx, adj, xadj, ordered_adj, ordered_xadj); // two loops with no lock
 	count_triangles (T, nVtx, xadj, ordered_adj, ordered_xadj); // single loop with three locks
 
 	free (ordered_adj);
 	free (ordered_xadj);
 	timestamp t_tc;
-	cout << "Triangle counting time: " << t_tc - t_begin << endl;
+	cout << "Triangle counting time: " << t_tc - t_cog << endl;
 
 	timestamp td (0, 0);
 	int oc = 0;
 	bool flag = true;
 
+#ifdef DEBUG_000
+	timestamp ts1;
+	int nt = 1, tn = 0;
+#pragma omp parallel
+	{
+		nt = omp_get_num_threads();
+		tn = omp_get_thread_num();
+	}
+	int* ccs = (int *) calloc (nt, sizeof(int));
+	timestamp ts2;
+	td += ts2 - ts1;
+#endif
 
 #pragma omp parallel for schedule (dynamic, 1000)
 	for (edge ind = 0; ind < nEdge; ind++) {
-		mapInitialHISpaceEfficient (ind, xadj, adj, xel, el, T
+#ifdef DEBUG_000
+		ccs[tn] += 	mapInitialHI (ind, xadj, adj, xel, el, T
 #ifdef SYNC
 				, U
 #endif
 		);
+#else
+		mapInitialHI (ind, xadj, adj, xel, el, T
+#ifdef SYNC
+				, U
+#endif
+		);
+#endif
 	}
 
 #ifdef SYNC
 	memcpy (T, U, sizeof(vertex) * nEdge);
 #endif
 
-	timestamp ts5;
-	cout << "H 0 time: " << ts5 - t_tc << endl;
+	timestamp t_init;
+	cout << "H 0 time: " << t_init - t_tc - td << endl;
+#ifdef DUMP_Hs
+	print_Ks (nEdge, T, vfile, oc);
+#endif
 	oc++;
 
 	while (flag) {
-		flag = false;
-
 		timestamp td1;
-
-		timestamp td2;
-		td += td2 - td1;
-
+		flag = false;
 
 #pragma omp parallel for schedule (dynamic, 1000)
 		for (edge ind = 0; ind < nEdge; ind++) {
-			int fl = regularUpdateHISpaceEfficient (ind, xadj, adj, xel, el, T
+			int fl = regularUpdateHI (ind, xadj, adj, xel, el, T
 #ifdef SYNC
 					, U
 #endif
@@ -1032,22 +1024,29 @@ void pitrussSpaceEfficient (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, ve
 			if (fl == 1)
 				flag = true;
 		}
-
+		timestamp td2;
 #ifdef SYNC
 		memcpy (T, U, sizeof(vertex) * nEdge);
 #endif
 
-		timestamp t_end;
-		cout << "H " << oc << " time: " << t_end - t_begin - td << endl;
+#ifdef DUMP_Hs
+	print_Ks (nEdge, T, vfile, oc);
+#endif
+
+		timestamp td3;
+		td += td3 - td2;
+
+		cout << "H " << oc << " time: " << td2 - td1 << endl;
 		oc++;
 	}
-
 
 	printf ("Converges at %d\n", oc);
 	timestamp t_end;
 	cout << "Total time: " << t_end - t_begin - td << endl;
 
-//	print_Ks (nEdge, el, T, vfile);
+#ifdef DUMP_K
+	print_Ks (nEdge, T, vfile);
+#endif
 
 	free (T);
 	free (xel);
@@ -1060,14 +1059,17 @@ void pitrussSpaceEfficient (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, ve
 }
 
 
-// does NOT store the edge-triangle graph; AND algorithm with the notification mechanism, each vertex is examined to see if active -- no collection in a batch
-void NMpitrussSpaceEfficient (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* T, const char* vfile) {
-#ifndef SYNC
-	// Ordered (directed) graph creation
+// AND algorithm with the notification mechanism
+void nmLocal23 (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* T, const char* vfile) {
+#ifdef SYNC
+	printf ("No SYNC for notification-mechanism\n");
+	exit(1);
+#else
 	timestamp t_begin;
+
+	// Ordered (directed) graph creation
 	couple1* el = (couple1 *) malloc (sizeof(couple1) * nEdge);
 	edge* xel = (edge *) malloc (sizeof(edge) * (nVtx+1));
-
 	vertex* ordered_adj = (vertex *) malloc (sizeof(vertex) * nEdge );
 	edge* ordered_xadj = (edge *) malloc (sizeof(edge) * (nVtx+1));;
 
@@ -1075,69 +1077,191 @@ void NMpitrussSpaceEfficient (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, 
 
 	timestamp t_cog;
 	cout << "creating ordered graph: " << t_cog - t_begin << endl;
-//
-//	// Triangle counting for each edge
-//	T = (vertex *) calloc (nEdge, sizeof(vertex));
 
-//	inefficient_count_triangles (T, nVtx, adj, xadj, ordered_adj, ordered_xadj); // two loops with no lock
+	// Triangle counting for each edge
+	T = (vertex *) calloc (nEdge, sizeof(vertex));
+
 	count_triangles (T, nVtx, xadj, ordered_adj, ordered_xadj); // single loop with three locks
 
 	free (ordered_adj);
 	free (ordered_xadj);
 	timestamp t_tc;
-	cout << "Triangle counting & edge-triangle graph construction time: " << t_tc - t_begin << endl;
+	cout << "Triangle counting time: " << t_tc - t_begin << endl;
 
 	timestamp td (0, 0);
 	int oc = 0;
 	bool flag = true;
 
+#ifdef DEBUG_000
+	timestamp ts1;
+	int nt = 1, tn = 0;
+#pragma omp parallel
+	{
+		nt = omp_get_num_threads();
+		tn = omp_get_thread_num();
+	}
+	int* ccs = (int *) calloc (nt, sizeof(int));
+	timestamp ts2;
+	td += ts2 - ts1;
+#endif
+
 
 #pragma omp parallel for schedule (dynamic, 1000)
 	for (edge ind = 0; ind < nEdge; ind++) {
-		mapInitialHISpaceEfficient (ind, xadj, adj, xel, el, T);
+#ifdef DEBUG_000
+		ccs[tn] += 	mapInitialHI (ind, xadj, adj, xel, el, T);
+#else
+		mapInitialHI (ind, xadj, adj, xel, el, T);
+#endif
 	}
-	oc++;
-
-	timestamp ts4;
-
 	bool changed[nEdge];
 	memset (changed, 255, sizeof(bool) * nEdge); // set all true
 
-	timestamp ts5;
-	cout << "H 0 time: " << ts5 - t_tc << endl;
+	timestamp t_init;
+	cout << "H 0 time: " << t_init - t_tc - td << endl;
+#ifdef DUMP_Hs
+	print_Ks (nEdge, T, vfile, oc);
+#endif
+	oc++;
 
 	while (flag) {
-		timestamp it1;
+		timestamp td1;
 		flag = false;
+
 #pragma omp parallel for schedule (dynamic, 1000)
-		for (edge i = 0; i < nEdge; i++) {
-			edge ind = i;
+		for (edge ind = 0; ind < nEdge; ind++) {
 			if (!changed[ind])
 				continue;
 			changed[ind] = false;
-			int a = efficientUpdateHISpaceEfficient (ind, xadj, adj, xel, el, T, changed);
+			int a = efficientUpdateHI (ind, xadj, adj, xel, el, T, changed);
+#ifdef DEBUG_000
+			ccs[tn] += a;
+#endif
 			if (a == 1)
 				flag = true;
 		}
 
-		timestamp it3;
-		cout << "H " << oc << " time: " << it3 - it1 << endl;
+		timestamp td2;
+#ifdef DEBUG_000
+		timestamp a1;
+		int degisenler = 0;
+		for(int i = 0; i < nt; i++)
+			degisenler += ccs[i];
+		memset (ccs, 0, nt * sizeof(int));
+		cout << "CHANGEDS: " << degisenler << endl;
+		timestamp a2;
+		td += a2 - a1;
+#endif
+
+#ifdef DUMP_Hs
+		print_Ks (nEdge, T, vfile, oc);
+#endif
+		timestamp td3;
+		td += td3 - td2;
+
+		cout << "H " << oc << " time: " << td2 - td1 << endl;
 		oc++;
 	}
 
 	printf ("Converges at %d\n", oc);
 	timestamp t_end;
+	cout << "Total time: " << t_end - t_begin - td << endl;
+
+#ifdef DUMP_K
+	print_Ks (nEdge, T, vfile);
+#endif
+
+	free (T);
+	free (el);
+	return;
+#endif
+}
+
+
+// AND algorithm with the notification mechanism
+void NoWaitnmLocal23 (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* T, const char* vfile) {
+#ifdef SYNC
+	printf ("No SYNC for notification-mechanism\n");
+	exit(1);
+#else
+	timestamp t_begin;
+
+	int nThreads = 1;
+	volatile int* counter;
+#pragma omp parallel
+	{
+		nThreads = omp_get_num_threads();
+		counter = (volatile int *) calloc (nThreads, sizeof(int));
+	}
+
+	// Ordered (directed) graph creation
+	couple1* el = (couple1 *) malloc (sizeof(couple1) * nEdge);
+	edge* xel = (edge *) malloc (sizeof(edge) * (nVtx+1));
+	vertex* ordered_adj = (vertex *) malloc (sizeof(vertex) * nEdge );
+	edge* ordered_xadj = (edge *) malloc (sizeof(edge) * (nVtx+1));;
+
+	createOrdered (nVtx, nEdge, adj, xadj, el, xel, ordered_adj, ordered_xadj);
+
+	timestamp t_cog;
+	cout << "creating ordered graph: " << t_cog - t_begin << endl;
+
+	// Triangle counting for each edge
+	T = (vertex *) calloc (nEdge, sizeof(vertex));
+
+	count_triangles (T, nVtx, xadj, ordered_adj, ordered_xadj); // single loop with three locks
+
+	free (ordered_adj);
+	free (ordered_xadj);
+	timestamp t_tc;
+	cout << "Triangle counting time: " << t_tc - t_begin << endl;
+
+	bool changed[nEdge];
+	memset (changed, 255, sizeof(bool) * nEdge); // set all true
+#pragma omp parallel for schedule (dynamic, 1000)
+	for (edge ind = 0; ind < nEdge; ind++)
+		mapInitialHI (ind, xadj, adj, xel, el, T);
+	timestamp t_init;
+	cout << "H 0 time: " << t_init - t_tc << endl;
+#ifdef DUMP_Hs
+	print_Ks (nEdge, T, vfile, oc);
+#endif
+
+	bool flags[nThreads];
+#pragma omp parallel
+	{
+		int nt = omp_get_thread_num();
+		flags[nt] = true;
+		while (flags[nt]) {
+			flags[nt] = false;
+			counter[omp_get_thread_num()]++;
+
+#pragma omp for nowait schedule (dynamic, 1000)
+			for (edge ind = 0; ind < nEdge; ind++) {
+				if (!changed[ind])
+					continue;
+				changed[ind] = false;
+				int a = efficientUpdateHI (ind, xadj, adj, xel, el, T, changed);
+				if (a == 1)
+					flags[nt] = true;
+			}
+		}
+	}
+
+	for (int i = 0; i < nThreads; i++)
+		printf ("counter[%d]: %d\n", i, counter[i]);
+	timestamp t_end;
 	cout << "Total time: " << t_end - t_begin << endl;
 
-//	print_Ks (nEdge, el, T, vfile);
-
-//	free (T);
-	free (el);
-
-	return;
-#else
+#ifdef DUMP_K
+	print_Ks (nEdge, T, vfile);
 #endif
-	printf ("truss done\n");
+
+	free (T);
+	free (el);
+	return;
+#endif
 }
+
+
 
 

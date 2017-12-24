@@ -577,16 +577,28 @@ inline bool hashUniquify (vector<vertex>& vertices) {
 }
 
 
+inline void print_Ks (int nVtx, volatile vertex* T, const char* vfile, int H = -1) {
+	string st (vfile);
+	if (H == -1)
+		st += "_FINAL_K";
+	else
+		st += "_H_" + to_string(H);
+	FILE* pp = fopen (st.c_str(), "w");
+	for (int i = 0; i < nVtx; i++)
+		fprintf (pp, "%d\n", T[i]);
+	fclose (pp);
+}
+
 void baseLocal12 (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* P, const char* vfile);
 void nmLocal12 (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* P, const char* vfile);
 void NoWaitnmLocal12 (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* P, const char* vfile);
 void fast12DegeneracyNumber (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* P, const char* vfile);
 
-void pitruss (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* T, const char* vfile);
-void NMpitruss (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* T, const char* vfile);
-void pitrussSpaceEfficient (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* T, const char* vfile);
-void NMpitrussSpaceEfficient (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* T, const char* vfile);
-
+void baseLocal23_ST (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* T, const char* vfile);
+void nmLocal23_ST (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* T, const char* vfile);
+void baseLocal23 (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* T, const char* vfile);
+void nmLocal23 (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* T, const char* vfile);
+void NoWaitnmLocal23 (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* T, const char* vfile);
 
 //template <typename VtxType, typename EdgeType>
 //void readGraph (char *filename, vector<vector<VtxType>>& graph, EdgeType* nEdge);

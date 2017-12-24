@@ -243,27 +243,25 @@ int main(int argc, char *argv[]) {
 
 	else if (depth == 230) {
 		vfile += "_PI_TRUSS";
-//		pitruss (nVtx, nEdge/2, adj, xadj, P, vfile.c_str());
-		pitrussSpaceEfficient (nVtx, nEdge/2, adj, xadj, P, vfile.c_str());
+		baseLocal23 (nVtx, nEdge/2, adj, xadj, P, vfile.c_str());
 	}
 	else if (depth == 2300) {
-		vfile += "_NM_PI_TRUSS";
-
-		// Triangle counting for each edge
-		P = (vertex *) calloc (nEdge, sizeof(vertex));
-//		NMpitruss (nVtx, nEdge/2, adj, xadj, P, vfile.c_str());
-		NMpitrussSpaceEfficient (nVtx, nEdge/2, adj, xadj, P, vfile.c_str());
-
-
-//		cout << "bef" << endl;
-//		FILE* fp = fopen ("/project/projectdirs/m2578/orkut.txt.bin_23_baseK", "w");
-//		cout << "bef" << endl;
-//		for (size_t i = 0; i < nEdge/2; i++) {
-//			fprintf (fp, "%d\n", P[i]);
-//			cout << "bef " << i << endl;
-//		}
-//		fclose (fp);
+		vfile += "_PI_TRUSS";
+		nmLocal23 (nVtx, nEdge/2, adj, xadj, P, vfile.c_str());
 	}
+	else if (depth == 23000) {
+		vfile += "_PI_TRUSS";
+		baseLocal23_ST (nVtx, nEdge/2, adj, xadj, P, vfile.c_str());
+	}
+	else if (depth == 230000) {
+		vfile += "_PI_TRUSS";
+		nmLocal23_ST (nVtx, nEdge/2, adj, xadj, P, vfile.c_str());
+	}
+	else if (depth == 2300000) {
+		vfile += "_PI_TRUSS";
+		NoWaitnmLocal23 (nVtx, nEdge/2, adj, xadj, P, vfile.c_str());
+	}
+
 	else if (depth == 231) {
 		vfile += "_K_TRUSS";
 		vector<vertex> T;

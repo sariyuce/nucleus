@@ -2,18 +2,6 @@
 
 // UTILITY FUNCTIONS, MIGHT BE NEEDED
 
-inline void print_Ks (int nVtx, volatile vertex* T, const char* vfile, int H = -1) {
-	string st (vfile);
-	if (H == -1)
-		st += "_FINAL_K";
-	else
-		st += "_H_" + to_string(H);
-	FILE* pp = fopen (st.c_str(), "w");
-	for (int i = 0; i < nVtx; i++)
-		fprintf (pp, "%d\n", T[i]);
-	fclose (pp);
-}
-
 inline void compute_KT (vertex* Reals, Graph& graph, vertex* T, int oc) {
 	int count = 0, score = 0;
 	for (vertex i = 0; i < graph.size(); i++) {
@@ -281,7 +269,11 @@ void baseLocal12 (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* P, c
 #pragma omp parallel for schedule (dynamic, 1000)
 	for (vertex ind = 0; ind < nVtx; ind++) {
 #ifdef DEBUG_000
-		ccs[tn] += mapInitialHI (ind, adj, xadj, P);
+		ccs[tn] += mapInitialHI (ind, adj, xadj, P
+#ifdef SYNC
+				, Q
+#endif
+		);
 #else
 		mapInitialHI (ind, adj, xadj, P
 #ifdef SYNC
@@ -314,7 +306,7 @@ void baseLocal12 (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* P, c
 		timestamp td1;
 		flag = false;
 
-#pragma omp parallel for default (shared)
+#pragma omp parallel for schedule (dynamic, 1000)
 		for (vertex ind = 0; ind < nVtx; ind++) {
 			int fl = regularUpdateHI (ind, adj, xadj, P
 #ifdef SYNC
@@ -403,7 +395,6 @@ void nmLocal12 (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* P, con
 		ccs[tn] += mapInitialHI (ind, adj, xadj, P);
 #else
 		mapInitialHI (ind, adj, xadj, P);
-//		TRY_mapInitialHI (ind, adj, xadj, P, changed);
 #endif
 	}
 
@@ -432,13 +423,12 @@ void nmLocal12 (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* P, con
 			if (!changed[ind])
 				continue;
 			changed[ind] = false;
-#ifdef DEBUG_000
-			ccs[tn] += efficientUpdateHI (ind, adj, xadj, P, changed);
-#else
 			int a = efficientUpdateHI (ind, adj, xadj, P, changed);
+#ifdef DEBUG_000
+			ccs[tn] += a;
+#endif
 			if (a == 1)
 				flag = true;
-#endif
 		}
 
 		timestamp td2;
@@ -520,7 +510,7 @@ void NoWaitnmLocal12 (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* 
 			flags[nt] = false;
 			counter[omp_get_thread_num()]++;
 
-#pragma omp for nowait schedule (dynamic, 1000) // (static, nVtx/nThreads)
+#pragma omp for nowait schedule (dynamic, 1000)
 			for (vertex ind = 0; ind < nVtx; ind++) {
 				if (!changed[ind])
 					continue;
