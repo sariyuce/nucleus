@@ -1232,8 +1232,9 @@ void NoWaitnmLocal23 (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* 
 		int nt = omp_get_thread_num();
 		flags[nt] = true;
 		while (flags[nt]) {
+//			timestamp a;
 			flags[nt] = false;
-			counter[omp_get_thread_num()]++;
+			counter[nt]++;
 
 #pragma omp for nowait schedule (dynamic, 1000)
 			for (edge ind = 0; ind < nEdge; ind++) {
@@ -1244,6 +1245,16 @@ void NoWaitnmLocal23 (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* 
 				if (a == 1)
 					flags[nt] = true;
 			}
+
+//			timestamp b;
+//			string st;
+//			timestamp c (0, 0);
+//			c = b - a;
+//			char ch[100];
+//			c.to_c_str (ch, 1000);
+//			string sss (ch);
+//			st = "thread: " + to_string (nt) + " iteration: " + to_string (counter[nt]) + " time: " + sss + "\n";
+//			cout << st;
 		}
 	}
 
@@ -1262,6 +1273,152 @@ void NoWaitnmLocal23 (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* 
 #endif
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// AND algorithm with the notification mechanism
+void StaticNoWaitnmLocal23 (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* T, const char* vfile) {
+#ifdef SYNC
+	printf ("No SYNC for notification-mechanism\n");
+	exit(1);
+#else
+	timestamp t_begin;
+
+	int nThreads = 1;
+	volatile int* counter;
+#pragma omp parallel
+	{
+		nThreads = omp_get_num_threads();
+		counter = (volatile int *) calloc (nThreads, sizeof(int));
+	}
+
+	// Ordered (directed) graph creation
+	couple1* el = (couple1 *) malloc (sizeof(couple1) * nEdge);
+	edge* xel = (edge *) malloc (sizeof(edge) * (nVtx+1));
+	vertex* ordered_adj = (vertex *) malloc (sizeof(vertex) * nEdge );
+	edge* ordered_xadj = (edge *) malloc (sizeof(edge) * (nVtx+1));;
+
+	createOrdered (nVtx, nEdge, adj, xadj, el, xel, ordered_adj, ordered_xadj);
+
+	timestamp t_cog;
+	cout << "creating ordered graph: " << t_cog - t_begin << endl;
+
+	// Triangle counting for each edge
+	T = (vertex *) calloc (nEdge, sizeof(vertex));
+
+	count_triangles (T, nVtx, xadj, ordered_adj, ordered_xadj); // single loop with three locks
+
+	free (ordered_adj);
+	free (ordered_xadj);
+	timestamp t_tc;
+	cout << "Triangle counting time: " << t_tc - t_begin << endl;
+
+	bool changed[nEdge];
+	memset (changed, 255, sizeof(bool) * nEdge); // set all true
+#pragma omp parallel for schedule (dynamic, 1000)
+	for (edge ind = 0; ind < nEdge; ind++)
+		mapInitialHI (ind, xadj, adj, xel, el, T);
+	timestamp t_init;
+	cout << "H 0 time: " << t_init - t_tc << endl;
+#ifdef DUMP_Hs
+	print_Ks (nEdge, T, vfile, oc);
+#endif
+
+	bool flags[nThreads];
+
+
+#pragma omp parallel
+	{
+		int nt = omp_get_thread_num();
+		flags[nt] = true;
+		while (flags[nt]) {
+			timestamp a;
+			flags[nt] = false;
+			counter[nt]++;
+
+#pragma omp for nowait schedule (static, 1000)
+			for (edge ind = 0; ind < nEdge; ind++) {
+				if (!changed[ind])
+					continue;
+				changed[ind] = false;
+				int a = efficientUpdateHI (ind, xadj, adj, xel, el, T, changed);
+				if (a == 1)
+					flags[nt] = true;
+			}
+
+			timestamp b;
+			string st;
+			timestamp c (0, 0);
+			c = b - a;
+			char ch[100];
+			c.to_c_str (ch, 1000);
+			string sss (ch);
+			st = "thread: " + to_string (nt) + " iteration: " + to_string (counter[nt]) + " time: " + sss + "\n";
+			cout << st;
+		}
+	}
+
+
+	timestamp t_static;
+	cout << "Static time: " << t_static - t_begin << endl;
+
+
+#pragma omp parallel
+	{
+		int nt = omp_get_thread_num();
+		flags[nt] = true;
+		while (flags[nt]) {
+			timestamp a;
+			flags[nt] = false;
+			counter[nt]++;
+
+#pragma omp for nowait schedule (dynamic, 1000)
+			for (edge ind = 0; ind < nEdge; ind++) {
+				if (!changed[ind])
+					continue;
+				changed[ind] = false;
+				int a = efficientUpdateHI (ind, xadj, adj, xel, el, T, changed);
+				if (a == 1)
+					flags[nt] = true;
+			}
+
+			timestamp b;
+			string st;
+			timestamp c (0, 0);
+			c = b - a;
+			char ch[100];
+			c.to_c_str (ch, 1000);
+			string sss (ch);
+			st = "thread: " + to_string (nt) + " iteration: " + to_string (counter[nt]) + " time: " + sss + "\n";
+			cout << st;
+		}
+	}
+
+	for (int i = 0; i < nThreads; i++)
+		printf ("counter[%d]: %d\n", i, counter[i]);
+	timestamp t_end;
+	cout << "Total time: " << t_end - t_begin << endl;
+
+#ifdef DUMP_K
+	print_Ks (nEdge, T, vfile);
+#endif
+
+	free (T);
+	free (el);
+	return;
+#endif
+}
 
 
 

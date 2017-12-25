@@ -389,7 +389,7 @@ void nmLocal12 (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* P, con
 	bool changed[nVtx];
 	memset (changed, 255, sizeof(bool) * nVtx); // set all true
 
-#pragma omp parallel for schedule (dynamic, 1)
+#pragma omp parallel for schedule (dynamic, 1000)
 	for (vertex ind = 0; ind < nVtx; ind++) {
 #ifdef DEBUG_000
 		ccs[tn] += mapInitialHI (ind, adj, xadj, P);
@@ -417,7 +417,7 @@ void nmLocal12 (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* P, con
 		timestamp td1;
 		flag = false;
 
-#pragma omp parallel for schedule (dynamic, 1)
+#pragma omp parallel for schedule (dynamic, 1000)
 		for (vertex i = 0; i < nVtx; i++) {
 			vertex ind = i;
 			if (!changed[ind])
@@ -501,14 +501,20 @@ void NoWaitnmLocal12 (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* 
 	print_Ks (nVtx, P, vfile, oc);
 #endif
 
-	bool flags[nThreads];
+//	bool flags[nThreads];
+	int flags[nThreads];
+	int works[nThreads];
 #pragma omp parallel
 	{
 		int nt = omp_get_thread_num();
-		flags[nt] = true;
-		while (flags[nt]) {
-			flags[nt] = false;
-			counter[omp_get_thread_num()]++;
+//		flags[nt] = true;
+		flags[nt] = 1;
+		while (flags[nt] > 0) {
+//			timestamp a;
+//			flags[nt] = false;
+			flags[nt] = 0;
+			works[nt] = 0;
+			counter[nt]++;
 
 #pragma omp for nowait schedule (dynamic, 1000)
 			for (vertex ind = 0; ind < nVtx; ind++) {
@@ -517,8 +523,21 @@ void NoWaitnmLocal12 (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* 
 				changed[ind] = false;
 				int a = efficientUpdateHI (ind, adj, xadj, P, changed);
 				if (a == 1)
-					flags[nt] = true;
+					flags[nt]++;
+//					flags[nt] = true;
+				works[nt]++;
 			}
+			string st = "thread: " + to_string (nt) + " iteration: " + to_string (counter[nt]) + " real-work: " + to_string(flags[nt]) + " / " + to_string(works[nt]) + " = " + to_string((double) flags[nt] / works[nt]) + "\n";
+			cout << st;
+//			timestamp b;
+//			string st;
+//			timestamp c (0, 0);
+//			c = b - a;
+//			char ch[100];
+//			c.to_c_str (ch, 1000);
+//			string sss (ch);
+//			st = "thread: " + to_string (nt) + " iteration: " + to_string (counter[nt]) + " time: " + sss + "\n";
+//			cout << st;
 		}
 	}
 

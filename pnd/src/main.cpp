@@ -262,6 +262,10 @@ int main(int argc, char *argv[]) {
 		NoWaitnmLocal23 (nVtx, nEdge/2, adj, xadj, P, vfile.c_str());
 	}
 
+	else if (depth == 23000000) {
+		vfile += "_PI_TRUSS";
+		StaticNoWaitnmLocal23 (nVtx, nEdge/2, adj, xadj, P, vfile.c_str());
+	}
 	else if (depth == 231) {
 		vfile += "_K_TRUSS";
 		vector<vertex> T;

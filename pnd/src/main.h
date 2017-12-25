@@ -592,6 +592,7 @@ inline void print_Ks (int nVtx, volatile vertex* T, const char* vfile, int H = -
 void baseLocal12 (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* P, const char* vfile);
 void nmLocal12 (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* P, const char* vfile);
 void NoWaitnmLocal12 (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* P, const char* vfile);
+void StaticNoWaitnmLocal23 (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* T, const char* vfile);
 void fast12DegeneracyNumber (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* P, const char* vfile);
 
 void baseLocal23_ST (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* T, const char* vfile);
