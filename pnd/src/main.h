@@ -48,6 +48,7 @@
 using namespace std;
 using namespace util;
 
+typedef long long lol;
 typedef int vertex; //vertices are 32 bytes
 typedef int edge; //edges are 32 bytes
 typedef tuple<vertex, vertex> couple1;
@@ -323,7 +324,7 @@ inline double kt (int count, int score) {
 }
 
 
-inline vertex find_Tri_ind (vector<vertex>& xtl, vector<triangle_id>& tlist, vertex ind, vertex target) {
+inline vertex findTriInd (vector<vertex>& xtl, vector<triangle_id>& tlist, vertex ind, vertex target) {
 
 	for (vertex i = xtl[ind]; i < xtl[ind + 1]; i++) {
 		if (get<2>(tlist[i].triple) == target) {
@@ -380,27 +381,27 @@ inline vertex smaller (Graph& graph, vertex u, vertex v) {
 	return v;
 }
 
-inline int getTriId (int a, int b, int c, vector<vertex>& xel, vector<vertex>& xtl, vector<triangle_id>& tl, Graph& ordered_graph, Graph& graph) {
-	int u, v, w;
-	if (c == smaller (graph, a, c)) {
-		u = c;
-		v = a;
-		w = b;
-	}
-	else if (c == smaller (graph, b, c)) {
-		u = a;
-		v = c;
-		w = b;
-	}
-	else {
-		u = a;
-		v = b;
-		w = c;
-	}
-
-	int el_ind = xel[u] + find_ind (graph, ordered_graph, u, v);
-	return find_Tri_ind (xtl, tl, el_ind, w);
-}
+//inline int getTriId (int a, int b, int c, vector<vertex>& xel, vector<vertex>& xtl, vector<triangle_id>& tl, Graph& ordered_graph, Graph& graph) {
+//	int u, v, w;
+//	if (c == smaller (graph, a, c)) {
+//		u = c;
+//		v = a;
+//		w = b;
+//	}
+//	else if (c == smaller (graph, b, c)) {
+//		u = a;
+//		v = c;
+//		w = b;
+//	}
+//	else {
+//		u = a;
+//		v = b;
+//		w = c;
+//	}
+//
+//	int el_ind = xel[u] + find_ind (graph, ordered_graph, u, v);
+//	return find_Tri_ind (xtl, tl, el_ind, w);
+//}
 
 
 
@@ -503,11 +504,12 @@ inline int NgetTriId (int a, int b, int c, vertex* Nxel, vertex* Nxtl, triangle_
 	return Nfind_Tri_ind (Nxtl, Ntlist, Nel_ind, w);
 }
 
-
-inline int fast_getTriId (int u, int v, int w, vector<vertex>& xel, vector<vertex>& xtl, vector<triangle_id>& tl, Graph& ordered_graph, Graph& graph) {
-	int el_ind = xel[u] + find_ind (graph, ordered_graph, u, v);
-	return find_Tri_ind (xtl, tl, el_ind, w);
-}
+//
+//inline int fast_getTriId (int u, int v, int w, vector<vertex>& xel, vector<vertex>& xtl, vector<triangle_id>& tl, Graph& ordered_graph, Graph& graph) {
+//	int el_ind = xel[u] + find_ind (graph, ordered_graph, u, v);
+//	return find_Tri_ind (xtl, tl, el_ind, w);
+//}
+//
 
 
 inline vertex max3_old (vertex a, vertex b, vertex c) {
@@ -577,30 +579,29 @@ inline bool hashUniquify (vector<vertex>& vertices) {
 }
 
 
-inline void print_Ks (int nVtx, volatile vertex* T, const char* vfile, int H = -1) {
+inline void print_Ks (edge nVtx, vertex* T, const char* vfile, int H = -1) {
 	string st (vfile);
 	if (H == -1)
 		st += "_FINAL_K";
 	else
 		st += "_H_" + to_string(H);
 	FILE* pp = fopen (st.c_str(), "w");
-	for (int i = 0; i < nVtx; i++)
+	for (edge i = 0; i < nVtx; i++)
 		fprintf (pp, "%d\n", T[i]);
 	fclose (pp);
 }
 
 void baseLocal12 (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* P, const char* vfile);
 void nmLocal12 (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* P, const char* vfile);
-void NoWaitnmLocal12 (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* P, const char* vfile);
-void StaticNoWaitnmLocal23 (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* T, const char* vfile);
 void fast12DegeneracyNumber (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* P, const char* vfile);
 
 void baseLocal23_ST (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* T, const char* vfile);
 void nmLocal23_ST (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* T, const char* vfile);
 void baseLocal23 (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* T, const char* vfile);
 void nmLocal23 (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* T, const char* vfile);
-void NoWaitnmLocal23 (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* T, const char* vfile);
 
+void baseLocal34 (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* T, const char* vfile);
+void nmLocal34 (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* T, const char* vfile);
 //template <typename VtxType, typename EdgeType>
 //void readGraph (char *filename, vector<vector<VtxType>>& graph, EdgeType* nEdge);
 

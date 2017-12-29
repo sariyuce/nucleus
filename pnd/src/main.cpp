@@ -204,11 +204,6 @@ int main(int argc, char *argv[]) {
 		vfile += "_PI_CORE";
 		nmLocal12 (nVtx, nEdge, adj, xadj, P, vfile.c_str());
 	}
-	else if (depth == 12000) {
-		vfile += "_PI_CORE";
-		NoWaitnmLocal12 (nVtx, nEdge, adj, xadj, P, vfile.c_str());
-//		TRY_NMpicore (nVtx, nEdge, adj, xadj, P, vfile.c_str());
-	}
 	else if (depth == 121) {
 		vfile += "_K_CORE";
 		base_kcore (graph, nEdge/2, P, totaltime, &maxP, vfile.c_str(), fp);
@@ -257,15 +252,7 @@ int main(int argc, char *argv[]) {
 		vfile += "_PI_TRUSS";
 		nmLocal23_ST (nVtx, nEdge/2, adj, xadj, P, vfile.c_str());
 	}
-	else if (depth == 2300000) {
-		vfile += "_PI_TRUSS";
-		NoWaitnmLocal23 (nVtx, nEdge/2, adj, xadj, P, vfile.c_str());
-	}
 
-	else if (depth == 23000000) {
-		vfile += "_PI_TRUSS";
-		StaticNoWaitnmLocal23 (nVtx, nEdge/2, adj, xadj, P, vfile.c_str());
-	}
 	else if (depth == 231) {
 		vfile += "_K_TRUSS";
 		vector<vertex> T;
@@ -290,34 +277,38 @@ int main(int argc, char *argv[]) {
 		}
 		fclose (fzp);
 
-		k34_Seshlevels (graph, nEdge/2, T, cono, totaltime, &maxP, vfile.c_str(), fp);
+//		k34_Seshlevels (graph, nEdge/2, T, cono, totaltime, &maxP, vfile.c_str(), fp);
 	}
 
 	else if (depth == 734) {
 		vfile += "_K_34";
 		vector<vertex> T;
-		k34_levels (graph, nEdge/2, T, totaltime, &maxP, vfile.c_str(), fp);
+//		k34_levels (graph, nEdge/2, T, totaltime, &maxP, vfile.c_str(), fp);
 	}
 	else if (depth == 340) {
 		vfile += "_PI_34";
+		baseLocal34 (nVtx, nEdge/2, adj, xadj, P, vfile.c_str());
+
+
 //		base_pi34 (graph, nEdge/2, P, vReals, totaltime, &maxP, vfile.c_str(), fp);
-		justpi34 (graph, nEdge/2, P, vReals, totaltime, &maxP, vfile.c_str(), fp, asdf);
+//		justpi34 (graph, nEdge/2, P, vReals, totaltime, &maxP, vfile.c_str(), fp, asdf);
 	}
 	else if (depth == 3400) {
 		vertex* P;
-		vfile += "_PI_34_LS";
-		base_pi34_LessSpace (graph, nEdge/2, P, vReals, totaltime, &maxP, vfile.c_str(), fp, asdf);
+		vfile += "_PI_34_TRUSS";
+//		nmLocal34 (nVtx, nEdge/2, adj, xadj, P, vfile.c_str());
+//		base_pi34_LessSpace (graph, nEdge/2, P, vReals, totaltime, &maxP, vfile.c_str(), fp, asdf);
 //		TryFasterPi34 (graph, nEdge/2, P, vReals, totaltime, &maxP, vfile.c_str(), fp, asdf);
 	}
 	else if (depth == 341) {
 		vfile += "_K_34";
 		vector<vertex> T;
-		base_k34 (graph, nEdge/2, T, totaltime, &maxP, vfile.c_str(), fp);
+//		base_k34 (graph, nEdge/2, T, totaltime, &maxP, vfile.c_str(), fp);
 	}
 	else if (depth == 342) {
 		vfile += "_STORE_4C_K_34";
 		vector<vertex> T;
-		base_k34_Store4c (graph, nEdge/2, T, totaltime, &maxP, vfile.c_str(), fp);
+//		base_k34_Store4c (graph, nEdge/2, T, totaltime, &maxP, vfile.c_str(), fp);
 	}
 
 //	if (depth / 10 == 12) {

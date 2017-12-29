@@ -381,6 +381,7 @@ void createOrdered (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, couple1* e
 		ordered_xadj[oxi++] = oi;
 		xel[xi++] = i;
 	}
+	printf ("el.size: %d\n", i);
 }
 
 
@@ -820,12 +821,12 @@ void report_all_stuff2 (int variant, Graph& graph, int nEdge, int cn, p_auxies& 
 //				if (variant == 34)
 //					find_sub34 (j, graph, K, (*ax.tlist), (*ax.tl), visited, subx_ids, hrc, op);
 //				else
-				if (variant == 23)
-					find_subtruss (j, graph, K, (*ax.xel), (*ax.el), visited, subx_ids, hrc, op);
-				else {
+//				if (variant == 23)
+//					find_subtruss (j, graph, K, (*ax.xel), (*ax.el), visited, subx_ids, hrc, op);
+//				else {
 //					printf ("find %d subcore from %d\n", i, j);
-					find_subcore (j, graph, K, visited, subx_ids, hrc, tmerge, tloop, tdirect, op);
-				}
+//					find_subcore (j, graph, K, visited, subx_ids, hrc, tmerge, tloop, tdirect, op);
+//				}
 			}
 		}
 		old_size = op.total_size;

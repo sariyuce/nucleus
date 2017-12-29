@@ -2,151 +2,6 @@
 
 // UTILITY FUNCTIONS, MIGHT BE NEEDED
 
-inline vertex old_getEdgeId (vertex u, vertex v, vector<vertex>& xel, EdgeList2& el, Graph& graph) {
-
-	vertex a, b;
-	if (graph[u].size() < graph[v].size() || (graph[u].size() == graph[v].size() && u < v)) {
-		a = u; b = v;
-	}
-	else {
-		a = v; b = u;
-	}
-
-	for (vertex i = xel[a]; i < xel[a+1]; i++) {
-		if (get<1>(el[i]) == b) {
-			return i;
-		}
-	}
-	return -1;
-}
-
-inline void see_largerK (int s, int tn, HashMap<bool>& marked, vector<subcore>& hrc, vector<int>& merge_sc, stats& op) {
-	if (marked.hasDefaultValue(s)) {
-		vector<int> acc; // accumulate during find
-		int next_id = hrc.size() - 1;
-		int old_s = s;
-
-		while (hrc[s].root != -1) {
-			acc.push_back (s);
-			s = hrc[s].root;
-		}
-		for (int i : acc)
-			hrc[i].root = s;
-		if (marked.hasDefaultValue(s) && s != next_id) { // now you have the root as s
-			if (hrc[s].K > tn) { // s becomes kid of next_id-th subcore
-				hrc[s].parent = next_id;
-				hrc[s].root = next_id;
-			}
-			else // hrc[s].K == tn
-				merge_sc.push_back (s); // defer the merge processing to the end: need to know the ranks
-			marked[s] = true;
-		}
-		marked[old_s] = true;
-	}
-}
-
-inline void see_equalK (vertex u, vertex v, vertex w, vector<int>& es, HashMap<bool>& visited, queue<couple1>& bfsorder) {
-	es.push_back (u);
-	if (visited.hasDefaultValue(u)) {
-		couple1 cp = make_tuple (v, w);
-		bfsorder.push(cp);
-		visited[u] = true;
-	}
-}
-
-void find_subtruss (vertex root, Graph& graph, vertex* T, vector<vertex>& xel, EdgeList2& el, HashMap<bool>& visited,
-		vector<vertex>& subtruss_ids, vector<subcore>& hrc, stats& op) {
-	vertex tn = T[root];
-	int next_id = hrc.size();
-	subcore sc;
-	sc.rank = 0;
-	sc.K = tn;
-	sc.parent = -1;
-	sc.root = -1;
-	sc.visible = true;
-	hrc.push_back (sc);
-	vector<int> es; // put the edge ids in subtruss
-	vector<int> merge_sc;
-	HashMap<bool> marked (false); // to keep track of the neighbor subcores (and their ancestors)
-	queue<couple1> bfsorder;
-	bfsorder.push(el[root]);
-	es.push_back (root);
-	visited[root] = true;
-	while (!bfsorder.empty()) {
-		couple1 c = bfsorder.front();
-		bfsorder.pop();
-		vertex u = get<0>(c);
-		vertex v = get<1>(c);
-		vector<vertex> inter;
-		intersection (graph[u], graph[v], inter);
-		for (size_t j = 0; j < inter.size(); j++) {
-			vertex w = old_getEdgeId(u, inter[j], xel, el, graph);
-			vertex x = old_getEdgeId(v, inter[j], xel, el, graph);
-			if (T[w] >= tn && T[x] >= tn) {
-				if (T[w] == tn) {
-					if (visited.hasDefaultValue(w) && subtruss_ids[w] != -1) {
-						printf ("VIOLATION-2\n");
-						exit(1);
-					}
-
-					see_equalK (w, u, inter[j], es, visited, bfsorder);
-				}
-				else // > tn
-					see_largerK (subtruss_ids[w], tn, marked, hrc, merge_sc, op);
-				if (T[x] == tn) {
-					if (visited.hasDefaultValue(x) && subtruss_ids[x] != -1) {
-						printf ("VIOLATION-2\n");
-						exit(1);
-					}
-
-					see_equalK (x, v, inter[j], es, visited, bfsorder);
-				}
-				else // > tn
-					see_largerK (subtruss_ids[x], tn, marked, hrc, merge_sc, op);
-			}
-		}
-	}
-
-	for (size_t i = 0; i < es.size(); i++)
-		subtruss_ids[es[i]] = next_id;
-
-	hrc[next_id].size = es.size();
-	op.total_size += es.size();
-
-	if (!merge_sc.empty()) {
-		merge_sc.push_back (next_id);
-		vector<bool> seen (merge_sc.size(), false);
-		for (int i = 0; i < merge_sc.size(); i++) {
-			if (!seen[i]) {
-				for (int j = i + 1; j < merge_sc.size(); j++) {
-					if (!seen[i] && !seen[j]) {
-						op.union_op++;
-						int ch = merge_sc[i];
-						int pr = merge_sc[j];
-						bool fl = false;
-						if (hrc[ch].rank > hrc[pr].rank) {
-							int t = pr;
-							pr = ch;
-							ch = t;
-							seen[j] = true;
-						}
-						else {
-							seen[i] = true;
-							fl = true;
-						}
-						hrc[ch].parent = pr;
-						hrc[ch].root = pr;
-						if (hrc[pr].rank == hrc[ch].rank)
-							hrc[pr].rank++;
-
-						if (fl)
-							break;
-					}
-				}
-			}
-		}
-	}
-}
 
 inline void print_Hs (Graph& graph, int nEdge, vector<vertex>& xel, EdgeList2& el, volatile vertex* T, const char* vfile, int oc) {
 #ifdef CONSTRUCT
@@ -198,7 +53,6 @@ inline void simple_distance (int nEdge, vertex* Reals, vertex* T, int oc) {
 	printf ("H %d , similarity: %lf\n", oc, score);
 }
 
-// Kendall-Tau
 inline void compute_KT (vertex* Reals, EdgeList2& el, Graph& tris, vertex* T, int oc) {
 	int count = 0, score = 0;
 	for (vertex i = 0; i < el.size(); i++) {
@@ -1051,6 +905,8 @@ void baseLocal23 (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* T, c
 	free (T);
 	free (xel);
 	free (el);
+	free (ordered_adj);
+	free (ordered_xadj);
 #ifdef SYNC
 	free (U);
 #endif
