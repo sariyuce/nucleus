@@ -2,7 +2,6 @@
 
 // UTILITY FUNCTIONS, MIGHT BE NEEDED
 
-
 inline void print_Hs (Graph& graph, int nEdge, vector<vertex>& xel, EdgeList2& el, volatile vertex* T, const char* vfile, int oc) {
 #ifdef CONSTRUCT
 	int mT = 0;
@@ -80,8 +79,8 @@ inline void compute_KT (vertex* Reals, EdgeList2& el, Graph& tris, vertex* T, in
 
 /* STORES EDGE-TRIANGLE GRAPHS */
 
-void store_count_triangles (vertex* T, vector<vertex>* tris, vertex nVtx, edge nEdge, vertex* adj, edge* xadj, couple1* el, edge* xel, vertex* ordered_adj, edge* ordered_xadj) {
-
+lol store_count_triangles (vertex* T, vector<vertex>* tris, vertex nVtx, edge nEdge, vertex* adj, edge* xadj, couple1* el, edge* xel, vertex* ordered_adj, edge* ordered_xadj) {
+	lol count = 0;
 #pragma omp parallel for
 	for (vertex i = 0; i < nVtx; i++) {
 		for (edge j = ordered_xadj[i]; j < ordered_xadj[i+1]; j++) {
@@ -108,6 +107,10 @@ void store_count_triangles (vertex* T, vector<vertex>* tris, vertex nVtx, edge n
 					T[y]++;
 					tris[y].push_back (x);
 					tris[y].push_back (z);
+#ifndef FAST
+#pragma omp atomic
+					count++;
+#endif
 				}
 			}
 		}
@@ -141,6 +144,7 @@ void store_count_triangles (vertex* T, vector<vertex>* tris, vertex nVtx, edge n
 			}
 		}
 	}
+	return count;
 }
 
 // this is faster than sort-based computation
@@ -149,7 +153,7 @@ inline int mapInitialHI_ST (edge ind, vector<vertex>* tris, vertex* P
 		, vertex* Q
 #endif
 ) {
-	HashMap<vertex> gmap (0);
+	HashMap<vertex> gmap (-1);
 	vertex greaters = 0;
 	vertex equals = 0;
 	vertex H = 0;
@@ -168,11 +172,12 @@ inline int mapInitialHI_ST (edge ind, vector<vertex>* tris, vertex* P
 			else { // equals = 0
 				H++;
 				vertex gH = 0;
-				if (!gmap.hasDefaultValue (H))
+				if (!gmap.hasDefaultValue (H)) {
 					gH = gmap[H];
+					gmap.erase (H);
+				}
 				equals = gH + 1;
 				greaters -= gH;
-				gmap.erase (H);
 			}
 		}
 		else if (sm > H + 1) {
@@ -185,12 +190,13 @@ inline int mapInitialHI_ST (edge ind, vector<vertex>* tris, vertex* P
 				greaters++;
 				H++;
 				vertex gH = 0;
-				if (!gmap.hasDefaultValue (H))
+				if (!gmap.hasDefaultValue (H)) {
 					gH = gmap[H];
+					gmap.erase (H);
+				}
 				equals = gH;
 				greaters -= gH;
 				gmap[sm]++;
-				gmap.erase (H);
 			}
 		}
 	}
@@ -320,23 +326,28 @@ void baseLocal23_ST (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* T
 	createOrdered (nVtx, nEdge, adj, xadj, el, xel, ordered_adj, ordered_xadj);
 
 	timestamp t_cog;
-	cout << "creating ordered graph: " << t_cog - t_begin << endl;
+	cout << "Creating ordered graph: " << t_cog - t_begin << endl;
 
 	// Triangle counting and storing for each edge
 	T = (vertex *) calloc (nEdge, sizeof(vertex));
 
 #ifdef SYNC
+	printf ("It is SYNC\n");
 	vertex* U = (vertex *) calloc (nEdge, sizeof(vertex));
+#else
+	printf ("It is ASYNC\n");
 #endif
 
 	vector<vertex> tris[nEdge];
-	store_count_triangles (T, tris, nVtx, nEdge, adj, xadj, el, xel, ordered_adj, ordered_xadj);
+	lol tricount = store_count_triangles (T, tris, nVtx, nEdge, adj, xadj, el, xel, ordered_adj, ordered_xadj);
 	free (xel);
 	free (ordered_adj);
 	free (ordered_xadj);
 	timestamp t_tc;
 	cout << "Triangle counting & edge-triangle graph construction time: " << t_tc - t_begin << endl;
-
+#ifndef FAST
+	cout << "# triangles: " << tricount << endl;
+#endif
 	timestamp td (0, 0);
 	int oc = 0;
 	bool flag = true;
@@ -424,18 +435,21 @@ void nmLocal23_ST (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* T, 
 	createOrdered (nVtx, nEdge, adj, xadj, el, xel, ordered_adj, ordered_xadj);
 
 	timestamp t_cog;
-	cout << "creating ordered graph: " << t_cog - t_begin << endl;
+	cout << "Creating ordered graph: " << t_cog - t_begin << endl;
 
 	// Triangle counting and storing for each edge
 	T = (vertex *) calloc (nEdge, sizeof(vertex));
 
 	vector<vertex> tris[nEdge];
-	store_count_triangles (T, tris, nVtx, nEdge, adj, xadj, el, xel, ordered_adj, ordered_xadj);
+	lol tricount = store_count_triangles (T, tris, nVtx, nEdge, adj, xadj, el, xel, ordered_adj, ordered_xadj);
 	free (xel);
 	free (ordered_adj);
 	free (ordered_xadj);
 	timestamp t_tc;
 	cout << "Triangle counting & edge-triangle graph construction time: " << t_tc - t_begin << endl;
+#ifndef FAST
+	cout << "# triangles: " << tricount << endl;
+#endif
 
 	timestamp td (0, 0);
 	int oc = 0;
@@ -528,12 +542,6 @@ void nmLocal23_ST (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* T, 
 
 
 
-
-
-
-
-
-
 /* DOES NOT STORE EDGE_TRIANGLE GRAPHS; SPACE-EFFICIENT (AND SLOWER) */
 
 inline vertex getEdgeId (vertex u, vertex v, edge* xel, couple1* el, vertex deg_u, vertex deg_v) {
@@ -547,8 +555,8 @@ inline vertex getEdgeId (vertex u, vertex v, edge* xel, couple1* el, vertex deg_
 }
 
 // single loop, three locks
-void count_triangles (vertex* T, vertex nVtx, edge* xadj, vertex* ordered_adj, edge* ordered_xadj) {
-
+lol count_triangles (vertex* T, vertex nVtx, edge* xadj, vertex* ordered_adj, edge* ordered_xadj) {
+	lol count = 0;
 #pragma omp parallel for
 	for (vertex i = 0; i < nVtx; i++) {
 		for (edge j = ordered_xadj[i]; j < ordered_xadj[i+1]; j++) {
@@ -575,10 +583,15 @@ void count_triangles (vertex* T, vertex nVtx, edge* xadj, vertex* ordered_adj, e
 					T[y]++;
 #pragma omp atomic
 					T[z]++;
+#ifndef FAST
+#pragma omp atomic
+					count++;
+#endif
 				}
 			}
 		}
 	}
+	return count;
 }
 
 inline int mapInitialHI (edge ind, edge* xadj, vertex* adj, edge* xel, couple1* el, vertex* P
@@ -586,7 +599,7 @@ inline int mapInitialHI (edge ind, edge* xadj, vertex* adj, edge* xel, couple1* 
 		, vertex* Q
 #endif
 ) {
-	HashMap<vertex> gmap (0);
+	HashMap<vertex> gmap (-1);
 	vertex greaters = 0;
 	vertex equals = 0;
 	vertex H = 0;
@@ -606,7 +619,7 @@ inline int mapInitialHI (edge ind, edge* xadj, vertex* adj, edge* xel, couple1* 
 			vertex deg_w = xadj[w+1] - xadj[w];
 			vertex id1 = getEdgeId (u, w, xel, el, deg_u, deg_w);
 			vertex id2 = getEdgeId (v, w, xel, el, deg_v, deg_w);
-			vertex sm = (P[id1] <= P[id2] ? P[id1] : P[id2]);
+			vertex sm = min (P[id1], P[id2]);
 
 			if (sm == H + 1) {
 				if (equals > 0) {
@@ -617,11 +630,12 @@ inline int mapInitialHI (edge ind, edge* xadj, vertex* adj, edge* xel, couple1* 
 				else { // equals = 0
 					H++;
 					vertex gH = 0;
-					if (!gmap.hasDefaultValue (H))
+					if (!gmap.hasDefaultValue (H)) {
 						gH = gmap[H];
+						gmap.erase (H);
+					}
 					equals = gH + 1;
 					greaters -= gH;
-					gmap.erase (H);
 				}
 			}
 			else if (sm > H + 1) {
@@ -634,12 +648,13 @@ inline int mapInitialHI (edge ind, edge* xadj, vertex* adj, edge* xel, couple1* 
 					greaters++;
 					H++;
 					vertex gH = 0;
-					if (!gmap.hasDefaultValue (H))
+					if (!gmap.hasDefaultValue (H)) {
 						gH = gmap[H];
+						gmap.erase (H);
+					}
 					equals = gH;
 					greaters -= gH;
 					gmap[sm]++;
-					gmap.erase (H);
 				}
 			}
 			i++;
@@ -687,7 +702,7 @@ inline int regularUpdateHI (edge ind, edge* xadj, vertex* adj, edge* xel, couple
 			vertex deg_w = xadj[w+1] - xadj[w];
 			vertex id1 = getEdgeId (u, w, xel, el, deg_u, deg_w);
 			vertex id2 = getEdgeId (v, w, xel, el, deg_v, deg_w);
-			vertex cur_T = (T[id1] <= T[id2] ? T[id1] : T[id2]);
+			vertex cur_T = min (T[id1], T[id2]);
 
 			if (cur_T >= previous_T)
 				greaterequals++;
@@ -707,9 +722,8 @@ inline int regularUpdateHI (edge ind, edge* xadj, vertex* adj, edge* xel, couple
 		vertex j;
 		for (j = previous_T - 1; j > 0; j--) {
 			greaterequals += smallers[j];
-			if (greaterequals >= j) {
+			if (greaterequals >= j)
 				break;
-			}
 		}
 #ifdef SYNC
 		if (U[ind] != j) {
@@ -799,25 +813,27 @@ void baseLocal23 (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* T, c
 	createOrdered (nVtx, nEdge, adj, xadj, el, xel, ordered_adj, ordered_xadj);
 
 	timestamp t_cog;
-	cout << "creating ordered graph: " << t_cog - t_begin << endl;
+	cout << "Creating ordered graph: " << t_cog - t_begin << endl;
 
 	// Triangle counting for each edge
 	T = (vertex *) calloc (nEdge, sizeof(vertex));
 
 #ifdef SYNC
-	printf ("it is SYNC\n");
+	printf ("It is SYNC\n");
 	vertex* U = (vertex *) calloc (nEdge, sizeof(vertex));
 #else
-	printf ("it is ASYNC\n");
+	printf ("It is ASYNC\n");
 #endif
 
-	count_triangles (T, nVtx, xadj, ordered_adj, ordered_xadj); // single loop with three locks
+	lol tricount = count_triangles (T, nVtx, xadj, ordered_adj, ordered_xadj); // single loop with three locks
 
 	free (ordered_adj);
 	free (ordered_xadj);
 	timestamp t_tc;
 	cout << "Triangle counting time: " << t_tc - t_cog << endl;
-
+#ifndef FAST
+	cout << "# triangles: " << tricount << endl;
+#endif
 	timestamp td (0, 0);
 	int oc = 0;
 	bool flag = true;
@@ -878,6 +894,7 @@ void baseLocal23 (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* T, c
 			if (fl == 1)
 				flag = true;
 		}
+
 		timestamp td2;
 #ifdef SYNC
 		memcpy (T, U, sizeof(vertex) * nEdge);
@@ -932,17 +949,20 @@ void nmLocal23 (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* T, con
 	createOrdered (nVtx, nEdge, adj, xadj, el, xel, ordered_adj, ordered_xadj);
 
 	timestamp t_cog;
-	cout << "creating ordered graph: " << t_cog - t_begin << endl;
+	cout << "Creating ordered graph: " << t_cog - t_begin << endl;
 
 	// Triangle counting for each edge
 	T = (vertex *) calloc (nEdge, sizeof(vertex));
 
-	count_triangles (T, nVtx, xadj, ordered_adj, ordered_xadj); // single loop with three locks
+	lol tricount = count_triangles (T, nVtx, xadj, ordered_adj, ordered_xadj); // single loop with three locks
 
 	free (ordered_adj);
 	free (ordered_xadj);
 	timestamp t_tc;
 	cout << "Triangle counting time: " << t_tc - t_begin << endl;
+#ifndef FAST
+	cout << "# triangles: " << tricount << endl;
+#endif
 
 	timestamp td (0, 0);
 	int oc = 0;
@@ -1032,6 +1052,4 @@ void nmLocal23 (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* T, con
 	return;
 #endif
 }
-
-
 

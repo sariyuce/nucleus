@@ -324,15 +324,6 @@ inline double kt (int count, int score) {
 }
 
 
-inline vertex findTriInd (vector<vertex>& xtl, vector<triangle_id>& tlist, vertex ind, vertex target) {
-
-	for (vertex i = xtl[ind]; i < xtl[ind + 1]; i++) {
-		if (get<2>(tlist[i].triple) == target) {
-			return i;
-		}
-	}
-	return -1;
-}
 
 inline void intersect_2 (Graph& graph, vertex u, vertex v, vector<vertex>& intersection) {
 	size_t i = 0, j = 0;
@@ -561,6 +552,9 @@ inline bool lessThan (vertex u, vertex v, edge* xadj) {
 
 //vector<tuple<int, int>> asdf;
 
+typedef tuple<int, int> eda;
+
+inline bool kksort (eda i, eda j) { return (get<1>(i) > get<1>(j)); }
 
 
 inline bool hashUniquify (vector<vertex>& vertices) {
@@ -591,9 +585,28 @@ inline void print_Ks (edge nVtx, vertex* T, const char* vfile, int H = -1) {
 	fclose (pp);
 }
 
-void baseLocal12 (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* P, const char* vfile);
-void nmLocal12 (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* P, const char* vfile);
-void fast12DegeneracyNumber (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* P, const char* vfile);
+
+inline void read_Ks (size_t sz, char* fl, vertex* P) {
+	P = (vertex *) malloc (sizeof(vertex) * sz);
+	FILE* fp = fopen (fl, "r");
+	vertex num;
+	for (size_t i = 0; i < sz; i++) {
+		fscanf (fp, "%d", &num);
+		P[i] = num;
+	}
+	fclose (fp);
+}
+
+void baseLocal12 (vertex nVtx, vertex* adj, edge* xadj, vertex* P, const char* vfile);
+void nmLocal12 (vertex nVtx, vertex* adj, edge* xadj, vertex* P, const char* vfile);
+void kcore (vertex nVtx, vertex* adj, edge* xadj, vertex* K, const char* vfile);
+
+void kcore_levels (vertex nVtx, vertex* adj, edge* xadj, vertex* L, const char* vfile);
+void kcore_Sesh_levels (vertex nVtx, vertex* adj, edge* xadj, vertex* K, vertex* L, const char* vfile);
+
+void fast12DegeneracyNumber (vertex nVtx, vertex* adj, edge* xadj, vertex* P);
+
+
 
 void baseLocal23_ST (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* T, const char* vfile);
 void nmLocal23_ST (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* T, const char* vfile);

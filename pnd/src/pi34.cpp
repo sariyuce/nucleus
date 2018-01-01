@@ -1,22 +1,22 @@
 #include "main.h"
-
-inline void print_Ks (vector<triangle_id>& tlist, volatile vertex* F, const char* vfile) {
-	string st (vfile);
-	st += "_FINAL_H_values";
-	FILE* pp = fopen (st.c_str(), "w");
-	for (int i = 0; i < tlist.size(); i++)
-		fprintf (pp, "%d %d %d   %d\n", get<0>(tlist[i].triple), get<1>(tlist[i].triple), get<2>(tlist[i].triple), F[i]);
-	fclose (pp);
-}
-
-inline void print_Hs (vector<triangle_id>& tlist, volatile vertex* F, const char* vfile, int oc) {
-	string st (vfile);
-	st += "_H_values_" + to_string (oc);
-	FILE* pp = fopen (st.c_str(), "w");
-	for (int i = 0; i < tlist.size(); i++)
-		fprintf (pp, "%d\n", F[i]);
-	fclose (pp);
-}
+//
+//inline void print_Ks (vector<triangle_id>& tlist, volatile vertex* F, const char* vfile) {
+//	string st (vfile);
+//	st += "_FINAL_H_values";
+//	FILE* pp = fopen (st.c_str(), "w");
+//	for (int i = 0; i < tlist.size(); i++)
+//		fprintf (pp, "%d %d %d   %d\n", get<0>(tlist[i].triple), get<1>(tlist[i].triple), get<2>(tlist[i].triple), F[i]);
+//	fclose (pp);
+//}
+//
+//inline void print_Hs (vector<triangle_id>& tlist, volatile vertex* F, const char* vfile, int oc) {
+//	string st (vfile);
+//	st += "_H_values_" + to_string (oc);
+//	FILE* pp = fopen (st.c_str(), "w");
+//	for (int i = 0; i < tlist.size(); i++)
+//		fprintf (pp, "%d\n", F[i]);
+//	fclose (pp);
+//}
 
 inline int minof (int a, int b, int c) {
 	int tm = (a < b) ? a : b;
@@ -39,6 +39,8 @@ inline void reverse_intersect (Graph& graph, Graph& ordered_graph,vertex u, vert
 		}
 	}
 }
+
+
 //
 //void superTriangleList (Graph& graph, Graph& ordered_graph, vector<int>& xel, vector<int>& xtl, EdgeList2& el, vector<triangle_id>& tl, Graph& TF) {
 //
@@ -358,101 +360,6 @@ inline void compute_KT (vector<triangle_id>& tlist, vector<vertex>& Reals, Graph
 //
 
 
-inline void updateAndNotify (int ind, volatile vertex* P, int newP, vector<vertex>& neigs, bool* changed) {
-	P[ind] = newP;
-	changed[ind] = true; // *THIS*
-	for (int k = 0; k < neigs.size(); k++) {
-		if (P[neigs[k]] >= P[ind]) {
-			changed[neigs[k]] = true;
-		}
-	}
-}
-
-
-inline int quick_h_index (int ind, int* Nsizegraph, int** Ngraph, triangle_id* Ntlist, int* Nxel, vertex* Nxtl, int** Nordered_graph, int* Nsizeordered_graph, volatile vertex* P, bool* changed) {
-
-	int nP, sm;
-	vector<vertex> neigs;
-	int previous_P = P[ind];
-	int greaterequals = 0;
-	vector<int> smallers (previous_P, 0);
-	bool yep_set = false;
-	vertex u = get<0> (Ntlist[ind].triple);
-	vertex v = get<1> (Ntlist[ind].triple);
-	vertex w = get<2> (Ntlist[ind].triple);
-
-	size_t ii = 0, jj = 0, kk = 0;
-	vertex u_size = Nsizegraph[u];
-	vertex v_size = Nsizegraph[v];
-	vertex w_size = Nsizegraph[w];
-
-	bool has4Clique = false;
-	while (ii < u_size && jj < v_size && kk < w_size) {
-		vertex a = Ngraph[u][ii];
-		vertex b = Ngraph[v][jj];
-		vertex c = Ngraph[w][kk];
-
-		if (a == b && a == c) {
-			has4Clique = true;
-			vertex x = a;
-			vertex id1 = NgetTriId (u, v, x, Nxel, Nxtl, Ntlist, Nordered_graph, Nsizeordered_graph, Ngraph, Nsizegraph);
-			vertex id2 = NgetTriId (u, w, x, Nxel, Nxtl, Ntlist, Nordered_graph, Nsizeordered_graph, Ngraph, Nsizegraph);
-			vertex id3 = NgetTriId (v, w, x, Nxel, Nxtl, Ntlist, Nordered_graph, Nsizeordered_graph, Ngraph, Nsizegraph);
-
-			int p1 = P[id1];
-			int p2 = P[id2];
-			int p3 = P[id3];
-			nP = sm = minof (p1, p2, p3);
-
-//			if (nP <= previous_P) { // *OLD THIS*
-//				neigs.push_back (id1);
-//				neigs.push_back (id2);
-//				neigs.push_back (id3);
-//			}
-//
-
-			if (p1 <= previous_P)
-				neigs.push_back (id1);
-			if (p2 <= previous_P)
-				neigs.push_back (id2);
-			if (p3 <= previous_P)
-				neigs.push_back (id3);
-
-			if (sm >= previous_P)
-				greaterequals++;
-			else
-				smallers[sm]++;
-			if (greaterequals == previous_P) {
-				yep_set = true;
-				break;
-			}
-			ii++; jj++; kk++;
-		}
-		else {
-			vertex m = max3_old(a, b, c);
-			if (a != m)
-				ii++;
-			if (b != m)
-				jj++;
-			if (c != m)
-				kk++;
-		}
-	}
-
-	if (!yep_set && has4Clique) {
-		int H = 0;
-		for (int j = previous_P - 1; j > 0; j--) {
-			greaterequals += smallers[j];
-			if (greaterequals >= j) {
-				H = j;
-				break;
-			}
-		}
-		updateAndNotify (ind, P, H, neigs, changed);
-		return 1;
-	}
-	return 0;
-}
 
 inline vertex findInd (vertex* ordered_adj, edge* ordered_xadj, vertex u, vertex v) {
 	for (vertex i = ordered_xadj[u]; i < ordered_xadj[u+1]; i++)
@@ -461,24 +368,12 @@ inline vertex findInd (vertex* ordered_adj, edge* ordered_xadj, vertex u, vertex
 	return -1;
 }
 
-inline vertex findTriInd (edge* xtl, triangle_id* tlist, edge ind, vertex target) {
-	printf ("xtl[%d]:"
-			" %d     "
-			"xtl[%d]: "
-			"%d\n",
-			ind,
-			xtl[ind],
-			ind+1,
-			xtl[ind+1]);
-	for (vertex i = xtl[ind]; i < xtl[ind + 1]; i++)
-		if (get<2>(tlist[i].triple) == target)
-			return i;
-	return -1;
-}
-
 inline int getTriangleId (vertex u, vertex v, vertex w, edge* xel, edge* xtl, triangle_id* tlist, vertex* ordered_adj, edge* ordered_xadj) {
 	edge ind = findInd (ordered_adj, ordered_xadj, u, v);
-	return findTriInd (xtl, tlist, ind, w);
+	for (vertex i = xtl[ind]; i < xtl[ind + 1]; i++)
+		if (get<2>(tlist[i].triple) == w)
+			return i;
+	return -1;
 }
 
 inline bool isSmaller (vertex* xadj, vertex u, vertex v) {
@@ -488,7 +383,6 @@ inline bool isSmaller (vertex* xadj, vertex u, vertex v) {
 		return true;
 	return false;
 }
-
 
 inline vertex getComplexTriangleId (vertex a, vertex b, vertex c, edge* xel, edge* xtl, triangle_id* tlist, edge* xadj, vertex* adj, edge* ordered_xadj, vertex* ordered_adj) {
 	vertex u, v, w;
@@ -507,10 +401,16 @@ inline vertex getComplexTriangleId (vertex a, vertex b, vertex c, edge* xel, edg
 		v = b;
 		w = c;
 	}
-
 	return getTriangleId (u, v, w, xel, xtl, tlist, ordered_adj, ordered_xadj);
 }
 
+inline void updateAndNotify (int ind, vertex* P, int newP, vector<vertex>& neigs, bool* changed) {
+	P[ind] = newP;
+	changed[ind] = true; // *THIS* todo: Are we sure on this?
+	for (auto w : neigs)
+		if (P[w] >= P[ind])
+			changed[w] = true;
+}
 
 inline int mapInitialHI (edge ind, vertex* adj, edge* xadj, triangle_id* Ntlist, edge* xel, edge* xtl, vertex* ordered_adj, edge* ordered_xadj, vertex* P
 #ifdef SYNC
@@ -518,7 +418,7 @@ inline int mapInitialHI (edge ind, vertex* adj, edge* xadj, triangle_id* Ntlist,
 #endif
 ) {
 
-	HashMap<vertex> gmap (INT_MIN);
+	HashMap<vertex> gmap (-1);
 	vertex greaters = 0;
 	vertex equals = 0;
 	vertex H = 0;
@@ -554,11 +454,12 @@ inline int mapInitialHI (edge ind, vertex* adj, edge* xadj, triangle_id* Ntlist,
 				else { // equals = 0
 					H++;
 					int gH = 0;
-					if (!gmap.hasDefaultValue (H))
+					if (!gmap.hasDefaultValue (H)) {
 						gH = gmap[H];
+						gmap.erase (H);
+					}
 					equals = gH + 1;
 					greaters -= gH;
-					gmap.erase (H);
 				}
 			}
 			else if (sm > H + 1) {
@@ -571,12 +472,13 @@ inline int mapInitialHI (edge ind, vertex* adj, edge* xadj, triangle_id* Ntlist,
 					greaters++;
 					H++;
 					int gH = 0;
-					if (!gmap.hasDefaultValue (H))
+					if (!gmap.hasDefaultValue (H))  {
 						gH = gmap[H];
+						gmap.erase (H);
+					}
 					equals = gH;
 					greaters -= gH;
 					gmap[sm]++;
-					gmap.erase (H);
 				}
 			}
 			ii++;
@@ -614,13 +516,7 @@ inline int regularUpdateHI (edge ind, vertex* adj, edge* xadj, triangle_id* Ntli
 #endif
 	) {
 
-	HashMap<vertex> gmap (INT_MIN);
-	vertex greaters = 0;
-	vertex equals = 0;
-	vertex H = 0;
-
 	vertex previous_P = P[ind];
-	vertex nP, sm;
 	vertex greaterequals = 0;
 	vector<vertex> smallers (previous_P, 0);
 	bool yep_set = false;
@@ -648,13 +544,12 @@ inline int regularUpdateHI (edge ind, vertex* adj, edge* xadj, triangle_id* Ntli
 			vertex id1 = getComplexTriangleId (u, v, x, xel, xtl, Ntlist, xadj, adj, ordered_xadj, ordered_adj);
 			vertex id2 = getComplexTriangleId (u, w, x, xel, xtl, Ntlist, xadj, adj, ordered_xadj, ordered_adj);
 			vertex id3 = getComplexTriangleId (v, w, x, xel, xtl, Ntlist, xadj, adj, ordered_xadj, ordered_adj);
+			vertex cur_F = min (min (P[id1], P[id2]), P[id3]);
 
-			nP = sm = min (min (P[id1], P[id2]), P[id3]);
-
-			if (sm >= previous_P)
+			if (cur_F >= previous_P)
 				greaterequals++;
 			else
-				smallers[sm]++;
+				smallers[cur_F]++;
 			if (greaterequals == previous_P) {
 				yep_set = true;
 				break;
@@ -673,13 +568,11 @@ inline int regularUpdateHI (edge ind, vertex* adj, edge* xadj, triangle_id* Ntli
 	}
 
 	if (!yep_set && has4Clique) {
-		vertex H = 0;
-		for (vertex j = previous_P - 1; j > 0; j--) {
+		vertex j;
+		for (j = previous_P - 1; j > 0; j--) {
 			greaterequals += smallers[j];
-			if (greaterequals >= j) {
-				H = j;
+			if (greaterequals >= j)
 				break;
-			}
 		}
 #ifdef SYNC
 		if (Q[ind] != j) {
@@ -687,8 +580,8 @@ inline int regularUpdateHI (edge ind, vertex* adj, edge* xadj, triangle_id* Ntli
 			return 1;
 		}
 #else
-		if (P[ind] != H) {
-			P[ind] = H;
+		if (P[ind] != j) {
+			P[ind] = j;
 			return 1;
 		}
 #endif
@@ -696,9 +589,82 @@ inline int regularUpdateHI (edge ind, vertex* adj, edge* xadj, triangle_id* Ntli
 	return 0;
 }
 
+inline int efficientUpdateHI (edge ind, vertex* adj, edge* xadj, triangle_id* Ntlist, edge* xel, edge* xtl, vertex* ordered_adj, edge* ordered_xadj, vertex* P, bool* changed) {
 
-//
-//
+	vector<vertex> neigs;
+	vertex previous_P = P[ind];
+	vertex greaterequals = 0;
+	vector<vertex> smallers (previous_P, 0);
+	bool yep_set = false;
+
+	vertex u = get<0> (Ntlist[ind].triple);
+	vertex v = get<1> (Ntlist[ind].triple);
+	vertex w = get<2> (Ntlist[ind].triple);
+
+	vertex ii = xadj[u];
+	vertex jj = xadj[v];
+	vertex kk = xadj[w];
+
+	vertex u_size = xadj[u+1];
+	vertex v_size = xadj[v+1];
+	vertex w_size = xadj[w+1];
+
+	bool has4Clique = false;
+	while (ii < u_size && jj < v_size && kk < w_size) {
+		vertex a = adj[ii];
+		vertex b = adj[jj];
+		vertex c = adj[kk];
+		if (a == b && a == c) {
+			has4Clique = true;
+			vertex x = a;
+			vertex id1 = getComplexTriangleId (u, v, x, xel, xtl, Ntlist, xadj, adj, ordered_xadj, ordered_adj);
+			vertex id2 = getComplexTriangleId (u, w, x, xel, xtl, Ntlist, xadj, adj, ordered_xadj, ordered_adj);
+			vertex id3 = getComplexTriangleId (v, w, x, xel, xtl, Ntlist, xadj, adj, ordered_xadj, ordered_adj);
+			vertex cur_F = min (min (P[id1], P[id2]), P[id3]);
+
+			if (P[id1] <= previous_P)
+				neigs.push_back (id1);
+			if (P[id2] <= previous_P)
+				neigs.push_back (id2);
+			if (P[id3] <= previous_P)
+				neigs.push_back (id3);
+
+			if (cur_F >= previous_P)
+				greaterequals++;
+			else
+				smallers[cur_F]++;
+			if (greaterequals == previous_P) {
+				yep_set = true;
+				break;
+			}
+			ii++; jj++; kk++;
+		}
+		else {
+			vertex m = max (max (a, b), c);
+			if (a != m)
+				ii++;
+			if (b != m)
+				jj++;
+			if (c != m)
+				kk++;
+		}
+	}
+
+
+	if (!yep_set && has4Clique) {
+		vertex j;
+		for (j = previous_P - 1; j > 0; j--) {
+			greaterequals += smallers[j];
+			if (greaterequals >= j) {
+				break;
+			}
+		}
+		updateAndNotify (ind, P, j, neigs, changed);
+		return 1;
+	}
+	return 0;
+}
+
 //
 //void TryFasterPi34 (Graph& graph, int nEdge, volatile vertex* P, vector<vertex>& Reals, util::timestamp& totaltime, vertex* threefour_number, const char* vfile, FILE* fp, string fname) {
 //
@@ -862,166 +828,16 @@ inline int regularUpdateHI (edge ind, vertex* adj, edge* xadj, triangle_id* Ntli
 //	return;
 //
 //}
-//
-//
-//
-//
-//
-//
-//void justpi34 (Graph& graph, int nEdge, volatile vertex* P, vector<vertex>& Reals, util::timestamp& totaltime, vertex* threefour_number, const char* vfile, FILE* fp, string fname) {
-//
-//	timestamp ts0minus;
-//
-//	int ngraphsize = graph.size();
-//	int* Nsizegraph = (int *) malloc (sizeof (int) * graph.size());
-//	int** Ngraph = (int **) malloc (sizeof (int*) * graph.size());
-//	for (int i = 0; i < graph.size(); i++) {
-//		Ngraph[i] = (int *) malloc (sizeof (int) * graph[i].size());
-//		for (int j = 0; j < graph[i].size(); j++)
-//			Ngraph[i][j] = graph[i][j];
-//		Nsizegraph[i] = graph[i].size();
-//	}
-//
-//	timestamp ts0minus_end;
-//
-//	EdgeList2 el;
-//	vector<vertex> xel;
-//	Graph ordered_graph;
-//	create_ordered_graph (graph, el, xel, ordered_graph);
-//
-//
-//	timestamp ts1minus;
-//	tuple<int, int>* Nel = (tuple<int, int> *) malloc (sizeof(tuple<int, int>) * el.size());
-//	int Nelsize = el.size();
-//	for (int i = 0; i < el.size(); i++)
-//		Nel[i] = el[i];
-//
-//	int* Nxel = (int *) malloc (sizeof(int) * xel.size());
-//	int Nxelsize = xel.size();
-//	for (int i = 0; i < xel.size(); i++)
-//		Nxel[i] = xel[i];
-//
-//
-//	int nordered_graphsize = ordered_graph.size();
-//	int* Nsizeordered_graph = (int *) malloc (sizeof (int) * ordered_graph.size());
-//	int** Nordered_graph = (int **) malloc (sizeof (int*) * ordered_graph.size());
-//	for (int i = 0; i < ordered_graph.size(); i++) {
-//		Nordered_graph[i] = (int *) malloc (sizeof (int) * ordered_graph[i].size());
-//		for (int j = 0; j < ordered_graph[i].size(); j++)
-//			Nordered_graph[i][j] = ordered_graph[i][j];
-//		Nsizeordered_graph[i] = ordered_graph[i].size();
-//	}
-//
-//	timestamp ts1minus_end;
-//
-//	timestamp ts0;
-//	cout << "before iterations: " << ts0 - ts0minus << endl;
-//
-//	vector<triangle_id> tlist;
-//	vector<vertex> xtl;
-//	create_classic_triangleList (ordered_graph, el, tlist, xtl); // not parallel, like ordered_graph creation in pi23
-//	int Nxtlsize = xtl.size();
-//	vertex* Nxtl = (vertex *) malloc (sizeof (vertex) * xtl.size());
-//	for (int i = 0; i < xtl.size(); i++)
-//		Nxtl[i] = xtl[i];
-//
-//	timestamp ts01;
-//	cout << "create triangle list: " << ts01 - ts0 << endl;
-//
-//	// 4-clique counting
-//	P = (vertex *) malloc (sizeof(vertex) * tlist.size());
-//	lol fccount = intersect3_count_classic_efficient (graph, ordered_graph, el, xel, xtl, tlist); // todo: can think about convert STLs to pointers
-//
-//	timestamp ts2minus;
-//	int Ntlistsize = tlist.size();
-//	triangle_id* Ntlist = (triangle_id *) malloc (sizeof (triangle_id) * tlist.size());
-//	for (int i = 0; i < tlist.size(); i++) {
-//		Ntlist[i].id = tlist[i].id;
-//		Ntlist[i].triple = tlist[i].triple;
-//	}
-//	timestamp ts2minus_end;
-//
-//	int nt = 1, tn = 0;
-//#pragma omp parallel
-//	{
-//		nt = omp_get_num_threads();
-//		tn = omp_get_thread_num();
-//
-//#pragma omp for
-//		for (int i = 0; i < Ntlistsize; i++)
-//			P[i] = Ntlist[i].id;
-//	}
-//
-//	timestamp ts1;
-//	cout << "Four clique counting: " << (ts1 - ts01) << endl;
-//
-////	int* ccs = (int *) calloc (nt, sizeof(int));
-////	int* nextBatch = (int *) malloc (sizeof(int) * Ntlistsize);
-//	int oc = 0;
-////	print_Hs (tlist, P, vfile, oc);
-//	oc++;
-//	timestamp ts2;
-//
-////	int oc = 0;
-//	bool flag = true;
-//
-//#pragma omp parallel for schedule (dynamic, 1000)
-//	for (int ind = 0; ind < Ntlistsize; ind++) {
-//		initial_h_index (ind, Nsizegraph, Ngraph, Ntlist, Nxel, Nxtl, Nordered_graph, Nsizeordered_graph, P);
-//	}
-//	timestamp ts3;
-//
-//
-//	timestamp ts3minus;
-////	int degisenler = 0;
-////	for(int i = 0; i < nt; i++)
-////		degisenler += ccs[i];
-//	timestamp ts3minus_end;
-//
-////	int nb = 0;
-////	for (int ind = 0; ind < Ntlistsize; ind++)
-////		nextBatch[nb++] = ind;
-//
-////	bool changed[Ntlistsize];
-////	memset (changed, 255, sizeof(bool) * Ntlistsize); // set all true
-////	memset (ccs, 0, nt * sizeof(int));
-//	timestamp ts4;
-//
-//
-////	cout << "CHANGEDS: " << degisenler << " H_0 par time: " << (ts3 - ts2) << "   seq time: " << ts4 - ts3 << "  tu: " << Ntlistsize << endl;
-//
-//
-//	timestamp td (0, 0);
-////	while (nb > 0) {
-//	while (flag) {
-//		flag = false;
-// 		timestamp it1;
-//#pragma omp parallel for schedule (dynamic, 1000)
-//		for (int i = 0; i < Ntlistsize; i++) {
-//			int ind = i;
-//			int fl = regular_h_index (ind, Nsizegraph, Ngraph, Ntlist, Nxel, Nxtl, Nordered_graph, Nsizeordered_graph, P);
-//			if (fl == 1)
-//				flag = true;
-//		}
-//		timestamp it2;
-//
-//		timestamp it3;
-//		cout << "  H_" << oc << " par time: " << it2 - it1 << "   seq time: " << it3 - it2 << endl;
-//		oc++;
-//	}
-//
-//	util::timestamp ts6;
-//	cout << "Total time: " << ts6 - ts0minus - ((ts0minus_end - ts0minus) + (ts1minus_end - ts1minus) + (ts2minus_end - ts2minus) + (ts3minus_end - ts3minus) + td) << endl;
-//
-////	print_Ks (tlist, P, vfile);
-//	return;
-//
-//}
-//
-//
-//
-//
-//// only ASYNC
+////
+////
+////
+////
+////
+////
+////
+////
+////
+////// only ASYNC
 //void base_pi34_LessSpace (Graph& graph, int nEdge, vertex* F, vector<vertex>& Reals, util::timestamp& totaltime, vertex* threefour_number, const char* vfile, FILE* fp, string fname) {
 //
 ////	int dum;
@@ -1418,10 +1234,10 @@ inline int regularUpdateHI (edge ind, vertex* adj, edge* xadj, triangle_id* Ntli
 //	xel.clear();
 //	return;
 //}
-//
 
 
-void intersection2 (vertex* adj, edge* xadj, vertex u, vertex v, vector<vertex>& intersection) {
+
+inline void intersection2 (vertex* adj, edge* xadj, vertex u, vertex v, vector<vertex>& intersection) {
 	vertex i = xadj[u];
 	vertex j = xadj[v];
 	vertex gu = xadj[u+1];
@@ -1440,8 +1256,6 @@ void intersection2 (vertex* adj, edge* xadj, vertex u, vertex v, vector<vertex>&
 	}
 }
 
-
-// parallel
 lol intersection3for4cliques (edge nEdge, edge* xadj, vertex* ordered_adj, edge* ordered_xadj, couple1* el, vertex* xel, edge* xtl, triangle_id* tlist) {
 	lol count = 0;
 #pragma omp parallel for
@@ -1473,9 +1287,10 @@ lol intersection3for4cliques (edge nEdge, edge* xadj, vertex* ordered_adj, edge*
 
 #pragma omp atomic
 					(tlist[in4].id)++;
-
+#ifndef FAST
 #pragma omp atomic
 					count++;
+#endif
 				}
 			}
 		}
@@ -1501,6 +1316,8 @@ void enumTriangles (edge nEdge, vertex* ordered_adj, edge* ordered_xadj, couple1
 }
 
 
+
+// base AND and SND algorithms, no notification mechanism. compile with SYNC=yes to get the synchronous mode (SND)
 void baseLocal34 (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* P, const char* vfile) {
 
 	timestamp t_begin;
@@ -1514,42 +1331,43 @@ void baseLocal34 (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* P, c
 	createOrdered (nVtx, nEdge, adj, xadj, el, xel, ordered_adj, ordered_xadj);
 
 	timestamp t_cog;
-	cout << "creating ordered graph: " << t_cog - t_begin << endl;
+	cout << "Creating ordered graph: " << t_cog - t_begin << endl;
 
-	printf ("nEdge: %d\n", nEdge);
 	// Enumerating triangles
 	edge* xtl = (edge *) malloc (sizeof(edge) * (nEdge + 1));
 	vector<triangle_id> tlist;
-	enumTriangles (nEdge/2, ordered_adj, ordered_xadj, el, tlist, xtl);
+	enumTriangles (nEdge, ordered_adj, ordered_xadj, el, tlist, xtl);
 
 	timestamp t_tri;
-	cout << "enumerating triangles: " << t_tri - t_cog << endl;
+	cout << "Enumerating triangles: " << t_tri - t_cog << endl;
 
 	// 4-clique counting
 	P = (vertex *) malloc (sizeof(vertex) * tlist.size());
 
 #ifdef SYNC
-	printf ("it is SYNC\n");
+	printf ("It is SYNC\n");
 	vertex Q = (vertex *) malloc (sizeof(vertex) * tlist.size());
 #else
-	printf ("it is ASYNC\n");
+	printf ("It is ASYNC\n");
 #endif
 
-	printf ("tlist.size: %d\n", tlist.size());
+	cout << "# triangles: " << tlist.size() << endl;
 	triangle_id* Ntlist = (triangle_id *) malloc (sizeof (triangle_id) * tlist.size());
 	for (edge i = 0; i < tlist.size(); i++) {
 		Ntlist[i].id = tlist[i].id;
 		Ntlist[i].triple = tlist[i].triple;
 	}
 
-	lol fccount = intersection3for4cliques (nEdge/2, xadj, ordered_adj, ordered_xadj, el, xel, xtl, Ntlist);
-
+	lol fccount = intersection3for4cliques (nEdge, xadj, ordered_adj, ordered_xadj, el, xel, xtl, Ntlist);
+#ifndef FAST
+	cout << "# 4-cliques: " << fccount << endl;
+#endif
 #pragma omp parallel for
 	for (edge i = 0; i < tlist.size(); i++)
 		P[i] = Ntlist[i].id;
 
 	timestamp t_fc;
-	cout << "four clique counting: " << t_fc - t_tri << endl;
+	cout << "4-clique counting: " << t_fc - t_tri << endl;
 
 	timestamp td (0, 0);
 	int oc = 0;
@@ -1586,7 +1404,6 @@ void baseLocal34 (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* P, c
 #endif
 	}
 
-
 #ifdef SYNC
 	memcpy (P, Q, sizeof(vertex) * sz);
 #endif
@@ -1597,7 +1414,6 @@ void baseLocal34 (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* P, c
 	print_Ks (sz, P, vfile, oc);
 #endif
 	oc++;
-
 
 	while (flag) {
 		timestamp td1;
@@ -1625,7 +1441,6 @@ void baseLocal34 (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* P, c
 
 		timestamp td3;
 		td += td3 - td2;
-
 		cout << "H " << oc << " time: " << td2 - td1 << endl;
 		oc++;
 	}
@@ -1635,7 +1450,7 @@ void baseLocal34 (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* P, c
 	cout << "Total time: " << t_end - t_begin - td << endl;
 
 #ifdef DUMP_K
-	print_Ks (sz, P, vfile, oc);
+	print_Ks (sz, P, vfile);
 #endif
 
 	free (P);
@@ -1648,14 +1463,149 @@ void baseLocal34 (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* P, c
 #ifdef SYNC
 	free (Q);
 #endif
-
 	return;
-
 }
 
 
 
+void nmLocal34 (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* P, const char* vfile) {
+#ifdef SYNC
+	printf ("No SYNC for notification-mechanism\n");
+	exit(1);
+#endif
+	timestamp t_begin;
 
+	// Ordered (directed) graph creation
+	couple1* el = (couple1 *) malloc (sizeof(couple1) * nEdge);
+	edge* xel = (edge *) malloc (sizeof(edge) * (nVtx+1));
+	vertex* ordered_adj = (vertex *) malloc (sizeof(vertex) * nEdge );
+	edge* ordered_xadj = (edge *) malloc (sizeof(edge) * (nVtx+1));;
+
+	createOrdered (nVtx, nEdge, adj, xadj, el, xel, ordered_adj, ordered_xadj);
+
+	timestamp t_cog;
+	cout << "Creating ordered graph: " << t_cog - t_begin << endl;
+
+	// Enumerating triangles
+	edge* xtl = (edge *) malloc (sizeof(edge) * (nEdge + 1));
+	vector<triangle_id> tlist;
+	enumTriangles (nEdge, ordered_adj, ordered_xadj, el, tlist, xtl);
+
+	timestamp t_tri;
+	cout << "Enumerating triangles: " << t_tri - t_cog << endl;
+
+	// 4-clique counting
+	P = (vertex *) malloc (sizeof(vertex) * tlist.size());
+
+	cout << "# triangles: " << tlist.size() << endl;
+	triangle_id* Ntlist = (triangle_id *) malloc (sizeof (triangle_id) * tlist.size());
+	for (edge i = 0; i < tlist.size(); i++) {
+		Ntlist[i].id = tlist[i].id;
+		Ntlist[i].triple = tlist[i].triple;
+	}
+
+	lol fccount = intersection3for4cliques (nEdge, xadj, ordered_adj, ordered_xadj, el, xel, xtl, Ntlist);
+#ifndef FAST
+	cout << "# 4-cliques: " << fccount << endl;
+#endif
+
+#pragma omp parallel for
+	for (edge i = 0; i < tlist.size(); i++)
+		P[i] = Ntlist[i].id;
+
+	timestamp t_fc;
+	cout << "4-clique counting: " << t_fc - t_tri << endl;
+
+
+	int oc = 0;
+	bool flag = true;
+	timestamp td (0, 0);
+#ifdef DEBUG_000
+	timestamp ts1;
+	int nt = 1, tn = 0;
+#pragma omp parallel
+	{
+		nt = omp_get_num_threads();
+		tn = omp_get_thread_num();
+	}
+	int* ccs = (int *) calloc (nt, sizeof(int));
+	timestamp ts2;
+	td += ts2 - ts1;
+#endif
+
+	edge sz = tlist.size();
+
+#pragma omp parallel for schedule (dynamic, 1000)
+	for (edge ind = 0; ind < sz; ind++) {
+#ifdef DEBUG_000
+		ccs[tn] += 	mapInitialHI (ind, adj, xadj, Ntlist, xel, xtl, ordered_adj, ordered_xadj, P);
+#else
+		mapInitialHI (ind, adj, xadj, Ntlist, xel, xtl, ordered_adj, ordered_xadj, P);
+#endif
+	}
+
+	bool changed[sz];
+	memset (changed, 255, sizeof(bool) * sz); // set all true
+
+	timestamp t_init;
+	cout << "H 0 time: " << t_init - t_fc - td << endl;
+#ifdef DUMP_Hs
+	print_Ks (sz, P, vfile, oc);
+#endif
+	oc++;
+	while (flag) {
+		timestamp td1;
+		flag = false;
+
+#pragma omp parallel for schedule (dynamic, 1000)
+		for (edge ind = 0; ind < sz; ind++) {
+			if (!changed[ind])
+				continue;
+			changed[ind] = false;
+			int a = efficientUpdateHI (ind, adj, xadj, Ntlist, xel, xtl, ordered_adj, ordered_xadj, P, changed);
+#ifdef DEBUG_000
+			ccs[tn] += a;
+#endif
+			if (a == 1)
+				flag = true;
+		}
+		timestamp td2;
+#ifdef DEBUG_000
+		int degisenler = 0;
+		for(int i = 0; i < nt; i++)
+			degisenler += ccs[i];
+		memset (ccs, 0, nt * sizeof(int));
+		cout << "CHANGEDS: " << degisenler << endl;
+#endif
+
+
+#ifdef DUMP_Hs
+	print_Ks (sz, P, vfile, oc);
+#endif
+
+		timestamp td3;
+		td += td3 - td2;
+		cout << "H " << oc << " time: " << td2 - td1 << endl;
+		oc++;
+	}
+	printf ("Converges at %d\n", oc);
+	timestamp t_end;
+	cout << "Total time: " << t_end - t_begin - td << endl;
+
+#ifdef DUMP_K
+	print_Ks (sz, P, vfile);
+#endif
+
+
+	free (P);
+	free (xel);
+	free (el);
+	free (Ntlist);
+	free (xtl);
+	free (ordered_adj);
+	free (ordered_xadj);
+	return;
+}
 
 
 

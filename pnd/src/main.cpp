@@ -166,48 +166,58 @@ int main(int argc, char *argv[]) {
 	}
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
 	vertex* P; // = (vertex *) malloc (sizeof(vertex) * nVtx);
-	if (depth == 712) {
-		vfile += "_asdf";
-		kcore_levels (graph, nEdge/2, P, totaltime, &maxP, vfile.c_str(), fp);
+
+	if (depth == 121) {
+		vfile += "_K_CORE";
+		kcore (nVtx, adj, xadj, P, vfile.c_str());
 	}
-	else if (depth == 612) {
-		vfile += "_asdf";
-		vertex* cono = (vertex *) malloc (sizeof(vertex) * nVtx);
-		FILE* fzp = fopen (argv[3], "r");
-		int num;
-		for (int i = 0; i < nVtx; i++) {
-			fscanf (fzp, "%d", &num);
-			if (num < 0 || num > nVtx)
-				cono[i] = 0;
-			else
-				cono[i] = num;
-		}
-		fclose (fzp);
-		kcore_Seshlevels (graph, nEdge/2, P, cono, totaltime, &maxP, vfile.c_str(), fp);
-	}
-
-
-
-	else if (depth == 19) {
-		vfile += "_PI_CORE";
-		fast12DegeneracyNumber (nVtx, nEdge, adj, xadj, P, vfile.c_str());
-	}
-
-
 	else if (depth == 120) {
-		vfile += "_PI_CORE";
-
-		baseLocal12 (nVtx, nEdge, adj, xadj, P, vfile.c_str());
+		vfile += "_CORE";
+		baseLocal12 (nVtx, adj, xadj, P, vfile.c_str());
 	}
 	else if (depth == 1200) {
+		vfile += "_CORE";
+		nmLocal12 (nVtx, adj, xadj, P, vfile.c_str());
+	}
+	else if (depth == 712) {
+		vfile += "_LEVELS";
+		vertex* L;
+		kcore_levels (nVtx, adj, xadj, L, vfile.c_str());
+	}
+	else if (depth == 612) {
+		if (argc < 4) {
+			cout << "K file is needed\n";
+			exit(1);
+		}
+		read_Ks (nVtx, argv[3], P);
+		vfile += "_SESH_LEVELS";
+		vertex* L;
+		kcore_Sesh_levels (nVtx, adj, xadj, P, L, vfile.c_str());
+	}
+	else if (depth == 19) {
 		vfile += "_PI_CORE";
-		nmLocal12 (nVtx, nEdge, adj, xadj, P, vfile.c_str());
+		fast12DegeneracyNumber (nVtx, adj, xadj, P);
 	}
-	else if (depth == 121) {
-		vfile += "_K_CORE";
-		base_kcore (graph, nEdge/2, P, totaltime, &maxP, vfile.c_str(), fp);
-	}
+
+
+
+
+
+
 
 
 	else if (depth == 723) {
@@ -233,37 +243,6 @@ int main(int argc, char *argv[]) {
 		ktruss_Seshlevels (graph, nEdge/2, T, cono, totaltime, &maxP, vfile.c_str(), fp);
 
 	}
-
-
-
-	else if (depth == 230) {
-		vfile += "_PI_TRUSS";
-		baseLocal23 (nVtx, nEdge/2, adj, xadj, P, vfile.c_str());
-	}
-	else if (depth == 2300) {
-		vfile += "_PI_TRUSS";
-		nmLocal23 (nVtx, nEdge/2, adj, xadj, P, vfile.c_str());
-	}
-	else if (depth == 23000) {
-		vfile += "_PI_TRUSS";
-		baseLocal23_ST (nVtx, nEdge/2, adj, xadj, P, vfile.c_str());
-	}
-	else if (depth == 230000) {
-		vfile += "_PI_TRUSS";
-		nmLocal23_ST (nVtx, nEdge/2, adj, xadj, P, vfile.c_str());
-	}
-
-	else if (depth == 231) {
-		vfile += "_K_TRUSS";
-		vector<vertex> T;
-		base_ktruss (graph, nEdge/2, T, totaltime, &maxP, vfile.c_str(), fp);
-	}
-	else if (depth == 232) {
-		vfile += "_STORE_TRI_K_TRUSS";
-		vector<vertex> T;
-		base_ktruss_StoreTri (graph, nEdge/2, T, totaltime, &maxP, vfile.c_str(), fp);
-	}
-
 	else if (depth == 634) {
 		vector<vertex> T;
 		vector<vertex> cono;
@@ -276,29 +255,26 @@ int main(int argc, char *argv[]) {
 				cono.push_back (num);
 		}
 		fclose (fzp);
-
 //		k34_Seshlevels (graph, nEdge/2, T, cono, totaltime, &maxP, vfile.c_str(), fp);
 	}
-
 	else if (depth == 734) {
 		vfile += "_K_34";
 		vector<vertex> T;
 //		k34_levels (graph, nEdge/2, T, totaltime, &maxP, vfile.c_str(), fp);
 	}
-	else if (depth == 340) {
-		vfile += "_PI_34";
-		baseLocal34 (nVtx, nEdge/2, adj, xadj, P, vfile.c_str());
 
 
-//		base_pi34 (graph, nEdge/2, P, vReals, totaltime, &maxP, vfile.c_str(), fp);
-//		justpi34 (graph, nEdge/2, P, vReals, totaltime, &maxP, vfile.c_str(), fp, asdf);
+
+
+	else if (depth == 231) {
+		vfile += "_K_TRUSS";
+		vector<vertex> T;
+		base_ktruss (graph, nEdge/2, T, totaltime, &maxP, vfile.c_str(), fp);
 	}
-	else if (depth == 3400) {
-		vertex* P;
-		vfile += "_PI_34_TRUSS";
-//		nmLocal34 (nVtx, nEdge/2, adj, xadj, P, vfile.c_str());
-//		base_pi34_LessSpace (graph, nEdge/2, P, vReals, totaltime, &maxP, vfile.c_str(), fp, asdf);
-//		TryFasterPi34 (graph, nEdge/2, P, vReals, totaltime, &maxP, vfile.c_str(), fp, asdf);
+	else if (depth == 232) {
+		vfile += "_STORE_TRI_K_TRUSS";
+		vector<vertex> T;
+		base_ktruss_StoreTri (graph, nEdge/2, T, totaltime, &maxP, vfile.c_str(), fp);
 	}
 	else if (depth == 341) {
 		vfile += "_K_34";
@@ -311,33 +287,40 @@ int main(int argc, char *argv[]) {
 //		base_k34_Store4c (graph, nEdge/2, T, totaltime, &maxP, vfile.c_str(), fp);
 	}
 
-//	if (depth / 10 == 12) {
-//		// for each edge, check direction and difference
-//		for (vertex i = 0; i < nVtx; i++)
-//			for (vertex j = 0; j < graph[i].size(); j++) {
-//				int u = i, v = graph[i][j];
-//				if (u < v)
-//					printf ("u,v: %d\t-\t%d\tPs: %d\t-\t%d\n", u, v, P[u], P[v]);
-//			}
-//	}
-//	else {
-		// for each triangle, check direction and difference
-//		for (vertex i = 0; i < nVtx; i++)
-//			for (vertex j = 0; j < graph[i].size(); j++) {
-//				int u = i, v = graph[i][j];
-//				if (u < v) {
-//					vector<vertex> g;
-//					smart_intersection (graph, u, v, g);
-//					for (int w : g)
-//						printf ("u,v,w: %d\t-\t%d\t-\t%d\tPs: %d\t-\t%d\t-\t%d\n", u, v, w, P[u], P[v]);
-//				}
-//	}
-//	if (depth < 900)
-//		fclose (fp);
 
-//	for (vertex i = 0; i < nVtx; ++i)
-//		graph[i].clear();
-//	graph.clear();
+
+
+
+	else if (depth == 230) {
+		vfile += "_TRUSS";
+		baseLocal23 (nVtx, nEdge/2, adj, xadj, P, vfile.c_str());
+	}
+	else if (depth == 2300) {
+		vfile += "_TRUSS";
+		nmLocal23 (nVtx, nEdge/2, adj, xadj, P, vfile.c_str());
+	}
+	else if (depth == 23000) {
+		vfile += "_PI_TRUSS";
+		baseLocal23_ST (nVtx, nEdge/2, adj, xadj, P, vfile.c_str());
+	}
+	else if (depth == 230000) {
+		vfile += "_PI_TRUSS";
+		nmLocal23_ST (nVtx, nEdge/2, adj, xadj, P, vfile.c_str());
+	}
+
+
+	else if (depth == 340) {
+		vfile += "_PI_34";
+		baseLocal34 (nVtx, nEdge/2, adj, xadj, P, vfile.c_str());
+	}
+	else if (depth == 3400) {
+//		vertex* P;
+		vfile += "_PI_34";
+		nmLocal34 (nVtx, nEdge/2, adj, xadj, P, vfile.c_str());
+//		base_pi34_LessSpace (graph, nEdge/2, P, vReals, totaltime, &maxP, vfile.c_str(), fp, asdf);
+//		TryFasterPi34 (graph, nEdge/2, P, vReals, totaltime, &maxP, vfile.c_str(), fp, asdf);
+	}
+
 
 #ifdef DEBUG_0
 	if (depth == 340)

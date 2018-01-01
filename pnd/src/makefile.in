@@ -53,6 +53,11 @@ CXXFLAGS    += -O2 -DNDEBUG
 LDFLAGS   += -DNDEBUG
 endif
 
+ifeq ($(FAST), yes)
+CFLAGS	+= -D FAST
+CXXFLAGS += -D FAST
+endif
+
 ifeq ($(SHORT), yes)
 CFLAGS	+= -D SHORT
 CXXFLAGS += -D SHORT

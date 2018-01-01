@@ -37,10 +37,6 @@ inline void simple_distance (vertex* Reals, Graph& graph, vertex* T, int oc) {
 
 
 
-
-
-
-
 // ESSENTIALS
 
 inline int sortInitialHI (vertex ind, vertex* adj, edge* xadj, vertex* P
@@ -133,7 +129,7 @@ inline int mapInitialHI (vertex ind, vertex* adj, edge* xadj, vertex* P
 #endif
 ) {
 
-	HashMap<vertex> gmap (0);
+	HashMap<vertex> gmap (-1);
 	vertex greaters = 0;
 	vertex equals = 0;
 	vertex H = 0;
@@ -150,11 +146,12 @@ inline int mapInitialHI (vertex ind, vertex* adj, edge* xadj, vertex* P
 			else { // equals = 0
 				H++;
 				vertex gH = 0;
-				if (!gmap.hasDefaultValue (H))
+				if (!gmap.hasDefaultValue (H)) {
 					gH = gmap[H];
+					gmap.erase (H);
+				}
 				equals = gH + 1;
 				greaters -= gH;
-				gmap.erase (H);
 			}
 		}
 		else if (sm > H + 1) {
@@ -167,12 +164,13 @@ inline int mapInitialHI (vertex ind, vertex* adj, edge* xadj, vertex* P
 				greaters++;
 				H++;
 				vertex gH = 0;
-				if (!gmap.hasDefaultValue (H))
+				if (!gmap.hasDefaultValue (H)) {
 					gH = gmap[H];
+					gmap.erase (H);
+				}
 				equals = gH;
 				greaters -= gH;
 				gmap[sm]++;
-				gmap.erase (H);
 			}
 		}
 	}
@@ -226,10 +224,8 @@ inline int efficientUpdateHI (vertex ind, vertex* adj, edge* xadj, vertex* P, bo
 }
 
 
-
-
 // base AND and SND algorithms, no notification mechanism. compile with SYNC=yes to get the synchronous mode (SND)
-void baseLocal12 (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* P, const char* vfile) {
+void baseLocal12 (vertex nVtx, vertex* adj, edge* xadj, vertex* P, const char* vfile) {
 
 	timestamp t_begin;
 	P = (vertex *) calloc (nVtx, sizeof(vertex));
@@ -239,14 +235,14 @@ void baseLocal12 (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* P, c
 		P[i] = xadj[i+1] - xadj[i];
 
 #ifdef SYNC
-	printf ("it is SYNC\n");
+	printf ("It is SYNC\n");
 	vertex* Q = (vertex *) malloc (sizeof(vertex) * nVtx);
 #else
-	printf ("it is ASYNC\n");
+	printf ("It is ASYNC\n");
 #endif
 
 	timestamp t_deg;
-	cout << "degreeFinding time: " << t_deg - t_begin << endl;
+	cout << "Degree finding time: " << t_deg - t_begin << endl;
 
 	timestamp td (0, 0);
 	int oc = 0;
@@ -351,7 +347,7 @@ void baseLocal12 (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* P, c
 
 
 // AND algorithm with the notification mechanism
-void nmLocal12 (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* P, const char* vfile) {
+void nmLocal12 (vertex nVtx, vertex* adj, edge* xadj, vertex* P, const char* vfile) {
 #ifdef SYNC
 	printf ("No SYNC for notification-mechanism\n");
 	exit(1);
@@ -362,8 +358,6 @@ void nmLocal12 (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* P, con
 #pragma omp parallel for default (shared)
 	for (vertex i = 0; i < nVtx; i++)
 		P[i] = xadj[i+1] - xadj[i];
-
-	printf ("it is ASYNC\n");
 
 	timestamp t_deg;
 	cout << "degreeFinding time: " << t_deg - t_begin << endl;
@@ -466,11 +460,169 @@ void nmLocal12 (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* P, con
 #endif
 }
 
-typedef tuple<int, int> eda;
-bool kksort (eda i, eda j) { return (get<1>(i) > get<1>(j)); }
+// Sequential k-core computation
+void kcore (vertex nVtx, vertex* adj, edge* xadj, vertex* K, const char* vfile) {
+
+	timestamp t_begin;
+	size_t max_degree = 0;
+	for (size_t i = 0; i < nVtx; i++) {
+		auto deg = xadj[i+1] - xadj[i];
+		if (deg > max_degree)
+			max_degree = deg;
+	}
+	K = (vertex *) malloc (nVtx * sizeof(vertex));
+
+
+	// Peeling
+	Naive_Bucket na_bs;
+	na_bs.Initialize(max_degree, nVtx);
+	for (size_t i = 0; i < nVtx; i++) {
+		auto deg = xadj[i+1] - xadj[i];
+		if (deg > 0)
+			na_bs.Insert (i, deg);
+	}
+
+	vertex degree_of_u = 0;
+	while (1) {
+		vertex u, val;
+		if (na_bs.PopMin(&u, &val) == -1) // if the bucket is empty
+			break;
+
+		degree_of_u = K[u] = val;
+
+
+		for (int i = xadj[u]; i < xadj[u+1]; i++) { /* decrease the degree of the neighbors with greater degree */
+			vertex v = adj[i];
+			if (na_bs.CurrentValue(v) > val)
+				na_bs.DecVal(v);
+		}
+	}
+
+	na_bs.Free();
+	cout << "Max core number: " << degree_of_u << endl;
+	print_Ks (nVtx, K, vfile);
+	return;
+}
+
+
+
+
+// ONGOING WORK
+/*
+- L_0: All those vertices with the minimum degree.
+- To find L_i: delete all vertices in L_j (j < i). Then find all vertices with the minimum degree in the remaining graph.
+*/
+void kcore_levels (vertex nVtx, vertex* adj, edge* xadj, vertex* L, const char* vfile) {
+
+	size_t max_degree = 0;
+	for (size_t i = 0; i < nVtx; i++) {
+		auto deg = xadj[i+1] - xadj[i];
+		if (deg > max_degree)
+			max_degree = deg;
+	}
+	L = (vertex *) malloc (nVtx * sizeof(vertex));
+
+	// Peeling
+	Naive_Bucket na_bs;
+	na_bs.Initialize(max_degree, nVtx);
+	for (size_t i = 0; i < nVtx; i++) {
+		auto deg = xadj[i+1] - xadj[i];
+		if (deg > 0)
+			na_bs.Insert (i, deg);
+	}
+	vertex degree_of_u = 0;
+
+	int level = 1;
+	while (1) {
+		vertex u, min_val, val;
+		vector<vertex> mins;
+
+		vertex ret = na_bs.PopMin(&u, &min_val);
+		if (ret == -1) // if the bucket is empty
+			break;
+
+		if (min_val == 0)
+			continue;
+
+		mins.push_back (u);
+
+		while (1) {
+			ret = na_bs.PopMin(&u, &val);
+			if (ret == -1) // if the bucket is empty
+				break;
+			if (val > min_val) {
+				na_bs.Insert (u, val); // put it back
+				break;
+			}
+			mins.push_back (u);
+		}
+
+		for (auto v : mins) {
+			L[v] = min_val;
+			for (int i = xadj[v]; i < xadj[v+1]; i++) { /* decrease the degree of the neighbors with greater degree */
+				vertex w = adj[i];
+				if (na_bs.CurrentValue(w) > min_val)
+					na_bs.DecVal(w);
+			}
+		}
+		printf ("Level %d K: %d size: %d\n", level, min_val, mins.size());
+		level++;
+	}
+	na_bs.Free();
+#ifdef DUMP_K
+	print_Ks (nVtx, L, vfile);
+#endif
+	return;
+}
+
+
+/*
+- L_0: All those vertices whose degree is at most K-value.
+- To find L_i: delete all vertices in L_j (j < i). Then find all vertices whose degree in the remaining graph is at most (original) K-value.
+*/
+void kcore_Sesh_levels (vertex nVtx, vertex* adj, edge* xadj, vertex* K, vertex* L, const char* vfile) {
+
+	L = (vertex *) malloc (nVtx * sizeof(vertex));
+	vertex* degs = (vertex *) malloc (nVtx * sizeof(vertex));
+	for (size_t i = 0; i < nVtx; i++)
+		degs[i] = xadj[i+1] - xadj[i];
+
+	int level = 1;
+	while (1) {
+		vector<vertex> atMostK; // torem;
+		for (vertex i = 0; i < nVtx; i++) {
+			if (degs[i] != -1 && degs[i] <= K[i])
+				atMostK.push_back(i);
+		}
+
+		if (atMostK.empty())
+			break;
+
+		for (vertex i = 0; i < atMostK.size(); i++) {
+			vertex v = atMostK[i];
+			int sma = 0, geq = 0, prevs = 0;
+			for (vertex j = xadj[v]; j < xadj[v+1]; j++) {
+				vertex w = adj[j];
+				if (degs[w] != -1)
+					degs[w]--;
+			}
+			degs[v] = -1;
+			L[v] = level;
+		}
+
+		printf ("Level %d  size: %d\n", level, atMostK.size());
+		level++;
+	}
+#ifdef DUMP_K
+	print_Ks (nVtx, L, vfile);
+#endif
+	return;
+}
+
+
 
 // Finds the max K value by iterating on top-number high degree vertices
-void fast12DegeneracyNumber (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* P, const char* vfile) {
+void fast12DegeneracyNumber (vertex nVtx, vertex* adj, edge* xadj, vertex* P) {
 
 	int number = 200; // only top-number vertices in degree are executed
 #ifdef SYNC
@@ -484,10 +636,8 @@ void fast12DegeneracyNumber (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, v
 	for (vertex i = 0; i < nVtx; i++)
 		P[i] = xadj[i+1] - xadj[i];
 
-	printf ("it is ASYNC\n");
-
 	timestamp t_tc;
-	cout << "degreeFinding time: " << t_tc - t_begin << endl;
+	cout << "Degree finding time: " << t_tc - t_begin << endl;
 
 	timestamp td (0, 0);
 	int oc = 0;
@@ -560,4 +710,5 @@ void fast12DegeneracyNumber (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, v
 	printf ("max K: %d\n", maxK);
 #endif
 }
+
 
