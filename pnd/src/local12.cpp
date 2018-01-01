@@ -488,8 +488,10 @@ void kcore (vertex nVtx, vertex* adj, edge* xadj, vertex* K, const char* vfile) 
 		if (na_bs.PopMin(&u, &val) == -1) // if the bucket is empty
 			break;
 
-		degree_of_u = K[u] = val;
+		if (val == 0)
+			continue;
 
+		degree_of_u = K[u] = val;
 
 		for (int i = xadj[u]; i < xadj[u+1]; i++) { /* decrease the degree of the neighbors with greater degree */
 			vertex v = adj[i];
@@ -500,6 +502,9 @@ void kcore (vertex nVtx, vertex* adj, edge* xadj, vertex* K, const char* vfile) 
 
 	na_bs.Free();
 	cout << "Max core number: " << degree_of_u << endl;
+	timestamp t_end;
+	cout << "Total time: " << t_end - t_begin << endl;
+
 #ifdef DUMP_K
 	print_Ks (nVtx, K, vfile);
 #endif
@@ -511,7 +516,7 @@ void kcore (vertex nVtx, vertex* adj, edge* xadj, vertex* K, const char* vfile) 
 
 // ONGOING WORK
 /*
-- L_0: All those vertices with the minimum degree.
+- L_1: All those vertices with the minimum degree.
 - To find L_i: delete all vertices in L_j (j < i). Then find all vertices with the minimum degree in the remaining graph.
 */
 void kcore_levels (vertex nVtx, vertex* adj, edge* xadj, vertex* L, const char* vfile) {
@@ -539,8 +544,7 @@ void kcore_levels (vertex nVtx, vertex* adj, edge* xadj, vertex* L, const char* 
 		vertex u, min_val, val;
 		vector<vertex> mins;
 
-		vertex ret = na_bs.PopMin(&u, &min_val);
-		if (ret == -1) // if the bucket is empty
+		if (na_bs.PopMin(&u, &min_val) == -1) // if the bucket is empty
 			break;
 
 		if (min_val == 0)
@@ -549,8 +553,7 @@ void kcore_levels (vertex nVtx, vertex* adj, edge* xadj, vertex* L, const char* 
 		mins.push_back (u);
 
 		while (1) {
-			ret = na_bs.PopMin(&u, &val);
-			if (ret == -1) // if the bucket is empty
+			if (na_bs.PopMin(&u, &val) == -1) // if the bucket is empty
 				break;
 			if (val > min_val) {
 				na_bs.Insert (u, val); // put it back
@@ -579,7 +582,7 @@ void kcore_levels (vertex nVtx, vertex* adj, edge* xadj, vertex* L, const char* 
 
 
 /*
-- L_0: All those vertices whose degree is at most K-value.
+- L_1: All those vertices whose degree is at most K-value.
 - To find L_i: delete all vertices in L_j (j < i). Then find all vertices whose degree in the remaining graph is at most (original) K-value.
 */
 void kcore_Sesh_levels (vertex nVtx, vertex* adj, edge* xadj, vertex* K, vertex* L, const char* vfile) {
@@ -591,7 +594,7 @@ void kcore_Sesh_levels (vertex nVtx, vertex* adj, edge* xadj, vertex* K, vertex*
 
 	int level = 1;
 	while (1) {
-		vector<vertex> atMostK; // torem;
+		vector<vertex> atMostK;
 		for (vertex i = 0; i < nVtx; i++) {
 			if (degs[i] != -1 && degs[i] <= K[i])
 				atMostK.push_back(i);
@@ -600,9 +603,7 @@ void kcore_Sesh_levels (vertex nVtx, vertex* adj, edge* xadj, vertex* K, vertex*
 		if (atMostK.empty())
 			break;
 
-		for (vertex i = 0; i < atMostK.size(); i++) {
-			vertex v = atMostK[i];
-			int sma = 0, geq = 0, prevs = 0;
+		for (vertex v : atMostK) {
 			for (vertex j = xadj[v]; j < xadj[v+1]; j++) {
 				vertex w = adj[j];
 				if (degs[w] != -1)
@@ -662,9 +663,9 @@ void fast12DegeneracyNumber (vertex nVtx, vertex* adj, edge* xadj, vertex* P, ve
 
 	while (flag) {
 
-		memset (changed, 255, sizeof(bool) * nVtx); // set all true
+		memset (changed, 0, sizeof(bool) * nVtx); // set all false
 		for (int i = start; i < number; i++)
-			changed[get<0>(KK[i])] = true;
+			changed[get<0>(KK[i])] = true; // only top-k true
 
 		timestamp it1;
 		flag = false;
@@ -674,13 +675,12 @@ void fast12DegeneracyNumber (vertex nVtx, vertex* adj, edge* xadj, vertex* P, ve
 			if (!changed[ind])
 				continue;
 			changed[ind] = false;
-#ifdef DEBUG_000
-			ccs[tn] += efficientUpdateHI (ind, adj, xadj, P, changed);
-#else
 			int a = efficientUpdateHI (ind, adj, xadj, P, changed);
+#ifdef DEBUG_000
+			ccs[tn] += a);
+#endif
 			if (a == 1)
 				flag = true;
-#endif
 		}
 
 #ifdef DEBUG_000

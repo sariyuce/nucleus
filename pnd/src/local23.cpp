@@ -931,7 +931,6 @@ void baseLocal23 (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* T, c
 	return;
 }
 
-
 // AND algorithm with the notification mechanism
 void nmLocal23 (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* T, const char* vfile) {
 #ifdef SYNC
@@ -1052,4 +1051,375 @@ void nmLocal23 (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* T, con
 	return;
 #endif
 }
+
+
+// Partly parallel k-truss computation (only triangle counting is parallel)
+void ktruss (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* T, const char* vfile) {
+
+	timestamp t_begin;
+
+	// Ordered (directed) graph creation
+	couple1* el = (couple1 *) malloc (sizeof(couple1) * nEdge);
+	edge* xel = (edge *) malloc (sizeof(edge) * (nVtx+1));
+	vertex* ordered_adj = (vertex *) malloc (sizeof(vertex) * nEdge );
+	edge* ordered_xadj = (edge *) malloc (sizeof(edge) * (nVtx+1));;
+
+	createOrdered (nVtx, nEdge, adj, xadj, el, xel, ordered_adj, ordered_xadj);
+
+	timestamp t_cog;
+	cout << "Creating ordered graph: " << t_cog - t_begin << endl;
+
+	// Triangle counting for each edge
+	edge* tc = (edge *) calloc (nEdge, sizeof(vertex));
+
+	lol tricount = count_triangles (tc, nVtx, xadj, ordered_adj, ordered_xadj); // single loop with three locks
+
+	free (ordered_adj);
+	free (ordered_xadj);
+	timestamp t_tc;
+	cout << "Triangle counting time: " << t_tc - t_cog << endl;
+#ifndef FAST
+	cout << "# triangles: " << tricount << endl;
+#endif
+	T = (vertex *) malloc (nEdge * sizeof(vertex));
+	memset (T, -1, sizeof(vertex) * nEdge);
+
+	// Peeling
+	Naive_Bucket na_bs;
+	na_bs.Initialize (nVtx, nEdge);
+	vertex id = 0;
+	for (size_t i = 0; i < nVtx; i++) {
+		vertex ord_deg = ordered_xadj[i+1] - ordered_xadj[i];
+		for (size_t j = 0; j < ord_deg; j++)
+			na_bs.Insert (id++, tc[xel[i] + j]);
+	}
+
+	vertex tc_of_uv = 0;
+	while (1) {
+		edge uv, val;
+		if (na_bs.PopMin(&uv, &val) == -1) // if the bucket is empty
+			break;
+
+		if (val == 0)
+			continue;
+
+		tc_of_uv = T[uv] = val;
+
+		vertex u = get<0>(el[uv]);
+		vertex v = get<1>(el[uv]);
+		vector<vertex> intersection;
+
+		intersection2 (adj, xadj, u, v, intersection);
+		for (auto w : intersection) { /* decrease the tc of the neighbor edges with greater tc */
+			vertex id1 = getEdgeId (u, w, xel, el, xadj[u+1] - xadj[u], xadj[w+1] - xadj[w]);
+			vertex id2 = getEdgeId (v, w, xel, el, xadj[v+1] - xadj[v], xadj[w+1] - xadj[w]);
+			if (T[id1] == -1 && T[id2] == -1) {
+				if (na_bs.CurrentValue(id1) > tc_of_uv)
+					na_bs.DecVal(id1);
+				if (na_bs.CurrentValue(id2) > tc_of_uv)
+					na_bs.DecVal(id2);
+			}
+		}
+	}
+
+	na_bs.Free();
+	cout << "Max truss number: " << tc_of_uv << endl;
+	timestamp t_end;
+	cout << "Total time: " << t_end - t_begin << endl;
+
+#ifdef DUMP_K
+	print_Ks (nEdge, T, vfile);
+#endif
+	return;
+}
+
+
+
+
+
+
+
+// ONGOING WORK
+/*
+- L_1: All those edges with the minimum triangle count.
+- To find L_i: delete all edges in L_j (j < i). Then find all edges with the minimum triangle count in the remaining graph.
+*/
+void ktruss_levels (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* L, const char* vfile) {
+
+	timestamp t_begin;
+	// Ordered (directed) graph creation
+	couple1* el = (couple1 *) malloc (sizeof(couple1) * nEdge);
+	edge* xel = (edge *) malloc (sizeof(edge) * (nVtx+1));
+	vertex* ordered_adj = (vertex *) malloc (sizeof(vertex) * nEdge );
+	edge* ordered_xadj = (edge *) malloc (sizeof(edge) * (nVtx+1));;
+
+	createOrdered (nVtx, nEdge, adj, xadj, el, xel, ordered_adj, ordered_xadj);
+
+	timestamp t_cog;
+	cout << "Creating ordered graph: " << t_cog - t_begin << endl;
+
+	// Triangle counting for each edge
+	edge* tc = (edge *) calloc (nEdge, sizeof(vertex));
+
+	lol tricount = count_triangles (tc, nVtx, xadj, ordered_adj, ordered_xadj); // single loop with three locks
+
+	free (ordered_adj);
+	free (ordered_xadj);
+	timestamp t_tc;
+	cout << "Triangle counting time: " << t_tc - t_cog << endl;
+#ifndef FAST
+	cout << "# triangles: " << tricount << endl;
+#endif
+	L = (vertex *) malloc (nEdge * sizeof(vertex));
+	memset (L, -1, sizeof(vertex) * nEdge);
+
+	// Peeling
+	Naive_Bucket na_bs;
+	na_bs.Initialize (nVtx, nEdge);
+	vertex id = 0;
+	for (size_t i = 0; i < nVtx; i++) {
+		vertex ord_deg = ordered_xadj[i+1] - ordered_xadj[i];
+		for (size_t j = 0; j < ord_deg; j++)
+			na_bs.Insert (id++, tc[xel[i] + j]);
+	}
+
+	vertex tc_of_uv = 0;
+
+	int level = 1;
+	while (1) {
+		edge uv, min_val, val;
+		vector<vertex> mins;
+
+		if (na_bs.PopMin(&uv, &min_val) == -1) // if the bucket is empty
+			break;
+
+		if (min_val == 0)
+			continue;
+
+		mins.push_back (uv);
+
+		while (1) {
+			if (na_bs.PopMin(&uv, &val) == -1) // if the bucket is empty
+				break;
+			if (val > min_val) {
+				na_bs.Insert (uv, val);
+				break;
+			}
+			mins.push_back (uv);
+		}
+
+		for (auto uv : mins) {
+			L[uv] = min_val;
+			vertex u = get<0>(el[uv]);
+			vertex v = get<1>(el[uv]);
+
+			vector<vertex> intersection;
+			intersection2 (adj, xadj, u, v, intersection);
+			for (auto w : intersection) { /* decrease the tc of the neighbor edges with greater tc */
+				vertex id1 = getEdgeId (u, w, xel, el, xadj[u+1] - xadj[u], xadj[w+1] - xadj[w]);
+				vertex id2 = getEdgeId (v, w, xel, el, xadj[v+1] - xadj[v], xadj[w+1] - xadj[w]);
+				if (L[id1] == -1 && L[id2] == -1) {
+					if (na_bs.CurrentValue(id1) > tc_of_uv)
+						na_bs.DecVal(id1);
+					if (na_bs.CurrentValue(id2) > tc_of_uv)
+						na_bs.DecVal(id2);
+				}
+			}
+		}
+
+		printf ("Level %d K: %d size: %d\n", level, min_val, mins.size());
+		level++;
+	}
+	na_bs.Free();
+#ifdef DUMP_K
+	print_Ks (nEdge, L, vfile);
+#endif
+	return;
+}
+
+
+
+/*
+- L_1: All those edges whose triangle count is at most T-value.
+- To find L_i: delete all edges in L_j (j < i). Then find all edges whose triangle counts in the remaining graph is at most (original) T-value.
+*/
+void ktruss_Sesh_levels (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* T, vertex* L, const char* vfile) {
+
+	timestamp t_begin;
+	// Ordered (directed) graph creation
+	couple1* el = (couple1 *) malloc (sizeof(couple1) * nEdge);
+	edge* xel = (edge *) malloc (sizeof(edge) * (nVtx+1));
+	vertex* ordered_adj = (vertex *) malloc (sizeof(vertex) * nEdge );
+	edge* ordered_xadj = (edge *) malloc (sizeof(edge) * (nVtx+1));;
+
+	createOrdered (nVtx, nEdge, adj, xadj, el, xel, ordered_adj, ordered_xadj);
+
+	timestamp t_cog;
+	cout << "Creating ordered graph: " << t_cog - t_begin << endl;
+
+	// Triangle counting for each edge
+	edge* tc = (edge *) calloc (nEdge, sizeof(vertex));
+
+	lol tricount = count_triangles (tc, nVtx, xadj, ordered_adj, ordered_xadj); // single loop with three locks
+
+	free (ordered_adj);
+	free (ordered_xadj);
+	timestamp t_tc;
+	cout << "Triangle counting time: " << t_tc - t_cog << endl;
+#ifndef FAST
+	cout << "# triangles: " << tricount << endl;
+#endif
+	L = (vertex *) malloc (nEdge * sizeof(vertex));
+
+	int level = 1;
+	while (1) {
+		vector<edge> atMostT;
+		for (vertex i = 0; i < nEdge; i++) {
+			if (tc[i] != -1 && tc[i] <= T[i])
+				atMostT.push_back(i);
+		}
+
+		if (atMostT.empty())
+			break;
+
+		for (edge uv : atMostT) {
+			vertex u = get<0>(el[uv]);
+			vertex v = get<1>(el[uv]);
+
+			vector<vertex> intersection;
+			intersection2 (adj, xadj, u, v, intersection);
+			for (auto w : intersection) { /* decrease the tc of the neighbor edges with greater tc */
+				vertex id1 = getEdgeId (u, w, xel, el, xadj[u+1] - xadj[u], xadj[w+1] - xadj[w]);
+				vertex id2 = getEdgeId (v, w, xel, el, xadj[v+1] - xadj[v], xadj[w+1] - xadj[w]);
+				if (tc[id1] == -1 && tc[id2] == -1) {
+					tc[id1]--;
+					tc[id2]--;
+				}
+			}
+			tc[uv] = -1;
+			L[uv] = level;
+		}
+
+		printf ("Level %d size: %d\n", level, atMostT.size());
+		level++;
+	}
+#ifdef DUMP_K
+	print_Ks (nEdge, L, vfile);
+#endif
+	return;
+}
+
+
+
+
+
+
+
+
+
+
+
+// Finds the max K value by iterating on top-number high degree vertices
+void fast23DegeneracyNumber (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* P, vertex topK) {
+
+	int number = topK; // only top-number vertices in degree are executed
+#ifdef SYNC
+	printf ("No SYNC for notification-mechanism\n");
+	exit(1);
+#else
+	timestamp t_begin;
+
+	// Ordered (directed) graph creation
+	couple1* el = (couple1 *) malloc (sizeof(couple1) * nEdge);
+	edge* xel = (edge *) malloc (sizeof(edge) * (nVtx+1));
+	vertex* ordered_adj = (vertex *) malloc (sizeof(vertex) * nEdge );
+	edge* ordered_xadj = (edge *) malloc (sizeof(edge) * (nVtx+1));;
+
+	createOrdered (nVtx, nEdge, adj, xadj, el, xel, ordered_adj, ordered_xadj);
+
+	timestamp t_cog;
+	cout << "Creating ordered graph: " << t_cog - t_begin << endl;
+
+	// Triangle counting for each edge
+	P = (edge *) calloc (nEdge, sizeof(vertex));
+
+	lol tricount = count_triangles (P, nVtx, xadj, ordered_adj, ordered_xadj); // single loop with three locks
+
+	free (ordered_adj);
+	free (ordered_xadj);
+	timestamp t_tc;
+	cout << "Triangle counting time: " << t_tc - t_cog << endl;
+
+	timestamp td (0, 0);
+	int oc = 0;
+	bool flag = true;
+
+	bool changed[nEdge];
+	memset (changed, 255, sizeof(bool) * nEdge); // set all true
+
+	vector<eda> KK;
+	for (vertex i = 0; i < nEdge; i++)
+		KK.push_back (make_tuple(i, P[i]));
+
+	sort (KK.begin(), KK.end(), kksort);
+
+	edge start = 0;
+	for (edge i = start; i < number; i++)
+		changed[get<0>(KK[i])] = true;
+
+
+	while (flag) {
+
+		memset (changed, 0, sizeof(bool) * nEdge); // set all false
+		for (edge i = start; i < number; i++)
+			changed[get<0>(KK[i])] = true; // only top-k true
+
+		timestamp it1;
+		flag = false;
+#pragma omp parallel for schedule (dynamic, 1000)
+		for (edge ind = 0; ind < nEdge; ind++) {
+			if (!changed[ind])
+				continue;
+			changed[ind] = false;
+			int a = efficientUpdateHI (ind, xadj, adj, xel, el, P, changed);
+#ifdef DEBUG_000
+			ccs[tn] += a;
+#endif
+			if (a == 1)
+				flag = true;
+		}
+
+#ifdef DEBUG_000
+		timestamp a1;
+		int degisenler = 0;
+		for(int i = 0; i < nt; i++)
+			degisenler += ccs[i];
+		memset (ccs, 0, nt * sizeof(int));
+		cout << "CHANGEDS: " << degisenler << endl;
+		timestamp a2;
+		td += a2 - a1;
+#endif
+
+		timestamp it3;
+		cout << "H " << oc << " time: " << it3 - it1 << endl;
+		oc++;
+	}
+
+	printf ("Converges at %d\n", oc);
+	timestamp t_end;
+	cout << "Total time: " << t_end - t_begin << endl;
+
+
+	vertex maxT = 0;
+	for (edge i = start; i < number; i++) {
+		int curP = P[get<0>(KK[i])];
+		if (curP > maxT)
+			maxT = curP;
+//		printf ("%d goes from %d to %d\n", get<0>(KK[i]), get<1>(KK[i]), curP);
+	}
+
+	printf ("max T: %d\n", maxT);
+#endif
+}
+
 

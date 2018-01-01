@@ -598,6 +598,27 @@ inline void read_Ks (size_t sz, const char* fl, vertex** P) {
 	fclose (fp);
 }
 
+
+inline void intersection2 (vertex* adj, edge* xadj, vertex u, vertex v, vector<vertex>& intersection) {
+	vertex i = xadj[u];
+	vertex j = xadj[v];
+	vertex gu = xadj[u+1];
+	vertex gv = xadj[v+1];
+
+	while (i < gu && j < gv) {
+		if (adj[i] < adj[j])
+			i++;
+		else if (adj[j] < adj[i])
+			j++;
+		else {
+			intersection.push_back(adj[i]);
+			i++;
+			j++;
+		}
+	}
+}
+
+
 void baseLocal12 (vertex nVtx, vertex* adj, edge* xadj, vertex* P, const char* vfile);
 void nmLocal12 (vertex nVtx, vertex* adj, edge* xadj, vertex* P, const char* vfile);
 void kcore (vertex nVtx, vertex* adj, edge* xadj, vertex* K, const char* vfile);
@@ -608,11 +629,29 @@ void kcore_Sesh_levels (vertex nVtx, vertex* adj, edge* xadj, vertex* K, vertex*
 void fast12DegeneracyNumber (vertex nVtx, vertex* adj, edge* xadj, vertex* P, vertex topK);
 
 
+void baseLocal23 (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* T, const char* vfile);
+void nmLocal23 (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* T, const char* vfile);
+void ktruss (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* T, const char* vfile);
+
+void ktruss_levels (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* L, const char* vfile);
+void ktruss_Sesh_levels (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* T, vertex* L, const char* vfile);
+
+void fast23DegeneracyNumber (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* P, vertex topK);
+
+
 
 void baseLocal23_ST (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* T, const char* vfile);
 void nmLocal23_ST (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* T, const char* vfile);
-void baseLocal23 (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* T, const char* vfile);
-void nmLocal23 (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* T, const char* vfile);
+
+
+
+
+
+
+
+
+
+
 
 void baseLocal34 (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* T, const char* vfile);
 void nmLocal34 (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* T, const char* vfile);

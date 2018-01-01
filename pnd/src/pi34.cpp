@@ -1237,25 +1237,6 @@ inline int efficientUpdateHI (edge ind, vertex* adj, edge* xadj, triangle_id* Nt
 
 
 
-inline void intersection2 (vertex* adj, edge* xadj, vertex u, vertex v, vector<vertex>& intersection) {
-	vertex i = xadj[u];
-	vertex j = xadj[v];
-	vertex gu = xadj[u+1];
-	vertex gv = xadj[v+1];
-
-	while (i < gu && j < gv) {
-		if (adj[i] < adj[j])
-			i++;
-		else if (adj[j] < adj[i])
-			j++;
-		else {
-			intersection.push_back(adj[i]);
-			i++;
-			j++;
-		}
-	}
-}
-
 lol intersection3for4cliques (edge nEdge, edge* xadj, vertex* ordered_adj, edge* ordered_xadj, couple1* el, vertex* xel, edge* xtl, triangle_id* tlist) {
 	lol count = 0;
 #pragma omp parallel for

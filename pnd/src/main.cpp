@@ -213,8 +213,8 @@ int main(int argc, char *argv[]) {
 			cout << "Top k number is needed\n";
 			exit(1);
 		}
-		vertex topK = atoi(argv[4]);
-		fast12DegeneracyNumber (nVtx, adj, xadj, P, topK);
+		vertex top_k = atoi(argv[4]);
+		fast12DegeneracyNumber (nVtx, adj, xadj, P, top_k);
 	}
 
 
@@ -224,29 +224,84 @@ int main(int argc, char *argv[]) {
 
 
 
-	else if (depth == 723) {
+
+
+
+	if (depth == 231) {
 		vfile += "_K_TRUSS";
-		vector<vertex> T;
-		ktruss_levels (graph, nEdge, T, totaltime, &maxP, vfile.c_str(), fp);
+		ktruss (nVtx, nEdge, adj, xadj, P, vfile.c_str());
+	}
+	else if (depth == 230) {
+		vfile += "_TRUSS";
+		baseLocal23 (nVtx, nEdge, adj, xadj, P, vfile.c_str());
+	}
+	else if (depth == 2300) {
+		vfile += "_TRUSS";
+		nmLocal23 (nVtx, nEdge, adj, xadj, P, vfile.c_str());
+	}
+	else if (depth == 723) {
+		vfile += "_LEVELS";
+		vertex* L;
+		ktruss_levels (nVtx, nEdge, adj, xadj, L, vfile.c_str());
 	}
 	else if (depth == 623) {
-		vector<vertex> T;
-		vertex* cono = (vertex *) malloc (sizeof(vertex) * nEdge);
-		FILE* fzp = fopen (argv[3], "r");
-		int num;
-		int i = 0;
-		while (	fscanf (fzp, "%d", &num) != EOF) {
-			if (num < 0)
-				cono[i] = 0;
-			else
-				cono[i] = num;
-			i++;
+		if (argc < 5) { // todo: update to 4
+			cout << "T file is needed\n";
+			exit(1);
 		}
-		printf ("i : %d  nEdge: %d\n", i, nEdge);
-		fclose (fzp);
-		ktruss_Seshlevels (graph, nEdge, T, cono, totaltime, &maxP, vfile.c_str(), fp);
-
+		read_Ks (nEdge, argv[4], &P); // todo: update to 3
+		vfile += "_SESH_LEVELS";
+		vertex* L;
+		ktruss_Sesh_levels (nVtx, nEdge, adj, xadj, P, L, vfile.c_str());
 	}
+	else if (depth == -23) {
+		if (argc < 5) { // todo: update to 4
+			cout << "Top k number is needed\n";
+			exit(1);
+		}
+		vertex top_k = atoi(argv[4]);
+		fast23DegeneracyNumber (nVtx, nEdge, adj, xadj, P, top_k);
+	}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	else if (depth == 232) {
+		vfile += "_STORE_TRI_K_TRUSS";
+		vector<vertex> T;
+		base_ktruss_StoreTri (graph, nEdge, T, totaltime, &maxP, vfile.c_str(), fp);
+	}
+	else if (depth == 23000) {
+		vfile += "_PI_TRUSS";
+		baseLocal23_ST (nVtx, nEdge, adj, xadj, P, vfile.c_str());
+	}
+	else if (depth == 230000) {
+		vfile += "_PI_TRUSS";
+		nmLocal23_ST (nVtx, nEdge, adj, xadj, P, vfile.c_str());
+	}
+
+
+
+
+
+
+
+
+
+
+
+
+
 	else if (depth == 634) {
 		vector<vertex> T;
 		vector<vertex> cono;
@@ -270,16 +325,6 @@ int main(int argc, char *argv[]) {
 
 
 
-	else if (depth == 231) {
-		vfile += "_K_TRUSS";
-		vector<vertex> T;
-		base_ktruss (graph, nEdge, T, totaltime, &maxP, vfile.c_str(), fp);
-	}
-	else if (depth == 232) {
-		vfile += "_STORE_TRI_K_TRUSS";
-		vector<vertex> T;
-		base_ktruss_StoreTri (graph, nEdge, T, totaltime, &maxP, vfile.c_str(), fp);
-	}
 	else if (depth == 341) {
 		vfile += "_K_34";
 		vector<vertex> T;
@@ -295,22 +340,6 @@ int main(int argc, char *argv[]) {
 
 
 
-	else if (depth == 230) {
-		vfile += "_TRUSS";
-		baseLocal23 (nVtx, nEdge, adj, xadj, P, vfile.c_str());
-	}
-	else if (depth == 2300) {
-		vfile += "_TRUSS";
-		nmLocal23 (nVtx, nEdge, adj, xadj, P, vfile.c_str());
-	}
-	else if (depth == 23000) {
-		vfile += "_PI_TRUSS";
-		baseLocal23_ST (nVtx, nEdge, adj, xadj, P, vfile.c_str());
-	}
-	else if (depth == 230000) {
-		vfile += "_PI_TRUSS";
-		nmLocal23_ST (nVtx, nEdge, adj, xadj, P, vfile.c_str());
-	}
 
 
 	else if (depth == 340) {
