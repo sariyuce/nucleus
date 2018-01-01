@@ -83,8 +83,6 @@ void readBinary(char *filename, VtxType* nVtx, EdgeType* nEdge, VtxType** adj, E
 	in.read((char*)nVtx, sizeof(VtxType)); // we already write this as +1
 	in.read((char*)nEdge, sizeof(EdgeType));
 
-
-	printf ("nVtx: %d   nEdge:%d\n", *nVtx, *nEdge);
 	(*xadj) = (EdgeType *) malloc (sizeof(EdgeType) * (*nVtx + 1));
 	(*adj) = (VtxType *) malloc (sizeof(VtxType) * (*nEdge * 2));
 

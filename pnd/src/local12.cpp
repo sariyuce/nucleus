@@ -500,7 +500,9 @@ void kcore (vertex nVtx, vertex* adj, edge* xadj, vertex* K, const char* vfile) 
 
 	na_bs.Free();
 	cout << "Max core number: " << degree_of_u << endl;
+#ifdef DUMP_K
 	print_Ks (nVtx, K, vfile);
+#endif
 	return;
 }
 
@@ -622,9 +624,9 @@ void kcore_Sesh_levels (vertex nVtx, vertex* adj, edge* xadj, vertex* K, vertex*
 
 
 // Finds the max K value by iterating on top-number high degree vertices
-void fast12DegeneracyNumber (vertex nVtx, vertex* adj, edge* xadj, vertex* P) {
+void fast12DegeneracyNumber (vertex nVtx, vertex* adj, edge* xadj, vertex* P, vertex topK) {
 
-	int number = 200; // only top-number vertices in degree are executed
+	int number = topK; // only top-number vertices in degree are executed
 #ifdef SYNC
 	printf ("No SYNC for notification-mechanism\n");
 	exit(1);

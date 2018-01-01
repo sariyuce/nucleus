@@ -586,13 +586,14 @@ inline void print_Ks (edge nVtx, vertex* T, const char* vfile, int H = -1) {
 }
 
 
-inline void read_Ks (size_t sz, char* fl, vertex* P) {
-	P = (vertex *) malloc (sizeof(vertex) * sz);
-	FILE* fp = fopen (fl, "r");
+inline void read_Ks (size_t sz, const char* fl, vertex** P) {
+	string st (fl);
+	*P = (vertex *) malloc (sizeof(vertex) * sz);
+	FILE* fp = fopen (st.c_str(), "r");
 	vertex num;
 	for (size_t i = 0; i < sz; i++) {
 		fscanf (fp, "%d", &num);
-		P[i] = num;
+		(*P)[i] = num;
 	}
 	fclose (fp);
 }
@@ -604,7 +605,7 @@ void kcore (vertex nVtx, vertex* adj, edge* xadj, vertex* K, const char* vfile);
 void kcore_levels (vertex nVtx, vertex* adj, edge* xadj, vertex* L, const char* vfile);
 void kcore_Sesh_levels (vertex nVtx, vertex* adj, edge* xadj, vertex* K, vertex* L, const char* vfile);
 
-void fast12DegeneracyNumber (vertex nVtx, vertex* adj, edge* xadj, vertex* P);
+void fast12DegeneracyNumber (vertex nVtx, vertex* adj, edge* xadj, vertex* P, vertex topK);
 
 
 

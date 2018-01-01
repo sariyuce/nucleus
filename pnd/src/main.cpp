@@ -31,7 +31,7 @@ int main(int argc, char *argv[]) {
 	Graph graph;
 	readGraph<vertex, edge>(filename, &nVtx, &nEdge, &adj, &xadj);
 
-	nEdge = xadj[nVtx];
+	nEdge = xadj[nVtx] / 2;
 
 	printf ("|V|: %d   |E|: %d\n", nVtx, nEdge);
 
@@ -70,24 +70,24 @@ int main(int argc, char *argv[]) {
 
 
 	string step_no = "";
-	if (depth < -900 || depth == 2300 || depth == 3400) {
-		out_file= vfile + "_out";
-		fopen (out_file.c_str(), "w");
-	}
-	else {
-		string str (argv[3]);
-		step_no = str.substr(str.find_last_of("_") + 1);
-		if (step_no == "values")
-			step_no = "K";
-		else {
-			string ss = str.substr(str.find_first_of("/") + 1, 5);
-			if (ss == "ASYNC")
-				step_no = "ASYNC_H_" + step_no;
-			else
-				step_no = "H_" + step_no;
-		}
-
-	}
+//	if (depth < -900 || depth == 2300 || depth == 3400) {
+//		out_file= vfile + "_out";
+//		fopen (out_file.c_str(), "w");
+//	}
+//	else {
+//		string str (argv[3]);
+//		step_no = str.substr(str.find_last_of("_") + 1);
+//		if (step_no == "values")
+//			step_no = "K";
+//		else {
+//			string ss = str.substr(str.find_first_of("/") + 1, 5);
+//			if (ss == "ASYNC")
+//				step_no = "ASYNC_H_" + step_no;
+//			else
+//				step_no = "H_" + step_no;
+//		}
+//
+//	}
 
 	timestamp totaltime (0, 0);
 	timestamp totaltime_1;
@@ -199,18 +199,22 @@ int main(int argc, char *argv[]) {
 		kcore_levels (nVtx, adj, xadj, L, vfile.c_str());
 	}
 	else if (depth == 612) {
-		if (argc < 4) {
+		if (argc < 5) { // todo: update to 4
 			cout << "K file is needed\n";
 			exit(1);
 		}
-		read_Ks (nVtx, argv[3], P);
+		read_Ks (nVtx, argv[4], &P); // todo: update to 3
 		vfile += "_SESH_LEVELS";
 		vertex* L;
 		kcore_Sesh_levels (nVtx, adj, xadj, P, L, vfile.c_str());
 	}
-	else if (depth == 19) {
-		vfile += "_PI_CORE";
-		fast12DegeneracyNumber (nVtx, adj, xadj, P);
+	else if (depth == -12) {
+		if (argc < 5) { // todo: update to 4
+			cout << "Top k number is needed\n";
+			exit(1);
+		}
+		vertex topK = atoi(argv[4]);
+		fast12DegeneracyNumber (nVtx, adj, xadj, P, topK);
 	}
 
 
@@ -223,7 +227,7 @@ int main(int argc, char *argv[]) {
 	else if (depth == 723) {
 		vfile += "_K_TRUSS";
 		vector<vertex> T;
-		ktruss_levels (graph, nEdge/2, T, totaltime, &maxP, vfile.c_str(), fp);
+		ktruss_levels (graph, nEdge, T, totaltime, &maxP, vfile.c_str(), fp);
 	}
 	else if (depth == 623) {
 		vector<vertex> T;
@@ -240,7 +244,7 @@ int main(int argc, char *argv[]) {
 		}
 		printf ("i : %d  nEdge: %d\n", i, nEdge);
 		fclose (fzp);
-		ktruss_Seshlevels (graph, nEdge/2, T, cono, totaltime, &maxP, vfile.c_str(), fp);
+		ktruss_Seshlevels (graph, nEdge, T, cono, totaltime, &maxP, vfile.c_str(), fp);
 
 	}
 	else if (depth == 634) {
@@ -255,12 +259,12 @@ int main(int argc, char *argv[]) {
 				cono.push_back (num);
 		}
 		fclose (fzp);
-//		k34_Seshlevels (graph, nEdge/2, T, cono, totaltime, &maxP, vfile.c_str(), fp);
+//		k34_Seshlevels (graph, nEdge, T, cono, totaltime, &maxP, vfile.c_str(), fp);
 	}
 	else if (depth == 734) {
 		vfile += "_K_34";
 		vector<vertex> T;
-//		k34_levels (graph, nEdge/2, T, totaltime, &maxP, vfile.c_str(), fp);
+//		k34_levels (graph, nEdge, T, totaltime, &maxP, vfile.c_str(), fp);
 	}
 
 
@@ -269,22 +273,22 @@ int main(int argc, char *argv[]) {
 	else if (depth == 231) {
 		vfile += "_K_TRUSS";
 		vector<vertex> T;
-		base_ktruss (graph, nEdge/2, T, totaltime, &maxP, vfile.c_str(), fp);
+		base_ktruss (graph, nEdge, T, totaltime, &maxP, vfile.c_str(), fp);
 	}
 	else if (depth == 232) {
 		vfile += "_STORE_TRI_K_TRUSS";
 		vector<vertex> T;
-		base_ktruss_StoreTri (graph, nEdge/2, T, totaltime, &maxP, vfile.c_str(), fp);
+		base_ktruss_StoreTri (graph, nEdge, T, totaltime, &maxP, vfile.c_str(), fp);
 	}
 	else if (depth == 341) {
 		vfile += "_K_34";
 		vector<vertex> T;
-//		base_k34 (graph, nEdge/2, T, totaltime, &maxP, vfile.c_str(), fp);
+//		base_k34 (graph, nEdge, T, totaltime, &maxP, vfile.c_str(), fp);
 	}
 	else if (depth == 342) {
 		vfile += "_STORE_4C_K_34";
 		vector<vertex> T;
-//		base_k34_Store4c (graph, nEdge/2, T, totaltime, &maxP, vfile.c_str(), fp);
+//		base_k34_Store4c (graph, nEdge, T, totaltime, &maxP, vfile.c_str(), fp);
 	}
 
 
@@ -293,32 +297,32 @@ int main(int argc, char *argv[]) {
 
 	else if (depth == 230) {
 		vfile += "_TRUSS";
-		baseLocal23 (nVtx, nEdge/2, adj, xadj, P, vfile.c_str());
+		baseLocal23 (nVtx, nEdge, adj, xadj, P, vfile.c_str());
 	}
 	else if (depth == 2300) {
 		vfile += "_TRUSS";
-		nmLocal23 (nVtx, nEdge/2, adj, xadj, P, vfile.c_str());
+		nmLocal23 (nVtx, nEdge, adj, xadj, P, vfile.c_str());
 	}
 	else if (depth == 23000) {
 		vfile += "_PI_TRUSS";
-		baseLocal23_ST (nVtx, nEdge/2, adj, xadj, P, vfile.c_str());
+		baseLocal23_ST (nVtx, nEdge, adj, xadj, P, vfile.c_str());
 	}
 	else if (depth == 230000) {
 		vfile += "_PI_TRUSS";
-		nmLocal23_ST (nVtx, nEdge/2, adj, xadj, P, vfile.c_str());
+		nmLocal23_ST (nVtx, nEdge, adj, xadj, P, vfile.c_str());
 	}
 
 
 	else if (depth == 340) {
 		vfile += "_PI_34";
-		baseLocal34 (nVtx, nEdge/2, adj, xadj, P, vfile.c_str());
+		baseLocal34 (nVtx, nEdge, adj, xadj, P, vfile.c_str());
 	}
 	else if (depth == 3400) {
 //		vertex* P;
 		vfile += "_PI_34";
-		nmLocal34 (nVtx, nEdge/2, adj, xadj, P, vfile.c_str());
-//		base_pi34_LessSpace (graph, nEdge/2, P, vReals, totaltime, &maxP, vfile.c_str(), fp, asdf);
-//		TryFasterPi34 (graph, nEdge/2, P, vReals, totaltime, &maxP, vfile.c_str(), fp, asdf);
+		nmLocal34 (nVtx, nEdge, adj, xadj, P, vfile.c_str());
+//		base_pi34_LessSpace (graph, nEdge, P, vReals, totaltime, &maxP, vfile.c_str(), fp, asdf);
+//		TryFasterPi34 (graph, nEdge, P, vReals, totaltime, &maxP, vfile.c_str(), fp, asdf);
 	}
 
 

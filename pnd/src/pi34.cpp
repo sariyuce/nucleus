@@ -1340,18 +1340,18 @@ void baseLocal34 (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* P, c
 
 	timestamp t_tri;
 	cout << "Enumerating triangles: " << t_tri - t_cog << endl;
+	cout << "# triangles: " << tlist.size() << endl;
 
 	// 4-clique counting
 	P = (vertex *) malloc (sizeof(vertex) * tlist.size());
 
 #ifdef SYNC
 	printf ("It is SYNC\n");
-	vertex Q = (vertex *) malloc (sizeof(vertex) * tlist.size());
+	vertex* Q = (vertex *) malloc (sizeof(vertex) * tlist.size());
 #else
 	printf ("It is ASYNC\n");
 #endif
 
-	cout << "# triangles: " << tlist.size() << endl;
 	triangle_id* Ntlist = (triangle_id *) malloc (sizeof (triangle_id) * tlist.size());
 	for (edge i = 0; i < tlist.size(); i++) {
 		Ntlist[i].id = tlist[i].id;
@@ -1472,7 +1472,7 @@ void nmLocal34 (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* P, con
 #ifdef SYNC
 	printf ("No SYNC for notification-mechanism\n");
 	exit(1);
-#endif
+#else
 	timestamp t_begin;
 
 	// Ordered (directed) graph creation
@@ -1505,17 +1505,15 @@ void nmLocal34 (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* P, con
 	}
 
 	lol fccount = intersection3for4cliques (nEdge, xadj, ordered_adj, ordered_xadj, el, xel, xtl, Ntlist);
-#ifndef FAST
-	cout << "# 4-cliques: " << fccount << endl;
-#endif
-
 #pragma omp parallel for
 	for (edge i = 0; i < tlist.size(); i++)
 		P[i] = Ntlist[i].id;
 
 	timestamp t_fc;
 	cout << "4-clique counting: " << t_fc - t_tri << endl;
-
+#ifndef FAST
+	cout << "# 4-cliques: " << fccount << endl;
+#endif
 
 	int oc = 0;
 	bool flag = true;
@@ -1605,6 +1603,7 @@ void nmLocal34 (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* P, con
 	free (ordered_adj);
 	free (ordered_xadj);
 	return;
+#endif
 }
 
 

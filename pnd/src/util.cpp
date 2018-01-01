@@ -381,7 +381,6 @@ void createOrdered (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, couple1* e
 		ordered_xadj[oxi++] = oi;
 		xel[xi++] = i;
 	}
-	printf ("el.size: %d\n", i);
 }
 
 
