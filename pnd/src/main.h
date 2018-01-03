@@ -366,6 +366,29 @@ inline void intersection3 (vertex* adj, edge* xadj, vertex u, vertex v, vertex w
 	}
 }
 
+inline void createOrdered (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, couple* el, edge* xel, vertex* ordered_adj, edge* ordered_xadj) {
+	edge xi = 0;
+	vertex i = 0;
+	xel[xi++] = 0;
+
+	edge oxi = 0;
+	vertex oi = 0;
+	ordered_xadj[oxi++] = 0;
+
+	for (vertex u = 0; u < nVtx; u++) {
+		for (vertex j = xadj[u]; j < xadj[u+1]; j++) {
+			vertex v = adj[j];
+			if (isSmaller (xadj, u, v)) {
+				ordered_adj[oi++] = v;
+				couple c = make_tuple(u, v);
+				el[i++] = c;
+			}
+		}
+		ordered_xadj[oxi++] = oi;
+		xel[xi++] = i;
+	}
+}
+
 void baseLocal12 (vertex nVtx, vertex* adj, edge* xadj, vertex* P, const char* vfile);
 void nmLocal12 (vertex nVtx, vertex* adj, edge* xadj, vertex* P, const char* vfile);
 void kcore (vertex nVtx, vertex* adj, edge* xadj, vertex* K, const char* vfile);
@@ -414,8 +437,6 @@ void k34_SF (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* T, const 
 
 template <typename VtxType, typename EdgeType>
 void readGraph (char *filename, VtxType* nVtx, EdgeType* nEdge, VtxType** adj, EdgeType** xadj);
-
-void createOrdered (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, couple* el, edge* xel, vertex* ordered_adj, edge* ordered_xadj);
 
 
 
