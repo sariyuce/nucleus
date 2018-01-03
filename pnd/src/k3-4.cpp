@@ -1,126 +1,97 @@
 #include "main.h"
+////
+////void create_classic_triangleList (Graph& ordered_graph, EdgeList2& el, vector<triangle_id>& tl, vector<vertex>& xtl) {
+////	xtl.push_back(0);
+////	vertex id = 0;
+////	for (size_t i = 0; i < el.size(); i++) {
+////		vector<vertex> is;
+////		intersect2 (ordered_graph, get<0>(el[i]), get<1>(el[i]), is);
+////		for (size_t j = 0; j < is.size(); j++) {
+////			triangle_id t;
+////			t.triple = make_tuple(get<0>(el[i]), get<1>(el[i]), is[j]);
+////			t.id = 0;
+////			tl.push_back(t);
+////		}
+////		xtl.push_back(tl.size());
+////	}
+////	return;
+////}
+////
 //
-//void create_classic_triangleList (Graph& ordered_graph, EdgeList2& el, vector<triangle_id>& tl, vector<vertex>& xtl) {
-//	xtl.push_back(0);
-//	vertex id = 0;
-//	for (size_t i = 0; i < el.size(); i++) {
-//		vector<vertex> is;
-//		intersect2 (ordered_graph, get<0>(el[i]), get<1>(el[i]), is);
-//		for (size_t j = 0; j < is.size(); j++) {
-//			triangle_id t;
-//			t.triple = make_tuple(get<0>(el[i]), get<1>(el[i]), is[j]);
-//			t.id = 0;
-//			tl.push_back(t);
-//		}
-//		xtl.push_back(tl.size());
-//	}
-//	return;
-//}
+////
+////// parallel
+////long intersect3_count_classic_efficient (Graph& graph, Graph& ordered_graph, EdgeList2& el, vector<vertex>& xel, vector<vertex>& xtl, vector<triangle_id>& tl) {
+////	long count = 0;
+////#pragma omp parallel for
+////	for (size_t i = 0; i < el.size(); i++) { // u < v
+////		int u = get<0>(el[i]);
+////		int v = get<1>(el[i]);
+////		vector<vertex> is;
+////		intersect_2 (ordered_graph, u, v, is);
+////		for (size_t j = 0; j < is.size(); j++) { // u < v < w
+////			int wcand = is[j];
+////			for (size_t k = j+1; k < is.size(); k++) { // u < v < x
+////				int xcand = is[k];
+////				int w = wcand, x = xcand;
+////				if (x == smaller (graph, w, x)) {
+////					int temp = w;
+////					w = x;
+////					x = temp;
+////				}
+////				if (find_ind (graph, ordered_graph, w, x) != -1) {
+////					vertex in1 = fast_getTriId (u, v, w, xel, xtl, tl, ordered_graph, graph);
+////					vertex in2 = fast_getTriId (u, v, x, xel, xtl, tl, ordered_graph, graph);
+////					vertex in3 = fast_getTriId (u, w, x, xel, xtl, tl, ordered_graph, graph);
+////					vertex in4 = fast_getTriId (v, w, x, xel, xtl, tl, ordered_graph, graph);
+////#pragma omp atomic
+////					(tl[in1].id)++;
+////
+////#pragma omp atomic
+////					(tl[in2].id)++;
+////
+////#pragma omp atomic
+////					(tl[in3].id)++;
+////
+////#pragma omp atomic
+////					(tl[in4].id)++;
+////
+////#pragma omp atomic
+////					count++;
+////				}
+////			}
+////		}
+////	}
+////	return count;
+////}
+////
+////bool comptl (triangle_id a, triangle_id b) {
+////	if (get<0>(a.triple) == get<0>(b.triple)) {
+////		if (get<1>(a.triple) == get<1>(b.triple))
+////			return (get<2>(a.triple) < get<2>(b.triple));
+////		else
+////			return (get<1>(a.triple) < get<1>(b.triple));
+////	}
+////	else
+////		return (get<0>(a.triple) < get<0>(b.triple));
+////}
+////
+////
+////inline void print_Ks (vector<triangle_id>& tl, vector<vertex>& F, const char* vfile) {
+////	string st (vfile);
+////	st += "_K";
+////	FILE* pp = fopen (st.c_str(), "w");
+////	sort (tl.begin(), tl.end(), comptl);
+////	for (vertex i = 0; i < tl.size(); i++) {
+////		int u = get<0>(tl[i].triple);
+////		int v = get<1>(tl[i].triple);
+////		int w = get<2>(tl[i].triple);
+////		fprintf (pp, "%d %d %d   %d\n", u, v, w, (F[i] == -1) ? 0 : F[i]);
+////	}
+////	fclose (pp);
+////}
+////
+//void base_k34 (Graph& graph, int nEdge, vector<vertex>& F, util::timestamp& totaltime, vertex* threefour_number, const char* vfile, FILE* fp) {
 //
-//void intersect3_new (Graph& graph, vertex u, vertex v, vertex w, vector<vertex>& intersection) {
-//	vertex i = 0, j = 0, k = 0;
-//	vertex u_size = graph[u].size();
-//	vertex v_size = graph[v].size();
-//	vertex w_size = graph[w].size();
-//	vector<vertex>& u_list = graph[u];
-//	vector<vertex>& v_list = graph[v];
-//	vector<vertex>& w_list = graph[w];
-//	while (i < u_size && j < v_size && k < w_size) {
-//		vertex a = u_list[i];
-//		vertex b = v_list[j];
-//		vertex c = w_list[k];
-//
-//		if (a == b && a == c) {
-//			intersection.push_back(a);
-//			i++; j++; k++;
-//		}
-//		else {
-//			vertex m = max3_old(a, b, c);
-//			if (a != m)
-//				i++;
-//			if (b != m)
-//				j++;
-//			if (c != m)
-//				k++;
-//		}
-//	}
-//	return;
-//}
-//
-//// parallel
-//long intersect3_count_classic_efficient (Graph& graph, Graph& ordered_graph, EdgeList2& el, vector<vertex>& xel, vector<vertex>& xtl, vector<triangle_id>& tl) {
-//	long count = 0;
-//#pragma omp parallel for
-//	for (size_t i = 0; i < el.size(); i++) { // u < v
-//		int u = get<0>(el[i]);
-//		int v = get<1>(el[i]);
-//		vector<vertex> is;
-//		intersect_2 (ordered_graph, u, v, is);
-//		for (size_t j = 0; j < is.size(); j++) { // u < v < w
-//			int wcand = is[j];
-//			for (size_t k = j+1; k < is.size(); k++) { // u < v < x
-//				int xcand = is[k];
-//				int w = wcand, x = xcand;
-//				if (x == smaller (graph, w, x)) {
-//					int temp = w;
-//					w = x;
-//					x = temp;
-//				}
-//				if (find_ind (graph, ordered_graph, w, x) != -1) {
-//					vertex in1 = fast_getTriId (u, v, w, xel, xtl, tl, ordered_graph, graph);
-//					vertex in2 = fast_getTriId (u, v, x, xel, xtl, tl, ordered_graph, graph);
-//					vertex in3 = fast_getTriId (u, w, x, xel, xtl, tl, ordered_graph, graph);
-//					vertex in4 = fast_getTriId (v, w, x, xel, xtl, tl, ordered_graph, graph);
-//#pragma omp atomic
-//					(tl[in1].id)++;
-//
-//#pragma omp atomic
-//					(tl[in2].id)++;
-//
-//#pragma omp atomic
-//					(tl[in3].id)++;
-//
-//#pragma omp atomic
-//					(tl[in4].id)++;
-//
-//#pragma omp atomic
-//					count++;
-//				}
-//			}
-//		}
-//	}
-//	return count;
-//}
-//
-//bool comptl (triangle_id a, triangle_id b) {
-//	if (get<0>(a.triple) == get<0>(b.triple)) {
-//		if (get<1>(a.triple) == get<1>(b.triple))
-//			return (get<2>(a.triple) < get<2>(b.triple));
-//		else
-//			return (get<1>(a.triple) < get<1>(b.triple));
-//	}
-//	else
-//		return (get<0>(a.triple) < get<0>(b.triple));
-//}
-//
-//
-//inline void print_Ks (vector<triangle_id>& tl, vector<vertex>& F, const char* vfile) {
-//	string st (vfile);
-//	st += "_K";
-//	FILE* pp = fopen (st.c_str(), "w");
-//	sort (tl.begin(), tl.end(), comptl);
-//	for (vertex i = 0; i < tl.size(); i++) {
-//		int u = get<0>(tl[i].triple);
-//		int v = get<1>(tl[i].triple);
-//		int w = get<2>(tl[i].triple);
-//		fprintf (pp, "%d %d %d   %d\n", u, v, w, (F[i] == -1) ? 0 : F[i]);
-//	}
-//	fclose (pp);
-//}
-//
-void base_k34 (Graph& graph, int nEdge, vector<vertex>& F, util::timestamp& totaltime, vertex* threefour_number, const char* vfile, FILE* fp) {
-}
-
 //	util::timestamp t_begin;
 //	char *p = (char*) &totaltime;
 //	util::timestamp *pout = (util::timestamp*) p;

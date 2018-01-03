@@ -1,44 +1,5 @@
 #include "main.h"
 
-// UTILITY FUNCTIONS, MIGHT BE NEEDED
-
-inline void compute_KT (vertex* Reals, Graph& graph, vertex* T, int oc) {
-	int count = 0, score = 0;
-	for (vertex i = 0; i < graph.size(); i++) {
-		int u = i;
-		for (vertex j = 0; j < graph[i].size(); j++) {
-			int v = graph[i][j];
-			if (u == smaller (graph, u, v))
-				EdgeKendallTau (Reals, T, u, v, &count, &score);
-		}
-	}
-	printf ("H %d , KendallTau: %lf\n", oc, kt (count, score));
-}
-
-inline void simple_distance (vertex* Reals, Graph& graph, vertex* T, int oc) {
-	double score = 0;
-	int count = 0;
-	for (vertex i = 0; i < graph.size(); i++)
-		if (T[i] > 0 && Reals[i] > 0) {
-			//			printf ("sc: %lf\n", (double) Reals[i] / T[i]);
-			//			score += (double) Reals[i] / T[i];
-			if (Reals[i] == T[i])
-				score++;
-			//			else
-			//				printf ("%d: Reals: %d   K: %d\n", i, Reals[i], T[i]);
-
-			count++;
-		}
-
-	//	score /= count;
-	printf ("H %d , similarity: %lf = %d / %d\n", oc, score/count, (int) score, count);
-}
-
-
-
-
-// ESSENTIALS
-
 inline int sortInitialHI (vertex ind, vertex* adj, edge* xadj, vertex* P
 #ifdef SYNC
 		, vertex* Q
@@ -514,7 +475,90 @@ void kcore (vertex nVtx, vertex* adj, edge* xadj, vertex* K, const char* vfile) 
 
 
 
+
+
+
 // ONGOING WORK
+
+// Finds the max K value by iterating on top-number high degree vertices
+void fast12DegeneracyNumber (vertex nVtx, vertex* adj, edge* xadj, vertex* P, vertex topK) {
+
+	int number = topK; // only top-number vertices in degree are executed
+#ifdef SYNC
+	printf ("No SYNC for notification-mechanism\n");
+	exit(1);
+#else
+	timestamp t_begin;
+	P = (vertex *) calloc (nVtx, sizeof(vertex));
+
+#pragma omp parallel for default (shared)
+	for (vertex i = 0; i < nVtx; i++)
+		P[i] = xadj[i+1] - xadj[i];
+
+	timestamp t_tc;
+	cout << "Degree finding time: " << t_tc - t_begin << endl;
+
+	timestamp td (0, 0);
+	int oc = 0;
+	bool flag = true;
+
+	bool changed[nVtx];
+	memset (changed, 255, sizeof(bool) * nVtx); // set all true
+
+	vector<eda> KK;
+	for (vertex i = 0; i < nVtx; i++)
+		KK.push_back (make_tuple(i, P[i]));
+
+	sort (KK.begin(), KK.end(), kksort);
+
+	int start = 0;
+	for (int i = start; i < number; i++)
+		changed[get<0>(KK[i])] = true;
+
+
+
+	while (flag) {
+
+		memset (changed, 0, sizeof(bool) * nVtx); // set all false
+		for (int i = start; i < number; i++)
+			changed[get<0>(KK[i])] = true; // only top-k true
+
+		timestamp it1;
+		flag = false;
+#pragma omp parallel for schedule (dynamic, 1000)
+		for (vertex i = 0; i < nVtx; i++) {
+			vertex ind = i;
+			if (!changed[ind])
+				continue;
+			changed[ind] = false;
+			int a = efficientUpdateHI (ind, adj, xadj, P, changed);
+			if (a == 1)
+				flag = true;
+		}
+
+		timestamp it3;
+		cout << "H " << oc << " time: " << it3 - it1 << endl;
+		oc++;
+	}
+
+	printf ("Converges at %d\n", oc);
+	timestamp t_end;
+	cout << "Total time: " << t_end - t_begin << endl;
+
+
+	int maxK = 0;
+	for (int i = start; i < number; i++) {
+		int curP = P[get<0>(KK[i])];
+		if (curP > maxK)
+			maxK = curP;
+//		printf ("%d goes from %d to %d\n", get<0>(KK[i]), get<1>(KK[i]), curP);
+	}
+
+	printf ("max K: %d\n", maxK);
+#endif
+}
+
+
 /*
 - L_1: All those vertices with the minimum degree.
 - To find L_i: delete all vertices in L_j (j < i). Then find all vertices with the minimum degree in the remaining graph.
@@ -620,97 +664,6 @@ void kcore_Sesh_levels (vertex nVtx, vertex* adj, edge* xadj, vertex* K, vertex*
 	print_Ks (nVtx, L, vfile);
 #endif
 	return;
-}
-
-
-
-// Finds the max K value by iterating on top-number high degree vertices
-void fast12DegeneracyNumber (vertex nVtx, vertex* adj, edge* xadj, vertex* P, vertex topK) {
-
-	int number = topK; // only top-number vertices in degree are executed
-#ifdef SYNC
-	printf ("No SYNC for notification-mechanism\n");
-	exit(1);
-#else
-	timestamp t_begin;
-	P = (vertex *) calloc (nVtx, sizeof(vertex));
-
-#pragma omp parallel for default (shared)
-	for (vertex i = 0; i < nVtx; i++)
-		P[i] = xadj[i+1] - xadj[i];
-
-	timestamp t_tc;
-	cout << "Degree finding time: " << t_tc - t_begin << endl;
-
-	timestamp td (0, 0);
-	int oc = 0;
-	bool flag = true;
-
-	bool changed[nVtx];
-	memset (changed, 255, sizeof(bool) * nVtx); // set all true
-
-	vector<eda> KK;
-	for (vertex i = 0; i < nVtx; i++)
-		KK.push_back (make_tuple(i, P[i]));
-
-	sort (KK.begin(), KK.end(), kksort);
-
-	int start = 0;
-	for (int i = start; i < number; i++)
-		changed[get<0>(KK[i])] = true;
-
-
-
-	while (flag) {
-
-		memset (changed, 0, sizeof(bool) * nVtx); // set all false
-		for (int i = start; i < number; i++)
-			changed[get<0>(KK[i])] = true; // only top-k true
-
-		timestamp it1;
-		flag = false;
-#pragma omp parallel for schedule (dynamic, 1000)
-		for (vertex i = 0; i < nVtx; i++) {
-			vertex ind = i;
-			if (!changed[ind])
-				continue;
-			changed[ind] = false;
-			int a = efficientUpdateHI (ind, adj, xadj, P, changed);
-#ifdef DEBUG_000
-			ccs[tn] += a);
-#endif
-			if (a == 1)
-				flag = true;
-		}
-
-#ifdef DEBUG_000
-		int degisenler = 0;
-		for(int i = 0; i < nt; i++)
-			degisenler += ccs[i];
-		memset (ccs, 0, nt * sizeof(int));
-		cout << "CHANGEDS: " << degisenler << endl;
-#endif
-
-		timestamp it3;
-		cout << "H " << oc << " time: " << it3 - it1 << endl;
-		oc++;
-	}
-
-	printf ("Converges at %d\n", oc);
-	timestamp t_end;
-	cout << "Total time: " << t_end - t_begin << endl;
-
-
-	int maxK = 0;
-	for (int i = start; i < number; i++) {
-		int curP = P[get<0>(KK[i])];
-		if (curP > maxK)
-			maxK = curP;
-//		printf ("%d goes from %d to %d\n", get<0>(KK[i]), get<1>(KK[i]), curP);
-	}
-
-	printf ("max K: %d\n", maxK);
-#endif
 }
 
 

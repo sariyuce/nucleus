@@ -31,11 +31,11 @@ inline void find_same_K_parent4 (int* ch, vector<subcore>& ecr) {
 	}
 }
 
-void build (int cn, vector<couple1>& relations, vector<subcore>& ecr, int* num_subcores, int nEdge, int nVtx) {
+void build (int cn, vector<couple>& relations, vector<subcore>& ecr, int* num_subcores, int nEdge, int nVtx) {
 	// regularization
-	vector<vector<couple1>> mm;
+	vector<vector<couple>> mm;
 	for (int i = 0; i < cn+1; i++) {
-		vector<couple1> t;
+		vector<couple> t;
 		mm.push_back(t);
 	}
 
@@ -53,14 +53,14 @@ void build (int cn, vector<couple1>& relations, vector<subcore>& ecr, int* num_s
 		if (a == b)
 			continue;
 
-		couple1 c = make_tuple (a, b);
+		couple c = make_tuple (a, b);
 		ecr[a].visible = ecr[b].visible = true; // not necessary, todo
 		mm[ecr[a].K].push_back (c);
 	}
 
 	// process mm in reverse order
 	for (int i = mm.size() - 1; i >= 0; i--) {
-		vector<couple1> merge_sc;
+		vector<couple> merge_sc;
 		for (int j = 0; j < mm[i].size(); j++) { // all have K of ecr[b].K
 			int a = get<0>(mm[i][j]);
 			int b = get<1>(mm[i][j]);
@@ -75,7 +75,7 @@ void build (int cn, vector<couple1>& relations, vector<subcore>& ecr, int* num_s
 				else { // ecr[root].K == ecr[a].K
 					int e = root;
 					int f = a;
-					couple1 c = (e<f) ? make_tuple (e, f) : make_tuple (f, e);
+					couple c = (e<f) ? make_tuple (e, f) : make_tuple (f, e);
 						merge_sc.push_back (c);
 				}
 			}

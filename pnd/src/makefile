@@ -8,8 +8,8 @@ SRCS	= $(CFILES:%=%.c) $(CXXFILES:%=%.cpp)
 
 all: $(TARGET) 
 
-pnd: main.o local12.o hier.o util.o local23.o kcore.o ktruss.o k3-4.o pi34.o bucket.o graph.o
-	$(LD) $(LDFLAGS) -o ../$@ main.o local12.o hier.o util.o local23.o kcore.o ktruss.o k3-4.o pi34.o bucket.o graph.o $(LIBS)
+pnd: main.o local12.o local23.o local34.o hier.o util.o bucket.o graph.o
+	$(LD) $(LDFLAGS) -o ../$@ main.o local12.o local23.o local34.o hier.o util.o bucket.o graph.o $(LIBS)
 	/bin/rm *.o  
 
 clean: 
