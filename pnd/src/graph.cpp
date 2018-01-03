@@ -30,6 +30,21 @@ static int really_read(std::istream& is, char* buf, size_t global_size) {
 	return 0;
 }
 
+inline bool hashUniquify (vector<vertex>& vertices) {
+	HashMap<bool> hermap (false);
+	for (size_t i = 0; i < vertices.size(); i++) {
+		int t = vertices[i];
+		if (hermap.hasDefaultValue (t))
+			hermap[t] = true;
+		else {
+			vertices.erase (vertices.begin() + i);
+			i--;
+		}
+	}
+	sort (vertices.begin(), vertices.end());
+	return true;
+}
+
 template <typename VtxType, typename EdgeType>
 void writeBinary (char* filename, VtxType nVtx, EdgeType nEdge, VtxType* adj, EdgeType* xadj) {
 

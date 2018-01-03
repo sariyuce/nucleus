@@ -1349,6 +1349,9 @@ void k34 (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* F, const cha
 	}
 
 	na_bs.Free();
+	for (size_t i = 0; i < tlist.size(); i++)
+		if (F[i] == -1)
+			F[i] = 0;
 	cout << "Max 34 number: " << fc_of_uvw << endl;
 	timestamp t_end;
 	cout << "Total time: " << t_end - t_begin << endl;

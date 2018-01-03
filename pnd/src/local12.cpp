@@ -441,6 +441,8 @@ void kcore (vertex nVtx, vertex* adj, edge* xadj, vertex* K, const char* vfile) 
 		auto deg = xadj[i+1] - xadj[i];
 		if (deg > 0)
 			na_bs.Insert (i, deg);
+		else
+			K[i] = 0;
 	}
 
 	vertex degree_of_u = 0;

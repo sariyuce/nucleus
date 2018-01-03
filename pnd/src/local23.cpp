@@ -1094,6 +1094,9 @@ void ktruss (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* T, const 
 	}
 
 	na_bs.Free();
+	for (size_t i = 0; i < nEdge; i++)
+		if (T[i] == -1)
+			T[i] = 0;
 	cout << "Max truss number: " << tc_of_uv << endl;
 	timestamp t_end;
 	cout << "Total time: " << t_end - t_begin << endl;
