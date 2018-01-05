@@ -1,8 +1,8 @@
 #ifndef __BUCKET__H
 #define __BUCKET__H
 
-#include "larray.h"
 #include <vector>
+#include <unordered_map>
 
 struct Naive_Bucket_element
 {
