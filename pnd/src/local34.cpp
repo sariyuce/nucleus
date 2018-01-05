@@ -93,7 +93,7 @@ inline int mapInitialHI (edge ind, vertex* adj, edge* xadj, triangle_id* tlist, 
 #endif
 ) {
 
-	HashMap<vertex> gmap (-1);
+	unordered_map<vertex, vertex> gmap;
 	vertex greaters = 0;
 	vertex equals = 0;
 	vertex H = 0;
@@ -129,8 +129,9 @@ inline int mapInitialHI (edge ind, vertex* adj, edge* xadj, triangle_id* tlist, 
 				else { // equals = 0
 					H++;
 					int gH = 0;
-					if (!gmap.hasDefaultValue (H)) {
-						gH = gmap[H];
+					auto it = gmap.find(H);
+					if (it != gmap.end()) {
+						gH = it->second;
 						gmap.erase (H);
 					}
 					equals = gH + 1;
@@ -147,8 +148,9 @@ inline int mapInitialHI (edge ind, vertex* adj, edge* xadj, triangle_id* tlist, 
 					greaters++;
 					H++;
 					int gH = 0;
-					if (!gmap.hasDefaultValue (H))  {
-						gH = gmap[H];
+					auto it = gmap.find(H);
+					if (it != gmap.end()) {
+						gH = it->second;
 						gmap.erase (H);
 					}
 					equals = gH;
