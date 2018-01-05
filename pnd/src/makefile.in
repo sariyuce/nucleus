@@ -36,7 +36,6 @@ CFLAGS	+= -fopenmp
 CXXFLAGS += -fopenmp
 endif
 
-
 ifeq ($(WARN),yes)
 FLAGS      = -Wall -W -Wextra
 endif
@@ -56,16 +55,6 @@ endif
 ifeq ($(FAST), yes)
 CFLAGS	+= -D FAST
 CXXFLAGS += -D FAST
-endif
-
-ifeq ($(SHORT), yes)
-CFLAGS	+= -D SHORT
-CXXFLAGS += -D SHORT
-endif
-
-ifeq ($(CONSTRUCT), yes)
-CFLAGS	+= -D CONSTRUCT
-CXXFLAGS += -D CONSTRUCT
 endif
 
 ifeq ($(TYPE), SYNC)
@@ -88,48 +77,12 @@ CFLAGS	+= -D DUMP_Hs
 CXXFLAGS += -D DUMP_Hs
 endif
 
-ifeq ($(RANDOM), yes)
-CFLAGS	+= -D RANDOM
-CXXFLAGS += -D RANDOM
+ifeq ($(VERBOSE), yes)
+CFLAGS	+= -D VERBOSE
+CXXFLAGS += -D VERBOSE
 endif
 
-ifeq ($(TRG), yes)
-CFLAGS	+= -D TRG
-CXXFLAGS += -D TRG
-endif
-
-ifeq ($(DEBUG_0), yes)
-CFLAGS	+= -D DEBUG_0
-CXXFLAGS += -D DEBUG_0
-endif
-
-ifeq ($(DEBUG_00), yes)
-CFLAGS	+= -D DEBUG_00
-CXXFLAGS += -D DEBUG_00
-endif
-
-ifeq ($(DEBUG_1), yes)
-CFLAGS	+= -D DEBUG_1
-CXXFLAGS += -D DEBUG_1
-endif
-
-
-ifeq ($(SUBG), yes)
-CFLAGS	+= -D SUBG
-CXXFLAGS += -D SUBG
-endif
-
-ifeq ($(NODENSITY), yes)
-CFLAGS	+= -D IMPR
-CXXFLAGS += -D IMPR
-endif
-
-AR         = ar rv
-RANLIB     = ranlib
-
-INC        = 
 LIBS       = -lm
-
 
 .SUFFIXES:
 .SUFFIXES: .o .cpp

@@ -23,17 +23,12 @@ struct Naive_Bucket
 	Naive_Bucket();
 	~Naive_Bucket();
 	void Initialize(int max_value, int nb_element);
-	void Free ();
-	/* value == INT_MAX means not present in bucket */
+	void Free (); /* value == INT_MAX means not present in bucket */
 	void Insert(int id, int value);
 	void Update(int id, int new_value);
 	void DecVal(int id);
-	void Adjust(int id);
-	void Sulk (int id);
-	/*returns -1 if empty*/
-	int PopMin(int* ret_id, int* ret_value);
+	int PopMin(int* ret_id, int* ret_value); /* returns -1 if empty */
 	int CurrentValue(int id);
 };
-
 
 #endif

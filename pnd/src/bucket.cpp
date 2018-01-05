@@ -18,6 +18,7 @@ Naive_Bucket::~Naive_Bucket() {
 	if (values != NULL)
 		free (values);
 }
+
 void Naive_Bucket::Free () {
 	free (buckets);
 	buckets = NULL;
@@ -26,12 +27,12 @@ void Naive_Bucket::Free () {
 	free (values);
 	values = NULL;
 }
+
 void Naive_Bucket::Initialize(int max_v, int nb_element) {
 	int i;
 	max_value = max_v;
 	buckets = (Naive_Bucket_element **) malloc(sizeof(Naive_Bucket_element *) * (max_value+1));
 	elements = (Naive_Bucket_element *) malloc(sizeof(Naive_Bucket_element) * nb_element);
-	//    printf("nb_element: %d\n", nb_element);
 	values = (int *) malloc(sizeof(int) * nb_element);
 	nb_elements = nb_element;
 	if (buckets == NULL || elements == NULL || values == NULL) {
@@ -81,7 +82,6 @@ int Naive_Bucket::CurrentValue(int id) {
 }
 
 void Naive_Bucket::DecVal(int id) {
-//	printf ("%d is decremented to %d\n", id, values[id]-1);
 	int old_value = values[id];
 	// adjust the prev and next pointers
 	if (elements[id].prev == NULL)
@@ -93,51 +93,4 @@ void Naive_Bucket::DecVal(int id) {
 	Naive_Bucket::Insert(id, values[id]-1);
 	return;
 }
-
-// bring the id to head of list
-void Naive_Bucket::Adjust(int id) {
-//	printf ("%d is adjusted\n", id);
-	int value = values[id];
-	// adjust the prev and next pointers
-	if (elements[id].prev == NULL) // at the head of list
-		return;
-	else {
-		if (elements[id].next != NULL)
-			elements[id].next->prev = elements[id].prev;
-		elements[id].prev->next = elements[id].next;
-		elements[id].next = buckets[value];
-		buckets[value]->prev = &(elements[id]);
-		elements[id].prev = NULL;
-		buckets[value] = &(elements[id]);
-	}
-	return;
-}
-
-// bring the id to tail of list, not constant time
-void Naive_Bucket::Sulk (int id) {
-//	printf ("%d is sulked\n", id);
-	int value = values[id];
-	// adjust the prev and next pointers
-	if (elements[id].next == NULL) // at the tail of list
-		return;
-	// find the tail
-	Naive_Bucket_element* tail = &(elements[id]);
-	while (tail->next != NULL)
-		tail = tail->next;
-	if (elements[id].prev == NULL) {// at the head of list
-		buckets[value] = elements[id].next;
-		buckets[value]->prev = NULL;
-	}
-	else {// in the middle of list
-		elements[id].prev->next = elements[id].next;
-		elements[id].next->prev = elements[id].prev;
-	}
-
-	elements[id].prev = tail;
-	elements[id].prev->next = &(elements[id]);
-	elements[id].next = NULL;
-
-	return;
-}
-
 

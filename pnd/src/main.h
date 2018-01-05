@@ -8,6 +8,11 @@
 #include <map>
 #include <unordered_map>
 #include <utility>
+#include <random>
+#include <chrono>
+#include <tuple>
+#include <fstream>
+
 #include <assert.h>
 #include <errno.h>
 #include <limits.h>
@@ -15,13 +20,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <random>
 #include <sys/stat.h>
-#include <chrono>
-#include <omp.h>
-#include <tuple>
-#include <fstream>
 #include <string.h>
+#include <omp.h>
+
 #include "bucket.h"
 #include "timestamp.cpp"
 #include "larray.h"
@@ -217,28 +219,14 @@ inline void createOrdered (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, cou
 void baseLocal12 (vertex nVtx, vertex* adj, edge* xadj, vertex* P, const char* vfile);
 void nmLocal12 (vertex nVtx, vertex* adj, edge* xadj, vertex* P, const char* vfile);
 void kcore (vertex nVtx, vertex* adj, edge* xadj, vertex* K, const char* vfile);
-void kcore_levels (vertex nVtx, vertex* adj, edge* xadj, vertex* L, const char* vfile);
-void kcore_Sesh_levels (vertex nVtx, vertex* adj, edge* xadj, vertex* K, vertex* L, const char* vfile);
-void fast12DegeneracyNumber (vertex nVtx, vertex* adj, edge* xadj, vertex* P, vertex topK);
 
 void baseLocal23 (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* T, const char* vfile);
 void nmLocal23 (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* T, const char* vfile);
 void ktruss (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* T, const char* vfile);
-void ktruss_levels (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* L, const char* vfile);
-void ktruss_Sesh_levels (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* T, vertex* L, const char* vfile);
-void fast23DegeneracyNumber (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* P, vertex topK);
-void baseLocal23_ST (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* T, const char* vfile);
-void nmLocal23_ST (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* T, const char* vfile);
-void ktruss_ST (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* T, const char* vfile);
 
 void baseLocal34 (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* T, const char* vfile);
 void nmLocal34 (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* T, const char* vfile);
 void k34 (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* T, const char* vfile);
-void k34_levels (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* L, const char* vfile);
-void fast34DegeneracyNumber (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* P, vertex topK);
-void baseLocal34_SF (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* T, const char* vfile);
-void nmLocal34_SF (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* T, const char* vfile);
-void k34_SF (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* T, const char* vfile);
 
 template <typename VtxType, typename EdgeType>
 void readGraph (char *filename, VtxType* nVtx, EdgeType* nEdge, VtxType** adj, EdgeType** xadj);
