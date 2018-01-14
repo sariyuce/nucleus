@@ -25,16 +25,15 @@
 #include <omp.h>
 
 #include "bucket.h"
-#include "timestamp.cpp"
 
 #define PRIME 251231
 using namespace std;
-using namespace util;
 
 typedef long long lol;
 typedef int vertex; //vertices are 32 bytes
 typedef int edge; //edges are 32 bytes
 
+typedef chrono::duration<double> tms;
 typedef tuple<vertex, vertex> couple;
 typedef tuple<vertex, vertex, vertex> triple;
 

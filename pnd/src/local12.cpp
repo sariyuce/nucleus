@@ -1,5 +1,6 @@
 #include "main.h"
 
+
 // this is faster than sort-based computation
 inline int mapInitialHI (vertex ind, vertex* adj, edge* xadj, vertex* P
 #ifdef SYNC
@@ -161,7 +162,7 @@ inline int efficientUpdateHI (vertex ind, vertex* adj, edge* xadj, vertex* P, bo
 // base AND and SND algorithms, no notification mechanism. compile with SYNC=yes to get the synchronous mode (SND)
 void baseLocal12 (vertex nVtx, vertex* adj, edge* xadj, vertex* P, const char* vfile) {
 
-	timestamp t_begin;
+	const auto t_begin = chrono::steady_clock::now();
 	P = (vertex *) calloc (nVtx, sizeof(vertex));
 
 #pragma omp parallel for default (shared)
@@ -175,65 +176,40 @@ void baseLocal12 (vertex nVtx, vertex* adj, edge* xadj, vertex* P, const char* v
 	printf ("It is ASYNC\n");
 #endif
 
-	timestamp t_deg;
-	cout << "Degree finding time: " << t_deg - t_begin << endl;
+	const auto t_deg = chrono::steady_clock::now();
+	tms t1 = t_deg - t_begin;
+	printf ("Degree finding time: %.6lf secs\n", t1.count());
 
-	timestamp td (0, 0);
 	int oc = 0;
 	bool flag = true;
 
-#ifdef VERBOSE
-	timestamp ts1;
-	int nt = 1, tn = 0;
-#pragma omp parallel
-	{
-		nt = omp_get_num_threads();
-		tn = omp_get_thread_num();
-	}
-	int* ccs = (int *) calloc (nt, sizeof(int));
-	timestamp ts2;
-	td += ts2 - ts1;
-#endif
-
-
 #pragma omp parallel for schedule (dynamic, 1000)
 	for (vertex ind = 0; ind < nVtx; ind++) {
-#ifdef VERBOSE
-		ccs[tn] += mapInitialHI (ind, adj, xadj, P
-#ifdef SYNC
-				, Q
-#endif
-		);
-#else
 		mapInitialHI (ind, adj, xadj, P
 #ifdef SYNC
 				, Q
 #endif
 		);
-#endif
 	}
 
 #ifdef SYNC
 	memcpy (P, Q, sizeof(vertex) * nVtx);
 #endif
 
-	timestamp t_init;
-	cout << "H 0 time: " << t_init - t_deg - td << endl;
+	const auto t_init = chrono::steady_clock::now();;
+	tms t2 = t_init - t_deg	;
+	printf ("H %d time: %.6lf secs\n", oc, t2.count());
+	tms td  = chrono::duration<double>::zero();
 #ifdef DUMP_Hs
+	const auto ts1 = chrono::steady_clock::now();
 	print_Ks (nVtx, P, vfile, oc);
+	const auto ts2 = chrono::steady_clock::now();
+	td += ts2 - ts1;
 #endif
 	oc++;
 
-
-#ifdef VERBOSE
-	vertex degisenler = 0;
-	for(int i = 0; i < nt; i++)
-		degisenler += ccs[i];
-	memset (ccs, 0, nt * sizeof(int));
-#endif
-
 	while (flag) {
-		timestamp td1;
+		const auto td1 = chrono::steady_clock::now();
 		flag = false;
 
 #pragma omp parallel for schedule (dynamic, 1000)
@@ -248,34 +224,39 @@ void baseLocal12 (vertex nVtx, vertex* adj, edge* xadj, vertex* P, const char* v
 				flag = true;
 		}
 
-		timestamp td2;
+
 #ifdef SYNC
 		memcpy (P, Q, sizeof(vertex) * nVtx);
 #endif
 
+		const auto td2 = chrono::steady_clock::now();
 #ifdef DUMP_Hs
+		const auto ts1 = chrono::steady_clock::now();
 		print_Ks (nVtx, P, vfile, oc);
+		const auto ts2 = chrono::steady_clock::now();
+		td += ts2 - ts1;
 #endif
-		timestamp td3;
-		td += td3 - td2;
 
-		cout << "H " << oc << " time: " << td2 - td1 << endl;
+		tms step = td2 - td1;
+		printf ("H %d time: %.6lf secs\n", oc, step.count());
 		oc++;
 	}
 
-	printf ("Converges at %d\n", oc);
-	timestamp t_end;
-	cout << "Total time: " << t_end - t_begin - td << endl;
-
 #ifdef DUMP_K
+	const auto ts3 = chrono::steady_clock::now();
 	print_Ks (nVtx, P, vfile);
+	const auto ts4 = chrono::steady_clock::now();
+	td += ts4 - ts3;
 #endif
 
 	free (P);
 #ifdef SYNC
 	free (Q);
 #endif
-
+	printf ("Converges at %d\n", oc);
+	const auto t_end = chrono::steady_clock::now();
+	tms total = t_end - t_begin - td;
+	printf ("Total time: %.6lf secs\n", total.count());
 	return;
 }
 
@@ -285,63 +266,42 @@ void nmLocal12 (vertex nVtx, vertex* adj, edge* xadj, vertex* P, const char* vfi
 	printf ("No SYNC for notification-mechanism\n");
 	exit(1);
 #else
-	timestamp t_begin;
+	const auto t_begin = chrono::steady_clock::now();
 	P = (vertex *) calloc (nVtx, sizeof(vertex));
 
 #pragma omp parallel for default (shared)
 	for (vertex i = 0; i < nVtx; i++)
 		P[i] = xadj[i+1] - xadj[i];
 
-	timestamp t_deg;
-	cout << "degreeFinding time: " << t_deg - t_begin << endl;
+	const auto t_deg = chrono::steady_clock::now();
+	tms t1 = t_deg - t_begin;
+	printf ("Degree finding time: %.6lf secs\n", t1.count());
 
-	timestamp td (0, 0);
 	int oc = 0;
 	bool flag = true;
-
-#ifdef VERBOSE
-	timestamp ts1;
-	int nt = 1, tn = 0;
-#pragma omp parallel
-	{
-		nt = omp_get_num_threads();
-		tn = omp_get_thread_num();
-	}
-	int* ccs = (int *) calloc (nt, sizeof(int));
-	timestamp ts2;
-	td += ts2 - ts1;
-#endif
-
 
 	bool changed[nVtx];
 	memset (changed, 255, sizeof(bool) * nVtx); // set all true
 
 #pragma omp parallel for schedule (dynamic, 1000)
 	for (vertex ind = 0; ind < nVtx; ind++) {
-#ifdef VERBOSE
-		ccs[tn] += mapInitialHI (ind, adj, xadj, P);
-#else
 		mapInitialHI (ind, adj, xadj, P);
-#endif
 	}
 
-	timestamp t_init;
-	cout << "H 0 time: " << t_init - t_deg - td << endl;
+	const auto t_init = chrono::steady_clock::now();;
+	tms t2 = t_init - t_deg	;
+	printf ("H %d time: %.6lf secs\n", oc, t2.count());
+	tms td  = chrono::duration<double>::zero();
 #ifdef DUMP_Hs
+	const auto ts1 = chrono::steady_clock::now();
 	print_Ks (nVtx, P, vfile, oc);
+	const auto ts2 = chrono::steady_clock::now();
+	td += ts2 - ts1;
 #endif
 	oc++;
 
-
-#ifdef VERBOSE
-	vertex degisenler = 0;
-	for(int i = 0; i < nt; i++)
-		degisenler += ccs[i];
-	memset (ccs, 0, nt * sizeof(int));
-#endif
-
 	while (flag) {
-		timestamp td1;
+		const auto td1 = chrono::steady_clock::now();
 		flag = false;
 
 #pragma omp parallel for schedule (dynamic, 1000)
@@ -351,44 +311,35 @@ void nmLocal12 (vertex nVtx, vertex* adj, edge* xadj, vertex* P, const char* vfi
 				continue;
 			changed[ind] = false;
 			int a = efficientUpdateHI (ind, adj, xadj, P, changed);
-#ifdef VERBOSE
-			ccs[tn] += a;
-#endif
 			if (a == 1)
 				flag = true;
 		}
-
-		timestamp td2;
-#ifdef VERBOSE
-		timestamp a1;
-		int degisenler = 0;
-		for(int i = 0; i < nt; i++)
-			degisenler += ccs[i];
-		memset (ccs, 0, nt * sizeof(int));
-		cout << "CHANGEDS: " << degisenler << endl;
-		timestamp a2;
-		td += a2 - a1;
-#endif
+		const auto td2 = chrono::steady_clock::now();
 
 #ifdef DUMP_Hs
+		const auto ts1 = chrono::steady_clock::now();
 		print_Ks (nVtx, P, vfile, oc);
+		const auto ts2 = chrono::steady_clock::now();
+		td += ts2 - ts1;
 #endif
-		timestamp td3;
-		td += td3 - td2;
 
-		cout << "H " << oc << " time: " << td2 - td1 << endl;
+		tms step = td2 - td1;
+		printf ("H %d time: %.6lf secs\n", oc, step.count());
 		oc++;
 	}
 
-	printf ("Converges at %d\n", oc);
-	timestamp t_end;
-	cout << "Total time: " << t_end - t_begin - td << endl;
-
 #ifdef DUMP_K
+	const auto ts3 = chrono::steady_clock::now();
 	print_Ks (nVtx, P, vfile);
+	const auto ts4 = chrono::steady_clock::now();
+	td += ts4 - ts3;
 #endif
 
 	free (P);
+	printf ("Converges at %d\n", oc);
+	const auto t_end = chrono::steady_clock::now();
+	tms total = t_end - t_begin - td;
+	printf ("Total time: %.6lf secs\n", total.count());
 	return;
 #endif
 }
@@ -396,7 +347,7 @@ void nmLocal12 (vertex nVtx, vertex* adj, edge* xadj, vertex* P, const char* vfi
 // Sequential k-core computation
 void kcore (vertex nVtx, vertex* adj, edge* xadj, vertex* K, const char* vfile) {
 
-	timestamp t_begin;
+	const auto t_begin = chrono::steady_clock::now();
 	size_t max_degree = 0;
 	for (size_t i = 0; i < nVtx; i++) {
 		auto deg = xadj[i+1] - xadj[i];
@@ -404,7 +355,6 @@ void kcore (vertex nVtx, vertex* adj, edge* xadj, vertex* K, const char* vfile) 
 			max_degree = deg;
 	}
 	K = (vertex *) malloc (nVtx * sizeof(vertex));
-
 
 	// Peeling
 	Naive_Bucket na_bs;
@@ -436,12 +386,18 @@ void kcore (vertex nVtx, vertex* adj, edge* xadj, vertex* K, const char* vfile) 
 	}
 
 	na_bs.Free();
-	cout << "Max core number: " << degree_of_u << endl;
-	timestamp t_end;
-	cout << "Total time: " << t_end - t_begin << endl;
-
+	tms td  = chrono::duration<double>::zero();
 #ifdef DUMP_K
+	const auto ts3 = chrono::steady_clock::now();
 	print_Ks (nVtx, K, vfile);
+	const auto ts4 = chrono::steady_clock::now();
+	td += ts4 - ts3;
 #endif
+
+	free(K);
+	cout << "Max core number: " << degree_of_u << endl;
+	const auto t_end = chrono::steady_clock::now();
+	tms total = t_end - t_begin - td;
+	printf ("Total time: %.6lf secs\n", total.count());
 	return;
 }

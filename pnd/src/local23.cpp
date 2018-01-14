@@ -270,8 +270,7 @@ inline int efficientUpdateHI (edge ind, edge* xadj, vertex* adj, edge* xel, coup
 // base AND and SND algorithms, no notification mechanism. compile with SYNC=yes to get the synchronous mode (SND)
 void baseLocal23 (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* T, const char* vfile) {
 
-	timestamp t_begin;
-
+	const auto t_begin = chrono::steady_clock::now();
 	// Ordered (directed) graph creation
 	couple* el = (couple *) malloc (sizeof(couple) * nEdge);
 	edge* xel = (edge *) malloc (sizeof(edge) * (nVtx+1));
@@ -280,8 +279,9 @@ void baseLocal23 (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* T, c
 
 	createOrdered (nVtx, nEdge, adj, xadj, el, xel, ordered_adj, ordered_xadj);
 
-	timestamp t_cog;
-	cout << "Creating ordered graph: " << t_cog - t_begin << endl;
+	const auto t_cog = chrono::steady_clock::now();
+	tms t1 = t_cog - t_begin;
+	printf ("Creating ordered graph: %.6lf secs\n", t1.count());
 
 	// Triangle counting for each edge
 	T = (vertex *) calloc (nEdge, sizeof(vertex));
@@ -297,58 +297,44 @@ void baseLocal23 (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* T, c
 
 	free (ordered_adj);
 	free (ordered_xadj);
-	timestamp t_tc;
-	cout << "Triangle counting time: " << t_tc - t_cog << endl;
+	const auto t_tc = chrono::steady_clock::now();
+	tms t2 = t_tc - t_cog;
+	printf ("Triangle counting time: %.6lf secs\n", t2.count());
+
 #ifndef FAST
 	cout << "# triangles: " << tricount << endl;
 #endif
-	timestamp td (0, 0);
+
 	int oc = 0;
 	bool flag = true;
 
-#ifdef VERBOSE
-	timestamp ts1;
-	int nt = 1, tn = 0;
-#pragma omp parallel
-	{
-		nt = omp_get_num_threads();
-		tn = omp_get_thread_num();
-	}
-	int* ccs = (int *) calloc (nt, sizeof(int));
-	timestamp ts2;
-	td += ts2 - ts1;
-#endif
-
 #pragma omp parallel for schedule (dynamic, 1000)
 	for (edge ind = 0; ind < nEdge; ind++) {
-#ifdef VERBOSE
-		ccs[tn] += 	mapInitialHI (ind, xadj, adj, xel, el, T
-#ifdef SYNC
-				, U
-#endif
-		);
-#else
 		mapInitialHI (ind, xadj, adj, xel, el, T
 #ifdef SYNC
 				, U
 #endif
 		);
-#endif
 	}
 
 #ifdef SYNC
 	memcpy (T, U, sizeof(vertex) * nEdge);
 #endif
 
-	timestamp t_init;
-	cout << "H 0 time: " << t_init - t_tc - td << endl;
+	const auto t_init = chrono::steady_clock::now();
+	tms t3 = t_init - t_tc;
+	printf ("H %d time: %.6lf secs\n", oc, t3.count());
+	tms td  = chrono::duration<double>::zero();
 #ifdef DUMP_Hs
+	const auto ts1 = chrono::steady_clock::now();
 	print_Ks (nEdge, T, vfile, oc);
+	const auto ts2 = chrono::steady_clock::now();
+	td += ts2 - ts1;
 #endif
 	oc++;
 
 	while (flag) {
-		timestamp td1;
+		const auto td1 = chrono::steady_clock::now();
 		flag = false;
 
 #pragma omp parallel for schedule (dynamic, 1000)
@@ -358,33 +344,32 @@ void baseLocal23 (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* T, c
 					, U
 #endif
 			);
-
 			if (fl == 1)
 				flag = true;
 		}
 
-		timestamp td2;
 #ifdef SYNC
 		memcpy (T, U, sizeof(vertex) * nEdge);
 #endif
 
+		const auto td2 = chrono::steady_clock::now();
 #ifdef DUMP_Hs
-	print_Ks (nEdge, T, vfile, oc);
+		const auto ts1 = chrono::steady_clock::now();
+		print_Ks (nEdge, T, vfile, oc);
+		const auto ts2 = chrono::steady_clock::now();
+		td += ts2 - ts1;
 #endif
 
-		timestamp td3;
-		td += td3 - td2;
-
-		cout << "H " << oc << " time: " << td2 - td1 << endl;
+		tms step = td2 - td1;
+		printf ("H %d time: %.6lf secs\n", oc, step.count());
 		oc++;
 	}
 
-	printf ("Converges at %d\n", oc);
-	timestamp t_end;
-	cout << "Total time: " << t_end - t_begin - td << endl;
-
 #ifdef DUMP_K
+	const auto ts3 = chrono::steady_clock::now();
 	print_Ks (nEdge, T, vfile);
+	const auto ts4 = chrono::steady_clock::now();
+	td += ts4 - ts3;
 #endif
 
 	free (T);
@@ -393,6 +378,10 @@ void baseLocal23 (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* T, c
 #ifdef SYNC
 	free (U);
 #endif
+	printf ("Converges at %d\n", oc);
+	const auto t_end = chrono::steady_clock::now();
+	tms total = t_end - t_begin - td;
+	printf ("Total time: %.6lf secs\n", total.count());
 
 	return;
 }
@@ -403,8 +392,8 @@ void nmLocal23 (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* T, con
 	printf ("No SYNC for notification-mechanism\n");
 	exit(1);
 #else
-	timestamp t_begin;
 
+	const auto t_begin = chrono::steady_clock::now();
 	// Ordered (directed) graph creation
 	couple* el = (couple *) malloc (sizeof(couple) * nEdge);
 	edge* xel = (edge *) malloc (sizeof(edge) * (nVtx+1));
@@ -413,8 +402,9 @@ void nmLocal23 (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* T, con
 
 	createOrdered (nVtx, nEdge, adj, xadj, el, xel, ordered_adj, ordered_xadj);
 
-	timestamp t_cog;
-	cout << "Creating ordered graph: " << t_cog - t_begin << endl;
+	const auto t_cog = chrono::steady_clock::now();
+	tms t1 = t_cog - t_begin;
+	printf ("Creating ordered graph: %.6lf secs\n", t1.count());
 
 	// Triangle counting for each edge
 	T = (vertex *) calloc (nEdge, sizeof(vertex));
@@ -423,50 +413,38 @@ void nmLocal23 (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* T, con
 
 	free (ordered_adj);
 	free (ordered_xadj);
-	timestamp t_tc;
-	cout << "Triangle counting time: " << t_tc - t_begin << endl;
+	const auto t_tc = chrono::steady_clock::now();
+	tms t2 = t_tc - t_cog;
+	printf ("Triangle counting time: %.6lf secs\n", t2.count());
+
 #ifndef FAST
 	cout << "# triangles: " << tricount << endl;
 #endif
 
-	timestamp td (0, 0);
 	int oc = 0;
 	bool flag = true;
 
-#ifdef VERBOSE
-	timestamp ts1;
-	int nt = 1, tn = 0;
-#pragma omp parallel
-	{
-		nt = omp_get_num_threads();
-		tn = omp_get_thread_num();
-	}
-	int* ccs = (int *) calloc (nt, sizeof(int));
-	timestamp ts2;
-	td += ts2 - ts1;
-#endif
-
-
 #pragma omp parallel for schedule (dynamic, 1000)
 	for (edge ind = 0; ind < nEdge; ind++) {
-#ifdef VERBOSE
-		ccs[tn] += 	mapInitialHI (ind, xadj, adj, xel, el, T);
-#else
 		mapInitialHI (ind, xadj, adj, xel, el, T);
-#endif
 	}
 	bool changed[nEdge];
 	memset (changed, 255, sizeof(bool) * nEdge); // set all true
 
-	timestamp t_init;
-	cout << "H 0 time: " << t_init - t_tc - td << endl;
+	const auto t_init = chrono::steady_clock::now();;
+	tms t3 = t_init - t_tc	;
+	printf ("H %d time: %.6lf secs\n", oc, t3.count());
+	tms td  = chrono::duration<double>::zero();
 #ifdef DUMP_Hs
+	const auto ts1 = chrono::steady_clock::now();
 	print_Ks (nEdge, T, vfile, oc);
+	const auto ts2 = chrono::steady_clock::now();
+	td += ts2 - ts1;
 #endif
 	oc++;
 
 	while (flag) {
-		timestamp td1;
+		const auto td1 = chrono::steady_clock::now();
 		flag = false;
 
 #pragma omp parallel for schedule (dynamic, 1000)
@@ -475,45 +453,36 @@ void nmLocal23 (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* T, con
 				continue;
 			changed[ind] = false;
 			int a = efficientUpdateHI (ind, xadj, adj, xel, el, T, changed);
-#ifdef VERBOSE
-			ccs[tn] += a;
-#endif
 			if (a == 1)
 				flag = true;
 		}
 
-		timestamp td2;
-#ifdef VERBOSE
-		timestamp a1;
-		int degisenler = 0;
-		for(int i = 0; i < nt; i++)
-			degisenler += ccs[i];
-		memset (ccs, 0, nt * sizeof(int));
-		cout << "CHANGEDS: " << degisenler << endl;
-		timestamp a2;
-		td += a2 - a1;
-#endif
-
+		const auto td2 = chrono::steady_clock::now();
 #ifdef DUMP_Hs
+		const auto ts1 = chrono::steady_clock::now();
 		print_Ks (nEdge, T, vfile, oc);
+		const auto ts2 = chrono::steady_clock::now();
+		td += ts2 - ts1;
 #endif
-		timestamp td3;
-		td += td3 - td2;
 
-		cout << "H " << oc << " time: " << td2 - td1 << endl;
+		tms step = td2 - td1;
+		printf ("H %d time: %.6lf secs\n", oc, step.count());
 		oc++;
 	}
 
-	printf ("Converges at %d\n", oc);
-	timestamp t_end;
-	cout << "Total time: " << t_end - t_begin - td << endl;
-
 #ifdef DUMP_K
+	const auto ts3 = chrono::steady_clock::now();
 	print_Ks (nEdge, T, vfile);
+	const auto ts4 = chrono::steady_clock::now();
+	td += ts4 - ts3;
 #endif
 
 	free (T);
 	free (el);
+	printf ("Converges at %d\n", oc);
+	const auto t_end = chrono::steady_clock::now();
+	tms total = t_end - t_begin - td;
+	printf ("Total time: %.6lf secs\n", total.count());
 	return;
 #endif
 }
@@ -521,7 +490,7 @@ void nmLocal23 (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* T, con
 // Partly parallel k-truss computation (only triangle counting is parallel)
 void ktruss (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* T, const char* vfile) {
 
-	timestamp t_begin;
+	const auto t_begin = chrono::steady_clock::now();
 
 	// Ordered (directed) graph creation
 	couple* el = (couple *) malloc (sizeof(couple) * nEdge);
@@ -531,16 +500,19 @@ void ktruss (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* T, const 
 
 	createOrdered (nVtx, nEdge, adj, xadj, el, xel, ordered_adj, ordered_xadj);
 
-	timestamp t_cog;
-	cout << "Creating ordered graph: " << t_cog - t_begin << endl;
+	const auto t_cog = chrono::steady_clock::now();
+	tms t1 = t_cog - t_begin;
+	printf ("Creating ordered graph: %.6lf secs\n", t1.count());
 
 	// Triangle counting for each edge
 	edge* tc = (edge *) calloc (nEdge, sizeof(vertex));
 
 	lol tricount = count_triangles (tc, nVtx, xadj, ordered_adj, ordered_xadj); // single loop with three locks
 
-	timestamp t_tc;
-	cout << "Triangle counting time: " << t_tc - t_cog << endl;
+	const auto t_tc = chrono::steady_clock::now();
+	tms t2 = t_tc - t_cog;
+	printf ("Triangle counting time: %.6lf secs\n", t2.count());
+
 #ifndef FAST
 	cout << "# triangles: " << tricount << endl;
 #endif
@@ -591,13 +563,20 @@ void ktruss (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* T, const 
 	for (size_t i = 0; i < nEdge; i++)
 		if (T[i] == -1)
 			T[i] = 0;
-	cout << "Max truss number: " << tc_of_uv << endl;
-	timestamp t_end;
-	cout << "Total time: " << t_end - t_begin << endl;
 
+	tms td  = chrono::duration<double>::zero();
 #ifdef DUMP_K
+	const auto ts3 = chrono::steady_clock::now();
 	print_Ks (nEdge, T, vfile);
+	const auto ts4 = chrono::steady_clock::now();
+	td += ts4 - ts3;
 #endif
+
+	free (T);
+	cout << "Max truss number: " << tc_of_uv << endl;
+	const auto t_end = chrono::steady_clock::now();
+	tms total = t_end - t_begin;
+	printf ("Total time: %.6lf secs\n", total.count());
 	return;
 }
 
