@@ -1,9 +1,7 @@
 MODE=gcc
 DEBUG=no
 OPT=yes
-SUBG=no
-IMPR=no
-NODENSITY=no
+FAST=yes
 
 PARALLEL=yes
 TYPE=ASYNC
@@ -75,11 +73,6 @@ endif
 ifeq ($(DUMP_Hs), yes)
 CFLAGS	+= -D DUMP_Hs
 CXXFLAGS += -D DUMP_Hs
-endif
-
-ifeq ($(VERBOSE), yes)
-CFLAGS	+= -D VERBOSE
-CXXFLAGS += -D VERBOSE
 endif
 
 LIBS       = -lm
