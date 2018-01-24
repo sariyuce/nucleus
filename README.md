@@ -2,7 +2,6 @@ This is a collection of the codes on the nucleus decomposition framework.
 - 'nd' has the basic nucleus decomposition[1] and hierarchy construction[2] codes.
 - 'bnd' has the tip and wing decompositions for bipartite networks[3] along with the hierarchy contructions
 - 'pnd' has the parallel nucleus decomposition algorithms[4], based on the h-index formulation -- no hierarchy construction exists
-- 'dnd' has the directed 2,3 nucleus decomposition algorithms
 
 
 [1] Finding the Hierarchy of Dense Subgraphs using Nucleus Decompositions<br>
@@ -15,7 +14,7 @@ International Conference on Very Large Data Bases (VLDB), 2017, <a href="sariyuc
     
 [3] Peeling Bipartite Networks for Dense Subgraph Discovery<br>
 A. Erdem Sariyuce, Ali Pinar<br>
-<a href="arxiv.org/pdf/1611.02756.pdf">arXiv:1611.02756</a><br>
+ACM International Conference on Web Search and Data Mining (WSDM), 2018, <a href="arxiv.org/pdf/1611.02756.pdf">arXiv:1611.02756</a>arXiv<br>
     
 [4] Parallel Local Algorithms for Core, Truss, and Nucleus Decompositions<br>
 A. Erdem Sariyuce, C. Seshadhri, Ali Pinar<br>
