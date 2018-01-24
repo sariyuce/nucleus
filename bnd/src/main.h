@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <utility>
 #include <string>
+#include <chrono>
 #include <initializer_list>
 
 #include <assert.h>
@@ -40,6 +41,7 @@ using namespace util;
 typedef int vertex; //vertices are 4 bytes
 typedef int edge; //edges are 4 bytes
 typedef long long lol;
+typedef chrono::duration<double> tms;
 typedef unordered_multimap<int, int> mmap;
 typedef pair<vertex, vertex> vp;
 typedef vector<vector<vertex> > Graph;
@@ -105,9 +107,9 @@ inline bool less_than (vertex u, vertex v, Graph& graph) {
 	return (graph[u].size() < graph[v].size() || (graph[u].size() == graph[v].size() && u < v));
 }
 
-inline void print_time (FILE* fp, const string& str, const timestamp& t) {
-	fprintf (fp, "%s %d.%06d\n", str.c_str(), t.seconds, t.microseconds);
-	fflush(fp);
+inline void print_time (FILE* fp, const string& str, tms t) {
+        fprintf (fp, "%s %.6lf\n", str.c_str(), t.count());
+        fflush(fp);
 }
 
 inline vertex find_ind (vector<vertex>& rg, vertex g) {
@@ -132,10 +134,10 @@ inline void prefixSum (vector<vertex>& xRight, Graph& rightGraph, vector<vp>& el
 }
 
 inline bool hashUniquify(vector<vertex>& ch, bool fl = true, string variant = "NONE") {
-	HashMap<bool> hermap(false);
+	unordered_map<vertex, bool> hermap;
 	for (size_t i = 0; i < ch.size(); i++) {
 		int t = ch[i];
-		if (hermap.hasDefaultValue(t)) {
+		if (hermap.find(t) == hermap.end()) {
 			hermap[t] = true;
 		}
 		else {

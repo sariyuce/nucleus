@@ -1,20 +1,7 @@
 #include "main.h"
 
 #define MAXLINE 1000000
-//#define WRITE_BINARY
-
-typedef struct asdf {
-	int f;
-	int s;
-} pprr;
-
-int pcmp(const void *v1, const void *v2) {
-	long long diff = (((pprr *)v1)->f - ((pprr *)v2)->f);
-	if (diff != 0)
-		return diff;
-	else
-		return (((pprr *)v1)->s - ((pprr *)v2)->s);
-}
+#define WRITE_BINARY
 
 static int really_read(std::istream& is, char* buf, size_t global_size) {
 	char* temp2 = buf;
@@ -29,7 +16,6 @@ static int really_read(std::istream& is, char* buf, size_t global_size) {
 	}
 	return 0;
 }
-
 
 // Regular graphs
 
@@ -168,8 +154,8 @@ void readBipartiteBinary(char *filename, vector<vector<VtxType>>& leftGraph, vec
 	for (vertex i = 0; i < leftVtx; i++) {
 		leftGraph[i].resize (pxadj[i]);
 		really_read (in, (char*)&(leftGraph[i][0]), sizeof(VtxType) * pxadj[i]);
-		if (i % 1000000 == 0)
-			printf ("left i: %d / %d\n", i, leftVtx);
+//		if (i % 1000000 == 0)
+//			printf ("left i: %d / %d\n", i, leftVtx);
 	}
 
 	rightGraph.resize (rightVtx);
@@ -178,8 +164,8 @@ void readBipartiteBinary(char *filename, vector<vector<VtxType>>& leftGraph, vec
 	for (vertex i = 0; i < rightVtx; i++) {
 		rightGraph[i].resize (pxadj2[i]);
 		really_read (in, (char*)&(rightGraph[i][0]), sizeof(VtxType) * pxadj2[i]);
-		if (i % 1000000 == 0)
-			printf ("right i: %d / %d\n", i, rightVtx);
+//		if (i % 1000000 == 0)
+//			printf ("right i: %d / %d\n", i, rightVtx);
 	}
 
 	int ss = 0;
@@ -216,8 +202,8 @@ void writeBipartiteBinary (char* filename, EdgeType nEdge, vector<vector<VtxType
 	for (VtxType i = 0; i < leftGraph.size(); i++) {
 		size_t sz = leftGraph[i].size();
 		fwrite (&(leftGraph[i][0]), sizeof(VtxType), sz, filep);
-		if (i % 1000000 == 0)
-			printf ("left i: %d\n", i);
+//		if (i % 1000000 == 0)
+//			printf ("left i: %d\n", i);
 	}
 
 	rightGraph.resize (rightVtx);
@@ -229,8 +215,8 @@ void writeBipartiteBinary (char* filename, EdgeType nEdge, vector<vector<VtxType
 	for (VtxType i = 0; i < rightGraph.size(); i++) {
 		size_t sz = rightGraph[i].size();
 		fwrite (&(rightGraph[i][0]), sizeof(VtxType), sz, filep);
-		if (i % 1000000 == 0)
-			printf ("right i: %d\n", i);
+//		if (i % 1000000 == 0)
+//			printf ("right i: %d\n", i);
 	}
 
 	fclose (filep);
@@ -313,7 +299,7 @@ void readBipartiteMM (char *filename, EdgeType* nEdge, vector<vector<VtxType>>& 
 template <typename VtxType, typename EdgeType>
 void readBipartiteOut (char *filename, EdgeType* nEdge, vector<vector<VtxType>>& leftGraph, vector<vector<VtxType>>& rightGraph) {
 
-	timestamp t1;
+	const auto t1 = chrono::steady_clock::now();
 	char line[MAXLINE];
 	FILE* fp = fopen(filename, "r");
 
@@ -350,8 +336,9 @@ void readBipartiteOut (char *filename, EdgeType* nEdge, vector<vector<VtxType>>&
 
 		co++;
 		if (co % 1000000 == 0) {
-			timestamp t2;
-			cout << "read " << co << "  edges, time: " << t2 - t1 << endl;
+			const auto t2 = chrono::steady_clock::now();
+			cout << "read " << co << "  edges, ";
+			print_time (stdout, "time: ", t2 - t1);
 
 		}
 	}

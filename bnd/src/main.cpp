@@ -2,7 +2,7 @@
 
 int main(int argc, char *argv[]) {
 
-	timestamp t1;
+	const auto t1 = chrono::steady_clock::now();
 #ifdef EXPS
 	if (argc < 4) {
 		if (argc == 3) {
@@ -133,7 +133,7 @@ int main(int argc, char *argv[]) {
 	}
 #endif
 
-#ifdef K_VALUES
+#ifdef DUMP_K
 	string kfile = vfile + "_K_values";
 	FILE* kf = fopen (kfile.c_str(), "w");
 	for (vertex i = 0; i < K.size(); i++)
@@ -141,7 +141,7 @@ int main(int argc, char *argv[]) {
 	fclose (kf);
 #endif
 
-	timestamp t2;
+	const auto t2 = chrono::steady_clock::now();
 	if (nd == "LEFT_TIP" || nd == "RIGHT_TIP" || nd == "WING")
 		printf ("%s\t|L|: %d\t|R|: %d\t|E|: %d\tmaxK: %d nButterflies: %d\n", gname.c_str(), leftGraph.size(), rightGraph.size(), nEdge, maxK, bCount);
 

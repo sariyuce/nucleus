@@ -38,7 +38,7 @@ lol countTriangles (Graph& graph, Graph& orientedGraph, Graph& TC) {
 
 void base_ktruss (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, lol* maxtruss, string vfile, FILE* fp) {
 
-	timestamp peelingStart;
+	const auto peelingStart = chrono::steady_clock::now();
 
 	vertex nVtx = graph.size();
 
@@ -54,7 +54,7 @@ void base_ktruss (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, l
 	//	Triangle counting for each edge
 	lol tric = countTriangles (graph, orientedGraph, TC);
 	tric /= 3;
-	timestamp tcEnd;
+	const auto tcEnd = chrono::steady_clock::now();
 	print_time (fp, "Triangle counting: ", tcEnd - peelingStart);
 
 	// Peeling
@@ -133,12 +133,12 @@ void base_ktruss (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, l
 	nBucket.Free();
 	*maxtruss = tc_e; // tc_e is tc of the last popped edge
 
-	timestamp peelingEnd;
+	const auto peelingEnd = chrono::steady_clock::now();
 	print_time (fp, "Peeling time: ", peelingEnd - peelingStart);
 
 	if (hierarchy) {
 		buildHierarchy (*maxtruss, relations, skeleton, &nSubcores, nEdge, nVtx);
-		timestamp nucleusEnd;
+		const auto nucleusEnd = chrono::steady_clock::now();
 
 		print_time (fp, "Truss decomposition time with hierarchy construction: ", nucleusEnd - peelingStart);
 		fprintf (fp, "# subcores: %d\t\t # subsubcores: %d\t\t |V|: %d\n", nSubcores, skeleton.size(), graph.size());
@@ -146,7 +146,7 @@ void base_ktruss (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, l
 		helpers hp (&el);
 		Graph dum;
 		presentNuclei ("TRUSS", skeleton, component, nEdge, hp, vfile, graph, dum, NULL, fp);
-		timestamp totalEnd;
+		const auto totalEnd = chrono::steady_clock::now();
 
 		print_time (fp, "Total time, including the density computations: ", totalEnd - peelingStart);
 	}

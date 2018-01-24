@@ -20,10 +20,10 @@ inline lol nChoosek(lol n, int k) {
 lol countButterflies (Graph& rightGraph, Graph& leftGraph, lol* butterflyCounts, lol* bCount) {
 
 	lol maxBc = 0;
-	HashMap<lol> dup (0);
+	unordered_map<vertex, lol> dup;
 	vertex i = 0;
 	for (i = 0; i < rightGraph.size(); i++) {
-		dup.reset (0);
+		dup.clear();
 		for (auto v : rightGraph[i])
 			for (auto w : leftGraph[v])
 				if (i < w)
@@ -49,15 +49,15 @@ lol countButterflies (Graph& rightGraph, Graph& leftGraph, lol* butterflyCounts,
 void tipDecomposition (Graph& leftGraph, Graph& rightGraph, edge nEdge, vector<vertex>& K, bool hierarchy,
 		lol* maxbicore, string vfile, FILE* fp, lol* bCount) {
 
-	timestamp c1;
+	const auto c1 = chrono::steady_clock::now();
 	lol* butterflyCounts = (lol*) calloc (sizeof(lol), rightGraph.size());
 	lol maxBc = countButterflies (rightGraph, leftGraph, butterflyCounts, bCount); // counts butterflies for each vertex on the right
-	timestamp c2;
+	const auto c2 = chrono::steady_clock::now();
 	fprintf (fp, "# bflys: %lld\t\t maxBc: %lld\n", *bCount, maxBc);
 	print_time (fp, "Counting butterflies per vertex time: ", c2 - c1);
 
 	// Peeling
-	timestamp p1;
+	const auto p1 = chrono::steady_clock::now();
 	K.resize (rightGraph.size(), -1);
 	Naive_Bucket nBucket;
 	nBucket.Initialize (maxBc+1, rightGraph.size());
@@ -97,7 +97,7 @@ void tipDecomposition (Graph& leftGraph, Graph& rightGraph, edge nEdge, vector<v
 
 		bf_u = K[u] = val;
 
-		HashMap<lol> dup (0);
+		unordered_map<vertex, lol> dup;
 		for (auto v : rightGraph[u])
 			for (auto w : leftGraph[v])
 				dup[w]++;
@@ -124,24 +124,24 @@ void tipDecomposition (Graph& leftGraph, Graph& rightGraph, edge nEdge, vector<v
 	nBucket.Free();
 	*maxbicore = bf_u;
 
-	timestamp p2;
+	const auto p2 = chrono::steady_clock::now();
 	if (!hierarchy) {
 		print_time (fp, "Only peeling time: ", p2 - p1);
 		print_time (fp, "Total time: ", (p2 - p1) + (c2 - c1));
 	}
 	else {
 		print_time (fp, "Only peeling + on-the-fly hierarchy construction time: ", p2 - p1);
-		timestamp b1;
+		const auto b1 = chrono::steady_clock::now();
 		buildHierarchy (*maxbicore, relations, skeleton, &nSubcores, nEdge, rightGraph.size(), leftGraph.size());
-		timestamp b2;
+		const auto b2 = chrono::steady_clock::now();
 
 		print_time (fp, "Building hierarchy time: ", b2 - b1);
 		print_time (fp, "Total TIP time (excluding density computation): ", (p2 - p1) + (c2 - c1) + (b2 - b1));
 
-		timestamp d1;
+		const auto d1 = chrono::steady_clock::now();
 		helpers dummy;
 		presentNuclei ("TIP", skeleton, component, nEdge, dummy, vfile, leftGraph, rightGraph, NULL, fp);
-		timestamp d2;
+		const auto d2 = chrono::steady_clock::now();
 
 		print_time (fp, "Total TIP time: ", (p2 - p1) + (c2 - c1) + (b2 - b1) + (d2 - d1));
 	}

@@ -60,17 +60,17 @@ inline vertex getEdgeIndex (vertex a, vertex b, vector<vp>& el, vector<vertex>& 
 void wingDecomposition (Graph& leftGraph, Graph& rightGraph, edge nEdge, vector<vertex>& K, bool hierarchy,
 		lol* maxbicore, FILE* fp, lol* bCount) {
 
-	timestamp pr1;
+	const auto pr1 = chrono::steady_clock::now();
 	vector<vp> left_el;
 	vector<vertex> xLeft;
 	prefixSum (xLeft, leftGraph, left_el);
 	vector<vp> right_el;
 	vector<vertex> xRight;
 	prefixSum (xRight, rightGraph, right_el);
-	timestamp pr2;
+	const auto pr2 = chrono::steady_clock::now();
 	print_time (fp, "Prefix computation time (both sides): ", pr2 - pr1);
 
-	timestamp c1;
+	const auto c1 = chrono::steady_clock::now();
 	Graph butterflyCounts (rightGraph.size());
 	for (vertex i = 0; i < rightGraph.size(); i++)
 		butterflyCounts[i].resize (rightGraph[i].size(), 0);
@@ -80,13 +80,13 @@ void wingDecomposition (Graph& leftGraph, Graph& rightGraph, edge nEdge, vector<
 		for (auto c : g)
 			if (c > maxBc)
 				maxBc = c;
-	timestamp c2;
+	const auto c2 = chrono::steady_clock::now();
 	fprintf (fp, "# bflys: %lld\t\t maxBc: %lld\n", *bCount, maxBc);
 	print_time (fp, "Counting butterflies per edge time: ", c2 - c1);
 
 
 	// peeling
-	timestamp p1;
+	const auto p1 = chrono::steady_clock::now();
 	K.resize (right_el.size(), -1);
 	Naive_Bucket nBucket;
 	nBucket.Initialize (maxBc, nEdge);
@@ -167,7 +167,7 @@ void wingDecomposition (Graph& leftGraph, Graph& rightGraph, edge nEdge, vector<
 	nBucket.Free();
 	*maxbicore = bf_e;
 
-	timestamp p2;
+	const auto p2 = chrono::steady_clock::now();
 	print_time (fp, "Only peeling time: ", p2 - p1);
 	print_time (fp, "Total WING time: ", (p2 - p1) + (c2 - c1) + (pr2 - pr1));
 }
@@ -194,14 +194,14 @@ inline void indicesIntersectionHrc (vector<vertex>& a, vector<vertex>& b, vector
 void wingDecompositionHrc (Graph& leftGraph, Graph& rightGraph, edge nEdge, vector<vertex>& K, bool hierarchy,
 		lol* maxbicore, string vfile, FILE* fp, lol* bCount) {
 
-	timestamp pr1;
+	const auto pr1 = chrono::steady_clock::now();
 	vector<vp> right_el;
 	vector<vertex> xRight;
 	prefixSum (xRight, rightGraph, right_el);
-	timestamp pr2;
+	const auto pr2 = chrono::steady_clock::now();
 	print_time (fp, "Prefix computation time (single side): ", pr2 - pr1);
 
-	timestamp c1;
+	const auto c1 = chrono::steady_clock::now();
 	Graph butterflyCounts (rightGraph.size());
 	for (vertex i = 0; i < rightGraph.size(); i++)
 		butterflyCounts[i].resize (rightGraph[i].size(), 0);
@@ -211,13 +211,13 @@ void wingDecompositionHrc (Graph& leftGraph, Graph& rightGraph, edge nEdge, vect
 		for (auto c : g)
 			if (c > maxBc)
 				maxBc = c;
-	timestamp c2;
+	const auto c2 = chrono::steady_clock::now();
 	fprintf (fp, "# bflys: %lld\t\t maxBc: %lld\n", *bCount, maxBc);
 	print_time (fp, "Counting butterflies per edge time: ", c2 - c1);
 
 
 	// peeling and hierarchy construction
-	timestamp p1;
+	const auto p1 = chrono::steady_clock::now();
 	K.resize (right_el.size(), -1);
 	Naive_Bucket nBucket;
 	nBucket.Initialize (maxBc, nEdge);
@@ -302,19 +302,19 @@ void wingDecompositionHrc (Graph& leftGraph, Graph& rightGraph, edge nEdge, vect
 	nBucket.Free();
 	*maxbicore = bf_e;
 
-	timestamp p2;
+	const auto p2 = chrono::steady_clock::now();
 	print_time (fp, "Only peeling + on-the-fly hierarchy construction time: ", p2 - p1);
-	timestamp b1;
+	const auto b1 = chrono::steady_clock::now();
 	buildHierarchy (*maxbicore, relations, skeleton, &nSubcores, nEdge, rightGraph.size(), leftGraph.size());
-	timestamp b2;
+	const auto b2 = chrono::steady_clock::now();
 
 	print_time (fp, "Building hierarchy time: ", b2 - b1);
 	print_time (fp, "Total WING time (excluding density computation): ", (pr2 - pr1) + (c2 - c1) + (p2 - p1) + (b2 - b1));
 
-	timestamp d1;
+	const auto d1 = chrono::steady_clock::now();
 	helpers hp (&right_el);
 	presentNuclei ("WING", skeleton, component, nEdge, hp, vfile, leftGraph, rightGraph, &xRight, fp);
-	timestamp d2;
+	const auto d2 = chrono::steady_clock::now();
 
 	print_time (fp, "Total WING time: ", (pr2 - pr1) + (c2 - c1) + (p2 - p1) + (b2 - b1) + (d2 - d1));
 }

@@ -31,7 +31,7 @@ inline void wingDensity(vector<vertex>& eset, vector<vp>& el, subcore* sc) {
 	sc->secondarySize = lefties.size();
 }
 
-inline bool pullChildrenSets (string variant, FILE* fp, vector<vertex>& children, HashMap<vertex>& orderInFile, vector<vertex>& vset,
+inline bool pullChildrenSets (string variant, FILE* fp, vector<vertex>& children, unordered_map<vertex, vertex>& orderInFile, vector<vertex>& vset,
 		vector<subcore>& skeleton, Graph& rightGraph, bool edgeList, vector<vertex>* xRight) {
 
 	int limit = INT_MAX;
@@ -42,10 +42,10 @@ inline bool pullChildrenSets (string variant, FILE* fp, vector<vertex>& children
 
 	char c;
 	for (auto eda : children) {
-		if (skeleton[eda].primarySize == -1)
+		if (skeleton[eda].primarySize == -1) 
 			return false;
 
-		if (orderInFile.hasDefaultValue (eda)) {
+		if (orderInFile.find (eda) == orderInFile.end()) {
 			printf ("PROBLEM: %d has -1 as order\n", eda);
 			exit(1);
 		}
@@ -78,8 +78,10 @@ inline bool pullChildrenSets (string variant, FILE* fp, vector<vertex>& children
 					d = (*xRight)[u] + find_ind (rightGraph[u], v);
 				}
 				vset.push_back (d);
-				if (vset.size() > limit)
+				if (vset.size() > limit) {
+					fseek (fp, 0, SEEK_END);
 					return false;
+				}
 			}
 			else
 				break;
@@ -130,7 +132,7 @@ inline void rearrange (vector<subcore>& skeleton) { // rearrange children and pa
 }
 
 // find the vertices/edges whose component is index, append the vertices/edges in those to the vertices/edges of its all children, sort, compute its density
-void reportSubgraph (string variant, vertex index, HashMap<vertex>& orderInFile, vector<vertex>& component, helpers& ax,
+void reportSubgraph (string variant, vertex index, unordered_map<vertex, vertex>& orderInFile, vector<vertex>& component, helpers& ax,
 		vector<subcore>& skeleton, Graph& leftGraph, Graph& rightGraph, edge nEdge, FILE* fp, FILE* gp, vector<vertex>* xRight = NULL) {
 
 	if (skeleton[index].parent == -1) {
@@ -231,7 +233,7 @@ void presentNuclei (string variant, vector<subcore>& skeleton, vector<int>& comp
 			component[i] = skeleton.size() - 1;
 
 	// match each component with its representative
-	HashMap<int> replace (-1);
+	unordered_map<vertex, int> replace;
 	for (auto i = 0; i < skeleton.size(); i++) {
 		auto sc = i;
 		auto original = sc;
@@ -243,7 +245,7 @@ void presentNuclei (string variant, vector<subcore>& skeleton, vector<int>& comp
 
 	// each component takes its representative's component number
 	for (auto i = 0; i < component.size(); i++)
-		if (!replace.hasDefaultValue (component[i]))
+		if (replace.find (component[i]) != replace.end())
 			component[i] = replace[component[i]];
 
 	stack<int> subcoreStack;
@@ -252,7 +254,7 @@ void presentNuclei (string variant, vector<subcore>& skeleton, vector<int>& comp
 	string nFile = vfile + "_NUCLEI";
 	FILE* fp = fopen (nFile.c_str(), "w+");
 	vector<subcore> backup (skeleton);
-	HashMap<int> orderInFile (-1); // key is the skeleton index, value is the order
+	unordered_map<vertex, int> orderInFile; // key is the skeleton index, value is the order
 	int o = 0; // order of subcores in file
 
 	while (!subcoreStack.empty()) {

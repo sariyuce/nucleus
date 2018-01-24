@@ -33,10 +33,10 @@ CXXFLAGS    += -D EXPS
 LDFLAGS   += -D EXPS
 endif
 
-ifeq ($(K_VALUES),yes)
-CFLAGS    += -D K_VALUES
-CXXFLAGS    += -D K_VALUES
-LDFLAGS   += -D K_VALUES
+ifeq ($(DUMP_K),yes)
+CFLAGS    += -D DUMP_K
+CXXFLAGS    += -D DUMP_K
+LDFLAGS   += -D DUMP_K
 endif
 
 AR         = ar rv

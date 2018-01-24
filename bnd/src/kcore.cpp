@@ -2,7 +2,7 @@
 
 void base_kcore (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, lol* maxCore, string vfile, FILE* fp) {
 
-	timestamp peelingStart;
+	const auto peelingStart = chrono::steady_clock::now();
 
 	vertex nVtx = graph.size();
 	vertex maxDeg = 0;
@@ -64,12 +64,12 @@ void base_kcore (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, lo
 	nBucket.Free();
 	*maxCore = deg_u; // deg_u is degree of the last popped vertex
 
-	timestamp peelingEnd;
+	const auto peelingEnd = chrono::steady_clock::now();
 	print_time (fp, "Peeling time: ", peelingEnd - peelingStart);
 
 	if (hierarchy) {
 		buildHierarchy (*maxCore, relations, skeleton, &nSubcores, nEdge, nVtx);
-		timestamp nucleusEnd;
+		const auto nucleusEnd = chrono::steady_clock::now();
 
 		print_time (fp, "Nucleus decomposition time with hierarchy construction: ", nucleusEnd - peelingStart);
 		fprintf (fp, "# subcores: %d\t\t # subsubcores: %d\t\t |V|: %d\n", nSubcores, skeleton.size(), graph.size());
@@ -77,14 +77,14 @@ void base_kcore (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, lo
 		helpers dummy;
 		Graph dum;
 		presentNuclei ("CORE", skeleton, component, nEdge, dummy, vfile, graph, dum, NULL, fp);
-		timestamp totalEnd;
+		const auto totalEnd = chrono::steady_clock::now();
 		print_time (fp, "Total time, including the density computations: ", totalEnd - peelingStart);
 	}
 }
 
 void weighted_base_kcore (Wraph& wraph, bool hierarchy, edge nEdge, vector<vertex>& K, lol* maxCore, string vfile, FILE* fp) {
 
-	timestamp peelingStart;
+	const auto peelingStart = chrono::steady_clock::now();
 	size_t nVtx = wraph.size();
 	double max_degree = 0;
 	for (size_t i = 0; i < nVtx; i++) {
@@ -169,12 +169,12 @@ void weighted_base_kcore (Wraph& wraph, bool hierarchy, edge nEdge, vector<verte
 			graph[i].push_back (wraph[i][j].n);
 	}
 
-	timestamp peelingEnd;
+	const auto peelingEnd = chrono::steady_clock::now();
 	print_time (fp, "Total time: ", peelingEnd - peelingStart);
 
 	if (hierarchy) {
 		buildHierarchy (*maxCore, relations, skeleton, &nSubcores, nEdge, graph.size());
-		timestamp nucleusEnd;
+		const auto nucleusEnd = chrono::steady_clock::now();
 
 		print_time (fp, "Fractional k-core decomposition time with hierarchy construction: ", nucleusEnd - peelingStart);
 		fprintf (fp, "# subcores: %d\t\t # subsubcores: %d\t\t |V|: %d\n", nSubcores, skeleton.size(), graph.size());
@@ -182,7 +182,7 @@ void weighted_base_kcore (Wraph& wraph, bool hierarchy, edge nEdge, vector<verte
 		helpers dummy;
 		Graph dum;
 		presentNuclei ("CORE", skeleton, component, nEdge, dummy, vfile, graph, dum, NULL, fp);
-		timestamp totalEnd;
+		const auto totalEnd = chrono::steady_clock::now();
 
 		print_time (fp, "Total time, including the density computations: ", totalEnd - peelingStart);
 	}
