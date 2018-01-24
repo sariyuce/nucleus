@@ -2,7 +2,7 @@
 
 void base_kcore (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* maxCore, string vfile, FILE* fp) {
 
-	timestamp p1;
+	const auto p1 = chrono::steady_clock::now();
 	vertex nVtx = graph.size();
 	vertex maxDeg = 0;
 	for (auto g : graph)
@@ -63,25 +63,25 @@ void base_kcore (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, ve
 	nBucket.Free();
 	*maxCore = deg_u; // deg_u is degree of the last popped vertex
 
-	timestamp p2;
+	const auto p2 = chrono::steady_clock::now();
 	if (!hierarchy) {
 		print_time (fp, "Peeling time: ", p2 - p1);
 	}
 	else  {
 		print_time (fp, "Peeling + on-the-fly hiearchy construction time: ", p2 - p1);
-		timestamp b1;
+		const auto b1 = chrono::steady_clock::now();
 		buildHierarchy (*maxCore, relations, skeleton, &nSubcores, nEdge, nVtx);
-		timestamp b2;
+		const auto b2 = chrono::steady_clock::now();
 
 		print_time (fp, "Building hierarchy time: ", b2 - b1);
 		print_time (fp, "Total 1,2 nucleus decomposition time (excluding density computation): ", (p2 - p1) + (b2 - b1));
 
 		fprintf (fp, "# subcores: %d\t\t # subsubcores: %d\t\t |V|: %d\n", nSubcores, skeleton.size(), graph.size());
 
-		timestamp d1;
+		const auto d1 = chrono::steady_clock::now();
 		helpers hp;
 		presentNuclei (12, skeleton, component, graph, nEdge, hp, vfile, fp);
-		timestamp d2;
+		const auto d2 = chrono::steady_clock::now();
 
 		print_time (fp, "Total 1,2 nucleus decomposition time: ", (p2 - p1) + (b2 - b1) + (d2 - d1));
 	}

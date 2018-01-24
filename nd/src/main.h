@@ -20,14 +20,11 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <random>
+#include <chrono>
 #include <sys/stat.h>
-
-#include "timestamp.cpp"
 #include "bucket.h"
-#include "larray.h"
 
 using namespace std;
-using namespace util;
 
 #define LOWERBOUND 0
 #define UPPERBOUND 500 // compute densities of subgraphs with at most this size, set to INT_MAX to compute all -- takes a lot of time
@@ -41,6 +38,10 @@ typedef unordered_multimap<int, int> mmap;
 typedef pair<vertex, vertex> vp;
 typedef tuple<vertex, vertex, vertex> vt;
 typedef vector<vector<vertex> > Graph;
+
+typedef chrono::duration<double> tms;
+typedef tuple<vertex, vertex> couple;
+typedef tuple<vertex, vertex, vertex> triple;
 
 
 struct subcore {
@@ -101,27 +102,11 @@ template<typename S, typename T> struct hash<pair<S, T>>
 };
 }
 
-
-inline void findRepresentative (vertex* child, vector<subcore>& skeleton) {
-	vertex u = *child;
-	if (skeleton[u].parent != -1) {
-		vertex pr = skeleton[u].parent;
-		while (skeleton[u].K == skeleton[pr].K) {
-			u = pr;
-			if (skeleton[u].parent != -1)
-				pr = skeleton[u].parent;
-			else
-				break;
-		}
-	}
-	*child = u;
-}
-
 inline bool hashUniquify (vector<vertex>& vertices) {
-	HashMap<bool> hermap (false);
+	unordered_map<vertex, bool> hermap;
 	for (size_t i = 0; i < vertices.size(); i++) {
 		int t = vertices[i];
-		if (hermap.hasDefaultValue (t))
+		if (hermap.find (t) == hermap.end())
 			hermap[t] = true;
 		else {
 			vertices.erase (vertices.begin() + i);
@@ -134,8 +119,8 @@ inline bool hashUniquify (vector<vertex>& vertices) {
 	return true;
 }
 
-inline void print_time (FILE* fp, const string& str, const timestamp& t) {
-	fprintf (fp, "%s %d.%06d\n", str.c_str(), t.seconds, t.microseconds);
+inline void print_time (FILE* fp, const string& str, tms t) {
+	fprintf (fp, "%s %.6lf\n", str.c_str(), t.count());
 	fflush(fp);
 }
 
@@ -143,22 +128,38 @@ inline bool less_than (vertex u, vertex v, Graph& graph) {
 	return (graph[u].size() < graph[v].size() || (graph[u].size() == graph[v].size() && u < v));
 }
 
-inline bool orientedConnected (Graph& graph, Graph& orientedGraph, vertex u, vertex v) {
+inline bool orderedConnected (Graph& graph, Graph& orderedGraph, vertex u, vertex v) {
 	vertex a = u, b = v;
 	if (less_than (v, u, graph))
 		swap (a, b);
-	for (auto c : orientedGraph[a])
+	for (auto c : orderedGraph[a])
 		if (c == b)
 			return true;
 	return false;
 }
 
-inline void createOriented (Graph& orientedGraph, Graph& graph) {
-	orientedGraph.resize (graph.size());
+inline void createOrderedIndexEdges (Graph& graph, vector<vp>& el, vector<vertex>& xel, Graph& orderedGraph) {
+	xel.push_back(0);
+	orderedGraph.resize(graph.size());
+	for (size_t u = 0; u < graph.size(); u++) {
+		for (size_t j = 0; j < graph[u].size(); j++) {
+			vertex v = graph[u][j];
+			if (less_than (u, v, graph)) {
+				orderedGraph[u].push_back(v);
+				vp c (u, v);
+				el.push_back(c);
+			}
+		}
+		xel.push_back(el.size());
+	}
+}
+
+inline void createOrdered (Graph& orderedGraph, Graph& graph) {
+	orderedGraph.resize (graph.size());
 	for (vertex i = 0; i < graph.size(); ++i)
 		for (auto u : graph[i])
 			if (less_than (i, u, graph))
-				orientedGraph[i].push_back(u);
+				orderedGraph[i].push_back(u);
 }
 
 inline vertex getEdgeId (vertex u, vertex v, vector<vertex>& xel, vector<vp>& el, Graph& graph) {
@@ -173,22 +174,6 @@ inline vertex getEdgeId (vertex u, vertex v, vector<vertex>& xel, vector<vp>& el
 
 	printf ("getEdgeId returns -1\n");
 	exit(1);
-}
-
-inline void createOrientedIndexEdges (Graph& graph, vector<vp>& el, vector<vertex>& xel, Graph& orientedGraph) {
-	xel.push_back(0);
-	orientedGraph.resize(graph.size());
-	for (size_t u = 0; u < graph.size(); u++) {
-		for (size_t j = 0; j < graph[u].size(); j++) {
-			vertex v = graph[u][j];
-			if (less_than (u, v, graph)) {
-				orientedGraph[u].push_back(v);
-				vp c (u, v);
-				el.push_back(c);
-			}
-		}
-		xel.push_back(el.size());
-	}
 }
 
 inline void intersection (vector<vertex>& a, vector<vertex>& b, vector<vertex>& c) {

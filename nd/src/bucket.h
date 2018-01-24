@@ -1,8 +1,8 @@
 #ifndef __BUCKET__H
 #define __BUCKET__H
 
-#include "larray.h"
 #include <vector>
+#include <unordered_map>
 
 struct Naive_Bucket_element
 {
@@ -23,12 +23,11 @@ struct Naive_Bucket
 	Naive_Bucket();
 	~Naive_Bucket();
 	void Initialize(int max_value, int nb_element);
-	void Free ();
-	/* value == INT_MAX means not present in bucket */
+	void Free (); /* value == INT_MAX means not present in bucket */
 	void Insert(int id, int value);
 	void Update(int id, int new_value);
 	void DecVal(int id);
-	int PopMin(int* ret_id, int* ret_value); 	/*returns -1 if empty*/
+	int PopMin(int* ret_id, int* ret_value); /* returns -1 if empty */
 	int CurrentValue(int id);
 };
 

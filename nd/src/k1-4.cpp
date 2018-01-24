@@ -1,19 +1,19 @@
 #include "main.h"
 
 // per vertex
-lol count4cliques (Graph& graph, Graph& orientedGraph, vector<vertex>& FC) {
+lol count4cliques (Graph& graph, Graph& orderedGraph, vector<vertex>& FC) {
 
 	lol fc = 0;
-	for (vertex i = 0; i < orientedGraph.size(); i++) {
-		for (vertex j = 0; j < orientedGraph[i].size(); j++) {
-			for (vertex k = j + 1; k < orientedGraph[i].size(); k++) {
-				for (vertex l = k + 1; l < orientedGraph[i].size(); l++) {
-					vertex a = orientedGraph[i][j];
-					vertex b = orientedGraph[i][k];
-					vertex c = orientedGraph[i][l];
-					if (orientedConnected(graph, orientedGraph, a, b) &&
-							orientedConnected(graph, orientedGraph, b, c) &&
-							orientedConnected(graph, orientedGraph, a, c)) {
+	for (vertex i = 0; i < orderedGraph.size(); i++) {
+		for (vertex j = 0; j < orderedGraph[i].size(); j++) {
+			for (vertex k = j + 1; k < orderedGraph[i].size(); k++) {
+				for (vertex l = k + 1; l < orderedGraph[i].size(); l++) {
+					vertex a = orderedGraph[i][j];
+					vertex b = orderedGraph[i][k];
+					vertex c = orderedGraph[i][l];
+					if (orderedConnected(graph, orderedGraph, a, b) &&
+							orderedConnected(graph, orderedGraph, b, c) &&
+							orderedConnected(graph, orderedGraph, a, c)) {
 						FC[a]++;
 						FC[b]++;
 						FC[c]++;
@@ -29,16 +29,16 @@ lol count4cliques (Graph& graph, Graph& orientedGraph, vector<vertex>& FC) {
 
 void base_k14 (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* max14, string vfile, FILE* fp) {
 
-	timestamp f1;
+	const auto f1 = chrono::steady_clock::now();
 	vertex nVtx = graph.size();
 
 	// Create directed graph from low degree vertices to higher degree vertices
-	Graph orientedGraph;
-	createOriented (orientedGraph, graph);
+	Graph orderedGraph;
+	createOrdered (orderedGraph, graph);
 
 	// 4-clique counting for each vertex
 	vector<vertex> FC (nVtx, 0);
-	lol fc = count4cliques (graph, orientedGraph, FC);
+	lol fc = count4cliques (graph, orderedGraph, FC);
 
 	vertex maxFC = 0;
 	for (vertex i = 0; i < graph.size(); i++)
@@ -46,11 +46,11 @@ void base_k14 (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vert
 			maxFC = FC[i];
 
 	fprintf (fp, "# 4-cliques: %lld\n", fc);
-	timestamp f2;
+	const auto f2 = chrono::steady_clock::now();
 	print_time (fp, "4-clique counting: ", f2 - f1);
 
 	// Peeling
-	timestamp p1;
+	const auto p1 = chrono::steady_clock::now();
 	K.resize(nVtx, -1);
 	Naive_Bucket nBucket;
 	nBucket.Initialize(maxFC, nVtx);
@@ -94,10 +94,10 @@ void base_k14 (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vert
 			vertex a = graph[u][j];
 			for (vertex k = j + 1; k < graph[u].size(); k++) {
 				vertex b = graph[u][k];
-				if (orientedConnected(graph, orientedGraph, a, b)) {
+				if (orderedConnected(graph, orderedGraph, a, b)) {
 					for (vertex l = k + 1; l < graph[u].size(); l++) {
 						vertex c = graph[u][l];
-						if (orientedConnected (graph, orientedGraph, a, c) && orientedConnected (graph, orientedGraph, b, c)) {
+						if (orderedConnected (graph, orderedGraph, a, c) && orderedConnected (graph, orderedGraph, b, c)) {
 							if (K[a] == -1 && K[b] == -1 && K[c] == -1) {
 								if (nBucket.CurrentValue(a) > fc_u)
 									nBucket.DecVal(a);
@@ -121,7 +121,7 @@ void base_k14 (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vert
 	nBucket.Free();
 	*max14 = fc_u;
 
-	timestamp p2;
+	const auto p2 = chrono::steady_clock::now();
 
 	if (!hierarchy) {
 		print_time (fp, "Only peeling time: ", p2 - p1);
@@ -129,19 +129,19 @@ void base_k14 (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vert
 	}
 	else {
 		print_time (fp, "Only peeling + on-the-fly hierarchy construction time: ", p2 - p1);
-		timestamp b1;
+		const auto b1 = chrono::steady_clock::now();
 		buildHierarchy (*max14, relations, skeleton, &nSubcores, nEdge, nVtx);
-		timestamp b2;
+		const auto b2 = chrono::steady_clock::now();
 
 		print_time (fp, "Building hierarchy time: ", b2 - b1);
 		print_time (fp, "Total 1,4 nucleus decomposition time (excluding density computation): ", (p2 - p1) + (f2 - f1) + (b2 - b1));
 
 		fprintf (fp, "# subcores: %d\t\t # subsubcores: %d\t\t |V|: %d\n", nSubcores, skeleton.size(), graph.size());
 
-		timestamp d1;
+		const auto d1 = chrono::steady_clock::now();
 		helpers hp;
 		presentNuclei (14, skeleton, component, graph, nEdge, hp, vfile, fp);
-		timestamp d2;
+		const auto d2 = chrono::steady_clock::now();
 
 		print_time (fp, "Total 1,4 nucleus decomposition time: ", (p2 - p1) + (f2 - f1) + (b2 - b1) + (d2 - d1));
 	}

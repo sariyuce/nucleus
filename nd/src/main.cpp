@@ -2,7 +2,7 @@
 
 int main (int argc, char *argv[]) {
 
-	timestamp t1;
+	const auto t1 = chrono::steady_clock::now();
 	if (argc < 3) {
 		fprintf(stderr, "usage: %s "
 				"\n <filename>"
@@ -25,7 +25,6 @@ int main (int argc, char *argv[]) {
 	edge nEdge = 0;
 	Graph graph;
 	readGraph<vertex, edge> (filename, graph, &nEdge);
-	printf ("nEdge: %d\n", nEdge);
 	string hrc (argv[3]);
 	string vfile = gname + "_" + nd;
 	string out_file;
@@ -56,7 +55,7 @@ int main (int argc, char *argv[]) {
 	else if (nd == "34")
 		base_k34 (graph, hierarchy, nEdge, K, &maxK, vfile, fp);
 
-#ifdef K_VALUES
+#ifdef DUMP_K
 	string kfile = vfile + "_K_values";
 	FILE* kf = fopen (kfile.c_str(), "w");
 	for (vertex i = 0; i < K.size(); i++)
@@ -64,7 +63,7 @@ int main (int argc, char *argv[]) {
 	fclose (kf);
 #endif
 
-	timestamp t2;
+	const auto t2 = chrono::steady_clock::now();
 	printf ("%s\t|V|: %d\t|E|: %d\tmaxK for %s-nucleus: %d\n", gname.c_str(), graph.size(), nEdge, nd.c_str(), maxK);
 	print_time (fp, "End-to-end Time: ", t2 - t1);
 	fclose (fp);

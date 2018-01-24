@@ -3,19 +3,6 @@
 #define MAXLINE 1000000
 #define WRITE_BINARY
 
-typedef struct asdf {
-	int f;
-	int s;
-} pprr;
-
-int pcmp(const void *v1, const void *v2) {
-	vertex diff = (((pprr *)v1)->f - ((pprr *)v2)->f);
-	if (diff != 0)
-		return diff;
-	else
-		return (((pprr *)v1)->s - ((pprr *)v2)->s);
-}
-
 static int really_read(std::istream& is, char* buf, size_t global_size) {
 	char* temp2 = buf;
 	while (global_size != 0) {
@@ -42,19 +29,15 @@ void writeBinary (char* filename, VtxType nVtx, EdgeType nEdge, vector<vector<Vt
 	fwrite (&edget, sizeof(int), 1, filep);
 
 	fwrite (&nVtx, sizeof(VtxType), 1, filep);
-	nEdge /= 2;
 	fwrite (&nEdge, sizeof(EdgeType), 1, filep);
-	nEdge *= 2;
 
 	for (VtxType i = 0; i < nVtx; i++) {
-		VtxType sz = graph[i].size();
-		fwrite (&sz, sizeof(VtxType), 1, filep);
+		auto sz = graph[i].size();
+		fwrite (&sz, sizeof(EdgeType), 1, filep);
 	}
 
-	for (VtxType i = 0; i < nVtx; i++) {
-		size_t sz = graph[i].size();
-		fwrite (&(graph[i][0]), sizeof(VtxType), sz, filep);
-	}
+	for (VtxType i = 0; i < nVtx; i++)
+		fwrite (&(graph[i][0]), sizeof(VtxType), graph[i].size(), filep);
 
 	fclose (filep);
 }
@@ -88,12 +71,10 @@ void readBinary(char *filename, vector<vector<VtxType>>& graph, EdgeType* nEdge)
 	vertex nVtx;
 	in.read((char*)&nVtx, sizeof(VtxType));
 	in.read((char*)nEdge, sizeof(EdgeType));
-//	*nEdge *= 2;
 
-	printf ("nVtx: %d   nEdge:%d\n", nVtx, *nEdge);
 	graph.resize (nVtx);
 	EdgeType *pxadj = (EdgeType*) malloc (sizeof(EdgeType) * nVtx);
-	really_read(in, (char*)pxadj, sizeof(EdgeType) * nVtx);
+	really_read (in, (char*)pxadj, sizeof(EdgeType) * nVtx);
 	for (vertex i = 0; i < nVtx; i++) {
 		graph[i].resize (pxadj[i]);
 		really_read (in, (char*)&(graph[i][0]), sizeof(VtxType) * pxadj[i]);
@@ -101,138 +82,82 @@ void readBinary(char *filename, vector<vector<VtxType>>& graph, EdgeType* nEdge)
 }
 
 template <typename VtxType, typename EdgeType>
-void readChaco (char *filename, Graph& graph, EdgeType* nEdge) {
-
+void readEdgeList (bool mm, char *filename, Graph& graph, EdgeType* nEdge) {
 	char* line = (char*) malloc (sizeof (char) * MAXLINE);
 	FILE* matfp = fopen(filename, "r");
 
 	// skip comments
-	do {
+	do
 		fgets(line, MAXLINE, matfp);
-	} while (line[0] == '%' || line[0] == '#');
-
-	VtxType nVtx, neig;
-	string s = line;
-	stringstream ss (s);
-	ss >> nVtx >> *nEdge;
-	nVtx += 1; // Since our graphs are zero-based
-
-	graph.resize (nVtx);
-	// read each edge list
-	for (VtxType i = 0; i < nVtx; i++) {
-		fgets(line, MAXLINE, matfp);
-		stringstream ss (line);
-		while (ss >> neig)
-			graph[i].push_back (neig);
-	}
-
-	// sort each neighbor list
-	for(VtxType i = 0; i < nVtx; i++)
-		hashUniquify (graph[i]);
-
-	fclose (matfp);
-}
-
-template <typename VtxType, typename EdgeType>
-void readMM (char *filename, Graph& graph, EdgeType* nEdge) {
-
-	char* line = (char*) malloc (sizeof (char) * MAXLINE);
-	FILE* matfp = fopen(filename, "r");
-
-	// skip comments
-	do {
-		fgets(line, 1000000, matfp);
-	} while (line[0] == '%' || line[0] == '#');
+	while (line[0] == '%' || line[0] == '#');
 
 	VtxType nVtx;
+	vector<couple> coords;
+	VtxType u, v, nv = 0;
 	stringstream ss (line);
-	ss >> nVtx >> *nEdge;
-	nVtx += 1; // Since our graphs are zero-based
-	// remove duplicate edges, take one direction
-	pprr* coords = (pprr*) malloc (sizeof(pprr) * 2 * *nEdge);
-	VtxType itemp, jtemp, index = 0;
+	if (mm) {
+		ss >> nVtx >> *nEdge;
+		printf ("|V|: %d   |E|: %d\n", nVtx, *nEdge);
+	}
+	else {
+		ss >> u >> v;
+		nv = max (nv, (max (u, v)));
+		if (u != v) {
+			coords.push_back (make_tuple (u, v));
+			coords.push_back (make_tuple (v, u));
+		}
+	}
 
-
-	for (EdgeType i = 0; i < *nEdge; i++) {
-		fgets(line, MAXLINE, matfp);
+	while (fgets(line, MAXLINE, matfp)) {
 		stringstream ss (line);
-		ss >> itemp >> jtemp;
-		if(itemp != jtemp) {
-			coords[index].f = coords[index + 1].s = itemp;
-			coords[index + 1].f = coords[index].s = jtemp;
-			index += 2;
+		ss >> u >> v;
+		nv = max (nv, (max (u, v)));
+		if (u != v) {
+			coords.push_back (make_tuple (u, v));
+			coords.push_back (make_tuple (v, u));
 		}
 	}
+	fclose (matfp);
 
-	qsort(coords, index, sizeof(pprr), pcmp);
-
-	VtxType onnz = 1; // onnz is # of edges
-	for(EdgeType i = 1; i < index; i++) {
-		if(coords[i].f != coords[onnz-1].f || coords[i].s != coords[onnz-1].s) {
-			coords[onnz].f = coords[i].f;
-			coords[onnz++].s = coords[i].s;
+	if (mm) {
+		if (nVtx != nv + 1) {
+			printf ("nVtx in header (%d) is wrong, must be %d\n", nVtx, nv + 1);
+			nVtx = nv + 1;
 		}
 	}
+	else
+		nVtx = nv + 1;
+
+	sort (coords.begin(), coords.end());
 
 	// begin constructing graph
 	graph.resize (nVtx);
-	for(EdgeType i = 0; i < onnz; i++)
-		graph[coords[i].f].push_back(coords[i].s);
+	EdgeType i = 0;
+	graph[get<0>(coords[i])].push_back(get<1>(coords[i]));
+	for (i = 1; i < coords.size(); i++)
+		if (coords[i] != coords[i-1])
+			graph[get<0>(coords[i])].push_back(get<1>(coords[i]));
 
 	// sort each neighbor list
-	edge numedge = 0;
-	for(VtxType i = 0; i < nVtx; i++) {
-		sort (graph[i].begin(), graph[i].end());
-		numedge += graph[i].size();
+	EdgeType ne = 0;
+	for (auto v : graph) {
+		sort (v.begin(), v.end());
+		ne += v.size();
 	}
-	*nEdge = numedge;
+	*nEdge = ne / 2;
 
-	fclose (matfp);
-
-}
-
-template <typename VtxType, typename EdgeType>
-void readOut (char *filename, Graph& graph, EdgeType* nEdge) {
-
-	char* line = (char*) malloc (sizeof (char) * MAXLINE);
-	FILE* matfp = fopen(filename, "r");
-
-	// skip comments
-	do {
-		fgets(line, 1000000, matfp);
-	} while (line[0] == '%' || line[0] == '#');
-
-	VtxType u, v;
-	string dum, sum;
-	unordered_map<pair<int, int>, bool> mp;
-	VtxType maxV = 0;
-	while (fgets (line, MAXLINE, matfp) != NULL) {
-		stringstream ss (line);
-		ss >> u >> v;
-		if (u > v)
-			swap (u, v);
-		auto at = mp.find (make_pair (u, v));
-		if (at == mp.end()) {
-			mp.emplace (make_pair(make_pair(u, v), true));
-
-			if (v > maxV) {
-				graph.resize (v+1);
-				maxV = v;
-			}
-			graph[u].push_back (v);
-			graph[v].push_back (u);
-			(*nEdge)++;
+	if (mm) {
+		if (*nEdge != ne / 2) {
+			printf ("nEdge in header (%d) is wrong, must be %d\n", *nEdge, ne/2);
+			*nEdge = ne / 2;
 		}
 	}
-	for (auto w : graph)
-		sort (w.begin(), w.end());
-	fclose (matfp);
-
+	else
+		*nEdge = ne / 2;
 }
 
 template <typename VtxType, typename EdgeType>
 void readGraph (char *filename, vector<vector<VtxType>>& graph, EdgeType* nEdge) {
-
 	string st (filename);
 	string gname = st.substr (st.find_last_of("/") + 1);
 	int idx = gname.find_last_of(".");
@@ -240,18 +165,15 @@ void readGraph (char *filename, vector<vector<VtxType>>& graph, EdgeType* nEdge)
 
 	if (ext == ".bin")
 		readBinary<VtxType, EdgeType> (filename, graph, nEdge);
-	else if (ext == ".graph")
-		readChaco<VtxType, EdgeType> (filename, graph, nEdge);
-	else if (gname.find("out") == 0) {
-		readOut<VtxType, EdgeType> (filename, graph, nEdge);
-	}
-	else // .mtx or .txt
-		readMM<VtxType, EdgeType> (filename, graph, nEdge);
+	else if (ext == ".mtx")
+		readEdgeList<VtxType, EdgeType> (true, filename, graph, nEdge);
+	else
+		readEdgeList<VtxType, EdgeType> (false, filename, graph, nEdge);
 
 #ifdef WRITE_BINARY
 	if (ext != ".bin") {
 		vertex nVtx = graph.size();
-		writeBinary (filename, nVtx, *nEdge, graph);
+		writeBinary<VtxType, EdgeType> (filename, nVtx, *nEdge, graph);
 		printf ("Binary graph is written\n");
 	}
 #endif

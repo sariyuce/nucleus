@@ -1,15 +1,15 @@
 #include "main.h"
 
 // per vertex
-lol countTriangles (Graph& graph, Graph& orientedGraph, vector<vertex>& TC) {
+lol countTriangles (Graph& graph, Graph& orderedGraph, vector<vertex>& TC) {
 
 	lol tc = 0;
-	for (size_t i = 0; i < orientedGraph.size(); i++) {
-		for (size_t j = 0; j < orientedGraph[i].size(); j++) {
-			for (size_t k = j + 1; k < orientedGraph[i].size(); k++) {
-				vertex a = orientedGraph[i][j];
-				vertex b = orientedGraph[i][k];
-				if (orientedConnected (graph, orientedGraph, a, b)) {
+	for (size_t i = 0; i < orderedGraph.size(); i++) {
+		for (size_t j = 0; j < orderedGraph[i].size(); j++) {
+			for (size_t k = j + 1; k < orderedGraph[i].size(); k++) {
+				vertex a = orderedGraph[i][j];
+				vertex b = orderedGraph[i][k];
+				if (orderedConnected (graph, orderedGraph, a, b)) {
 					TC[a]++;
 					TC[b]++;
 					TC[i]++;
@@ -23,23 +23,23 @@ lol countTriangles (Graph& graph, Graph& orientedGraph, vector<vertex>& TC) {
 
 void base_k13 (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* max13, string vfile, FILE* fp) {
 
-	timestamp t1;
+	const auto t1 = chrono::steady_clock::now();
 	vertex nVtx = graph.size();
 
 	// Create directed graph from low degree vertices to higher degree vertices
-	Graph orientedGraph;
-	createOriented (orientedGraph, graph);
+	Graph orderedGraph;
+	createOrdered (orderedGraph, graph);
 
 	// Triangle counting for each vertex
 	vector<vertex> TC (nVtx, 0);
-	lol tric = countTriangles (graph, orientedGraph, TC);
+	lol tric = countTriangles (graph, orderedGraph, TC);
 
 	fprintf (fp, "# triangles: %lld\n", tric);
-	timestamp t2;
+	const auto t2 = chrono::steady_clock::now();
 	print_time (fp, "Triangle counting: ", t2 - t1);
 
 	// Peeling
-	timestamp p1;
+	const auto p1 = chrono::steady_clock::now();
 	K.resize (nVtx, -1);
 	Naive_Bucket nBucket;
 	nBucket.Initialize (nEdge, nVtx); // maximum triangle count of a vertex is nEdge
@@ -82,7 +82,7 @@ void base_k13 (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vert
 			vertex a = graph[u][j];
 			for (vertex k = j + 1; k < graph[u].size(); k++) {
 				vertex b = graph[u][k];
-				if (orientedConnected (graph, orientedGraph, a, b)) {
+				if (orderedConnected (graph, orderedGraph, a, b)) {
 					if (K[a] == -1 && K[b] == -1) {
 						if (nBucket.CurrentValue(a) > tc_u)
 							nBucket.DecVal(a);
@@ -102,7 +102,7 @@ void base_k13 (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vert
 	nBucket.Free();
 	*max13 = tc_u;
 
-	timestamp p2;
+	const auto p2 = chrono::steady_clock::now();
 
 	if (!hierarchy) {
 		print_time (fp, "Only peeling time: ", p2 - p1);
@@ -110,19 +110,19 @@ void base_k13 (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vert
 	}
 	else {
 		print_time (fp, "Only peeling + on-the-fly hierarchy construction time: ", p2 - p1);
-		timestamp b1;
+		const auto b1 = chrono::steady_clock::now();
 		buildHierarchy (*max13, relations, skeleton, &nSubcores, nEdge, nVtx);
-		timestamp b2;
+		const auto b2 = chrono::steady_clock::now();
 
 		print_time (fp, "Building hierarchy time: ", b2 - b1);
 		print_time (fp, "Total 1,3 nucleus decomposition time (excluding density computation): ", (p2 - p1) + (t2 - t1) + (b2 - b1));
 
 		fprintf (fp, "# subcores: %d\t\t # subsubcores: %d\t\t |V|: %d\n", nSubcores, skeleton.size(), graph.size());
 
-		timestamp d1;
+		const auto d1 = chrono::steady_clock::now();
 		helpers hp;
 		presentNuclei (13, skeleton, component, graph, nEdge, hp, vfile, fp);
-		timestamp d2;
+		const auto d2 = chrono::steady_clock::now();
 
 		print_time (fp, "Total 1,3 nucleus decomposition time: ", (p2 - p1) + (t2 - t1) + (b2 - b1) + (d2 - d1));
 	}

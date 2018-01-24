@@ -17,7 +17,7 @@ inline vertex commons (vector<vertex>& a, vector<vertex>& b) {
 	return count;
 }
 
-bool pullChildrenSets (FILE* fp, vector<vertex>& children, HashMap<vertex>& orderInFile, vector<vertex>& vset, vector<subcore>& skeleton) {
+bool pullChildrenSets (FILE* fp, vector<vertex>& children, unordered_map<vertex, vertex>& orderInFile, vector<vertex>& vset, vector<subcore>& skeleton) {
 
 	int limit = UPPERBOUND;
 	char c;
@@ -25,7 +25,7 @@ bool pullChildrenSets (FILE* fp, vector<vertex>& children, HashMap<vertex>& orde
 		if (skeleton[eda].size == -1)
 			return false;
 
-		if (orderInFile.hasDefaultValue (eda)) {
+		if (orderInFile.find (eda) == orderInFile.end()) {
 			printf ("PROBLEM: %d has -1 as order\n", eda);
 			exit(1);
 		}
@@ -71,7 +71,6 @@ inline void dummyLine (subcore* sc, FILE* fp, vertex index) {
 	sc->nEdge = -1;
 	sc->parent = -1;
 	fprintf(fp, "%d %d %d %d %lf %d %d -1 \n", index,	sc->K, sc->size, sc->nEdge, sc->ed, sc->children.empty()?1:0, sc->parent);
-	// fprintf(fp, "-1\n");
 }
 
 inline void removeChild (vertex i, vector<subcore>& backup) {
@@ -84,7 +83,6 @@ inline void removeChild (vertex i, vector<subcore>& backup) {
 			}
 	}
 }
-
 
 void rearrange (vector<subcore>& skeleton) { // rearrange children and parents based on visibility
 
@@ -102,7 +100,7 @@ void rearrange (vector<subcore>& skeleton) { // rearrange children and parents b
 }
 
 // find the r-cliques whose component is index, append the vertices in those cliques to the vertices of its all children, sort, compute its density
-void reportSubgraph (int variant, vertex index, HashMap<vertex>& orderInFile, vector<vertex>& component, helpers& ax, vector<subcore>& skeleton, Graph& graph, edge nEdge, FILE* fp, FILE* gp) {
+void reportSubgraph (int variant, vertex index, unordered_map<vertex, vertex>& orderInFile, vector<vertex>& component, helpers& ax, vector<subcore>& skeleton, Graph& graph, edge nEdge, FILE* fp, FILE* gp) {
 
 	if (skeleton[index].parent == -1) {
 		skeleton[index].size = graph.size();
@@ -160,7 +158,7 @@ void reportSubgraph (int variant, vertex index, HashMap<vertex>& orderInFile, ve
 	if (vset.size() > 1)
 		skeleton[index].ed = (double) edge_count / (skeleton[index].size * (skeleton[index].size - 1) / 2);
 
-	bool highlight = (/*skeleton[index].children.empty() &&*/ skeleton[index].ed >= THRESHOLD && skeleton[index].size >= LOWERBOUND) ? true : false;
+	bool highlight = (skeleton[index].children.empty() && skeleton[index].ed >= THRESHOLD && skeleton[index].size >= LOWERBOUND) ? true : false;
 	if (highlight)
 		fprintf(gp, "id: %lld  K: %d  |V|: %d  |E|: %d  ed: %.2lf  LEAF?: %d  parent id: %lld\t", index, skeleton[index].K, skeleton[index].size, skeleton[index].nEdge,
 				skeleton[index].ed,	skeleton[index].children.empty()?1:0, skeleton[index].parent);
@@ -190,6 +188,21 @@ void bfsHierarchy (vector<subcore>& skeleton, stack<vertex>& scs) {
 	}
 }
 
+inline void findRepresentative (vertex* child, vector<subcore>& skeleton) {
+	vertex u = *child;
+	if (skeleton[u].parent != -1) {
+		vertex pr = skeleton[u].parent;
+		while (skeleton[u].K == skeleton[pr].K) {
+			u = pr;
+			if (skeleton[u].parent != -1)
+				pr = skeleton[u].parent;
+			else
+				break;
+		}
+	}
+	*child = u;
+}
+
 void presentNuclei (int variant, vector<subcore>& skeleton, vector<vertex>& component, Graph& graph, edge nEdge, helpers& ax, string vfile, FILE* gp) {
 
 	// assign unassigned items to top subcore
@@ -198,7 +211,7 @@ void presentNuclei (int variant, vector<subcore>& skeleton, vector<vertex>& comp
 			component[i] = skeleton.size() - 1;
 
 	// match each component with its representative
-	HashMap<vertex> replace (-1);
+	unordered_map<vertex, vertex> replace;
 	for (vertex i = 0; i < skeleton.size(); i++) {
 		vertex sc = i;
 		vertex original = sc;
@@ -210,7 +223,7 @@ void presentNuclei (int variant, vector<subcore>& skeleton, vector<vertex>& comp
 
 	// each component takes its representative's component number
 	for (vertex i = 0; i < component.size(); i++)
-		if (!replace.hasDefaultValue (component[i]))
+		if (replace.find (component[i]) != replace.end())
 			component[i] = replace[component[i]];
 
 	stack<vertex> subcoreStack;
@@ -220,7 +233,7 @@ void presentNuclei (int variant, vector<subcore>& skeleton, vector<vertex>& comp
 	FILE* fp = fopen (nFile.c_str(), "w+");
 	vector<subcore> backup (skeleton);
 
-	HashMap<vertex> orderInFile (-1); // key is the skeleton index, value is the order
+	unordered_map<vertex, vertex> orderInFile; // key is the skeleton index, value is the order
 	vertex o = 0; // order of subcores in file
 
 	while (!subcoreStack.empty()) {

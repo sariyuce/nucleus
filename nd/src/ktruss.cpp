@@ -1,12 +1,12 @@
 #include "main.h"
 
-inline int checkConnectedness (Graph& graph, Graph& orientedGraph, Graph& TC, vertex u, vertex v, vector<vertex>* xel = NULL) {
+inline int checkConnectedness (Graph& graph, Graph& orderedGraph, Graph& TC, vertex u, vertex v, vector<vertex>* xel = NULL) {
 
 	vertex a = u, b = v;
 	if (less_than (b, a, graph))
 		swap (a, b);
-	for (size_t k = 0; k < orientedGraph[a].size(); k++)
-		if (orientedGraph[a][k] == b) {
+	for (size_t k = 0; k < orderedGraph[a].size(); k++)
+		if (orderedGraph[a][k] == b) {
 			TC[a][k]++;
 			if (xel == NULL)
 				return b;
@@ -17,18 +17,18 @@ inline int checkConnectedness (Graph& graph, Graph& orientedGraph, Graph& TC, ve
 }
 
 // per edge
-lol countTriangles (Graph& graph, Graph& orientedGraph, Graph& TC) {
+lol countTriangles (Graph& graph, Graph& orderedGraph, Graph& TC) {
 
 	lol tc = 0;
 #ifdef SAVE_TRIS
 	FILE* fp = fopen ("tris", "w");
 #endif
-	for (size_t i = 0; i < orientedGraph.size(); i++) {
-		for (size_t j = 0; j < orientedGraph[i].size(); j++) {
-			for (size_t k = j + 1; k < orientedGraph[i].size(); k++) {
-				vertex a = orientedGraph[i][j];
-				vertex b = orientedGraph[i][k];
-				vertex c = checkConnectedness (graph, orientedGraph, TC, a, b);
+	for (size_t i = 0; i < orderedGraph.size(); i++) {
+		for (size_t j = 0; j < orderedGraph[i].size(); j++) {
+			for (size_t k = j + 1; k < orderedGraph[i].size(); k++) {
+				vertex a = orderedGraph[i][j];
+				vertex b = orderedGraph[i][k];
+				vertex c = checkConnectedness (graph, orderedGraph, TC, a, b);
 				if (c != -1) {
 #ifdef SAVE_TRIS
 					fprintf (fp, "%d %d %d\n", a, b, c);
@@ -48,24 +48,24 @@ lol countTriangles (Graph& graph, Graph& orientedGraph, Graph& TC) {
 
 void base_ktruss (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* maxtruss, string vfile, FILE* fp) {
 
-	timestamp t1;
+	const auto t1 = chrono::steady_clock::now();
 	vertex nVtx = graph.size();
 
 	// Create directed graph from low degree vertices to higher degree vertices AND prepare a CSR-like structure to index the edges
 	vector<vp> el;
 	vector<vertex> xel;
-	Graph orientedGraph;
-	createOrientedIndexEdges (graph, el, xel, orientedGraph);
+	Graph orderedGraph;
+	createOrderedIndexEdges (graph, el, xel, orderedGraph);
 
 	// Triangle counting for each edge
 	vector<vector<vertex> > TC (nVtx);
 	for (vertex i = 0; i < nVtx; i++)
-		TC[i].resize (orientedGraph[i].size(), 0);
+		TC[i].resize (orderedGraph[i].size(), 0);
 
 	lol tric;
 #ifndef LOAD_TRIS
 	// Compute
-	tric = countTriangles (graph, orientedGraph, TC);
+	tric = countTriangles (graph, orderedGraph, TC);
 #else
 	// Load
 	FILE* aa = fopen ("tris", "r");
@@ -80,18 +80,18 @@ void base_ktruss (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, v
 #endif
 
 	fprintf (fp, "# triangles: %lld\n", tric);
-	timestamp t2;
+	const auto t2 = chrono::steady_clock::now();
 	print_time (fp, "Triangle counting: ", t2 - t1);
 
 	// Peeling
-	timestamp p1;
+	const auto p1 = chrono::steady_clock::now();
 	K.resize (nEdge, -1);
 	printf ("nEdge: %d\n", nEdge);
 	Naive_Bucket nBucket;
 	nBucket.Initialize (nVtx, nEdge); // maximum triangle count of an edge is nVtx
 	vertex id = 0;
-	for (size_t i = 0; i < orientedGraph.size(); i++)
-		for (size_t j = 0; j < orientedGraph[i].size(); j++) {
+	for (size_t i = 0; i < orderedGraph.size(); i++)
+		for (size_t j = 0; j < orderedGraph[i].size(); j++) {
 			if (TC[i][j] > 0)
 				nBucket.Insert (id++, TC[i][j]);
 			else
@@ -157,7 +157,7 @@ void base_ktruss (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, v
 	nBucket.Free();
 	*maxtruss = tc_e;
 
-	timestamp p2;
+	const auto p2 = chrono::steady_clock::now();
 
 	if (!hierarchy) {
 		print_time (fp, "Only peeling time: ", p2 - p1);
@@ -165,36 +165,36 @@ void base_ktruss (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, v
 	}
 	else {
 		print_time (fp, "Only peeling + on-the-fly hierarchy construction time: ", p2 - p1);
-		timestamp b1;
+		const auto b1 = chrono::steady_clock::now();
 		buildHierarchy (*maxtruss, relations, skeleton, &nSubcores, nEdge, nVtx);
-		timestamp b2;
+		const auto b2 = chrono::steady_clock::now();
 
 		print_time (fp, "Building hierarchy time: ", b2 - b1);
 		print_time (fp, "Total 2,3 nucleus decomposition time (excluding density computation): ", (p2 - p1) + (t2 - t1) + (b2 - b1));
 
 		fprintf (fp, "# subcores: %d\t\t # subsubcores: %d\t\t |V|: %d\n", nSubcores, skeleton.size(), graph.size());
 
-		timestamp d1;
+		const auto d1 = chrono::steady_clock::now();
 		helpers hp (&el);
 		presentNuclei (23, skeleton, component, graph, nEdge, hp, vfile, fp);
-		timestamp d2;
+		const auto d2 = chrono::steady_clock::now();
 
 		print_time (fp, "Total 2,3 nucleus decomposition time: ", (p2 - p1) + (t2 - t1) + (b2 - b1) + (d2 - d1));
 	}
 }
 
 // per edge
-lol storeCountTriangles (Graph& graph, Graph& orientedGraph, Graph& TC, vector<vertex>& xel, Graph& tris) {
+lol storeCountTriangles (Graph& graph, Graph& orderedGraph, Graph& TC, vector<vertex>& xel, Graph& tris) {
 
 	lol tc = 0;
-	for (vertex i = 0; i < orientedGraph.size(); i++) {
-		for (vertex j = 0; j < orientedGraph[i].size(); j++) {
-			vertex a = orientedGraph[i][j];
+	for (vertex i = 0; i < orderedGraph.size(); i++) {
+		for (vertex j = 0; j < orderedGraph[i].size(); j++) {
+			vertex a = orderedGraph[i][j];
 			edge x = xel[i] + j;
-			for (vertex k = j + 1; k < orientedGraph[i].size(); k++) {
+			for (vertex k = j + 1; k < orderedGraph[i].size(); k++) {
 				edge y = xel[i] + k;
-				vertex b = orientedGraph[i][k];
-				vertex c = checkConnectedness (graph, orientedGraph, TC, a, b, &xel);
+				vertex b = orderedGraph[i][k];
+				vertex c = checkConnectedness (graph, orderedGraph, TC, a, b, &xel);
 
 				if (c != -1) {
 					tc++;
@@ -216,36 +216,36 @@ lol storeCountTriangles (Graph& graph, Graph& orientedGraph, Graph& TC, vector<v
 
 void base_ktruss_storeTriangles (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* maxtruss, string vfile, FILE* fp) {
 
-	timestamp t1;
+	const auto t1 = chrono::steady_clock::now();
 	vertex nVtx = graph.size();
 
 	// Create directed graph from low degree vertices to higher degree vertices AND prepare a CSR-like structure to index the edges
 	vector<vp> el;
 	vector<vertex> xel;
-	Graph orientedGraph;
-	createOrientedIndexEdges (graph, el, xel, orientedGraph);
+	Graph orderedGraph;
+	createOrderedIndexEdges (graph, el, xel, orderedGraph);
 
 	// Triangle counting for each edge
 	vector<vector<vertex> > TC (nVtx);
 	for (vertex i = 0; i < nVtx; i++)
-		TC[i].resize (orientedGraph[i].size(), 0);
+		TC[i].resize (orderedGraph[i].size(), 0);
 
 	vector<vector<vertex>> tris (el.size());
-	lol tric = storeCountTriangles (graph, orientedGraph, TC, xel, tris);
+	lol tric = storeCountTriangles (graph, orderedGraph, TC, xel, tris);
 
 	fprintf (fp, "# triangles: %lld\n", tric);
-	timestamp t2;
+	const auto t2 = chrono::steady_clock::now();
 	print_time (fp, "Triangle storing and counting: ", t2 - t1);
 
 
 	// Peeling
-	timestamp p1;
+	const auto p1 = chrono::steady_clock::now();
 	K.resize (nEdge, -1);
 	Naive_Bucket nBucket;
 	nBucket.Initialize (nVtx, nEdge);
 	vertex id = 0;
-	for (size_t i = 0; i < orientedGraph.size(); i++)
-		for (size_t j = 0; j < orientedGraph[i].size(); j++) {
+	for (size_t i = 0; i < orderedGraph.size(); i++)
+		for (size_t j = 0; j < orderedGraph[i].size(); j++) {
 			if (TC[i][j] > 0)
 				nBucket.Insert (id++, TC[i][j]);
 			else
@@ -307,7 +307,7 @@ void base_ktruss_storeTriangles (Graph& graph, bool hierarchy, edge nEdge, vecto
 	nBucket.Free();
 	*maxtruss = tc_e; // tc_e is tc of the last popped edge
 
-	timestamp p2;
+	const auto p2 = chrono::steady_clock::now();
 
 	if (!hierarchy) {
 		print_time (fp, "Only peeling time: ", p2 - p1);
@@ -315,19 +315,19 @@ void base_ktruss_storeTriangles (Graph& graph, bool hierarchy, edge nEdge, vecto
 	}
 	else {
 		print_time (fp, "Only peeling + on-the-fly hierarchy construction time: ", p2 - p1);
-		timestamp b1;
+		const auto b1 = chrono::steady_clock::now();
 		buildHierarchy (*maxtruss, relations, skeleton, &nSubcores, nEdge, nVtx);
-		timestamp b2;
+		const auto b2 = chrono::steady_clock::now();
 
 		print_time (fp, "Building hierarchy time: ", b2 - b1);
 		print_time (fp, "Total 2,3 nucleus decomposition (with stored triangles) time (excluding density computation): ", (p2 - p1) + (t2 - t1) + (b2 - b1));
 
 		fprintf (fp, "# subcores: %d\t\t # subsubcores: %d\t\t |V|: %d\n", nSubcores, skeleton.size(), graph.size());
 
-		timestamp d1;
+		const auto d1 = chrono::steady_clock::now();
 		helpers hp (&el);
 		presentNuclei (23, skeleton, component, graph, nEdge, hp, vfile, fp);
-		timestamp d2;
+		const auto d2 = chrono::steady_clock::now();
 
 		print_time (fp, "Total 2,3 nucleus decomposition (with stored triangles) time: ", (p2 - p1) + (t2 - t1) + (b2 - b1) + (d2 - d1));
 	}

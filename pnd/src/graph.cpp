@@ -3,7 +3,7 @@
 #define MAXLINE INT_MAX
 #define WRITE_BINARY
 
-static int really_read(std::istream& is, char* buf, size_t global_size) {
+static int really_read(istream& is, char* buf, size_t global_size) {
 	char* temp2 = buf;
 	while (global_size != 0) {
 		is.read(temp2, global_size);
@@ -189,7 +189,7 @@ void readGraph (char *filename, VtxType* nVtx, EdgeType* nEdge, VtxType** adj, E
 
 #ifdef WRITE_BINARY
 	if (ext != ".bin") {
-		writeBinary (filename, *nVtx, *nEdge, *adj, *xadj);
+		writeBinary<VtxType, EdgeType> (filename, *nVtx, *nEdge, *adj, *xadj);
 		printf ("Binary graph is written\n");
 	}
 #endif
