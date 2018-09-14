@@ -94,6 +94,7 @@ int main(int argc, char *argv[]) {
 	else if (nd == "WING") {
 		if (leftGraph.size() < rightGraph.size()) { // select the smaller set for faster computation
 			fprintf (fp, "LEFT is chosen as the PRIMARY set\n");
+			printf ("RIGHT pair, LEFT pair\n");
 			if (hierarchy)
 				wingDecompositionHrc (rightGraph, leftGraph, nEdge, K, hierarchy, &maxK, vfile, fp, &bCount);
 			else
@@ -101,6 +102,7 @@ int main(int argc, char *argv[]) {
 		}
 		else {
 			fprintf (fp, "RIGHT is chosen as the PRIMARY set\n");
+			printf ("LEFT pair, RIGHT pair\n");
 			if (hierarchy)
 				wingDecompositionHrc (leftGraph, rightGraph, nEdge, K, hierarchy, &maxK, vfile, fp, &bCount);
 			else
@@ -143,7 +145,7 @@ int main(int argc, char *argv[]) {
 
 	const auto t2 = chrono::steady_clock::now();
 	if (nd == "LEFT_TIP" || nd == "RIGHT_TIP" || nd == "WING")
-		printf ("%s\t|L|: %d\t|R|: %d\t|E|: %d\tmaxK: %d nButterflies: %d\n", gname.c_str(), leftGraph.size(), rightGraph.size(), nEdge, maxK, bCount);
+		printf ("%s\t|L|: %d\t|R|: %d\t|E|: %d\tmaxK: %d nButterflies: %ld\n", gname.c_str(), leftGraph.size(), rightGraph.size(), nEdge, maxK, bCount);
 
 	print_time (fp, "End-to-end Time: ", t2 - t1);
 	fclose (fp);

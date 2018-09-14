@@ -52,6 +52,7 @@ void tipDecomposition (Graph& leftGraph, Graph& rightGraph, edge nEdge, vector<v
 	const auto c1 = chrono::steady_clock::now();
 	lol* butterflyCounts = (lol*) calloc (sizeof(lol), rightGraph.size());
 	lol maxBc = countButterflies (rightGraph, leftGraph, butterflyCounts, bCount); // counts butterflies for each vertex on the right
+	
 	const auto c2 = chrono::steady_clock::now();
 	fprintf (fp, "# bflys: %lld\t\t maxBc: %lld\n", *bCount, maxBc);
 	print_time (fp, "Counting butterflies per vertex time: ", c2 - c1);

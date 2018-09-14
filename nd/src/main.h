@@ -27,7 +27,7 @@
 using namespace std;
 
 #define LOWERBOUND 0
-#define UPPERBOUND 500 // compute densities of subgraphs with at most this size, set to INT_MAX to compute all -- takes a lot of time
+#define UPPERBOUND 1000000 // compute densities of subgraphs with at most this size, set to INT_MAX to compute all -- takes a lot of time
 #define THRESHOLD 0.0
 #define PRIME 251231 // for hash function
 

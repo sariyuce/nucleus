@@ -1,7 +1,7 @@
 MODE=gcc
 DEBUG=no
 OPT=yes
-FAST=yes
+#FAST=yes
 
 PARALLEL=yes
 TYPE=ASYNC

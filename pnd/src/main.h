@@ -26,12 +26,17 @@
 
 #include "bucket.h"
 
+//#define DUMP_Hs
+//#define DUMP_K
+
 #define PRIME 251231
 using namespace std;
 
 typedef long long lol;
-typedef int vertex; //vertices are 32 bytes
-typedef int edge; //edges are 32 bytes
+typedef int vertex;
+typedef int edge;
+//typedef lol vertex; // for big graph runs, vertices are 32 bytes
+//typedef lol edge; // for big graph runs, edges are 32 bytes
 
 typedef chrono::duration<double> tms;
 typedef tuple<vertex, vertex> couple;
@@ -214,13 +219,53 @@ inline void createOrdered (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, cou
 	}
 }
 
+inline vertex commons (vector<vertex>& a, vector<vertex>& b) {
+	vertex i = 0, j = 0;
+	vertex count = 0;
+	while (i < a.size() && j < b.size()) {
+		if (a[i] < b[j])
+			i++;
+		else if (b[j] < a[i])
+			j++;
+		else {
+			count++;
+			i++;
+			j++;
+		}
+	}
+	return count;
+}
+
+
+
+inline bool hashUniquify (vector<vertex>& vertices) {
+	unordered_map<vertex, bool> hermap;
+	for (size_t i = 0; i < vertices.size(); i++) {
+			int t = vertices[i];
+			if (hermap.find (t) == hermap.end())
+					hermap[t] = true;
+			else {
+					vertices.erase (vertices.begin() + i);
+					i--;
+			}
+	}
+	sort (vertices.begin(), vertices.end());
+	return true;
+}
+
 void baseLocal12 (vertex nVtx, vertex* adj, edge* xadj, vertex* P, const char* vfile);
 void nmLocal12 (vertex nVtx, vertex* adj, edge* xadj, vertex* P, const char* vfile);
+void topKs (vertex nVtx, vertex* adj, edge* xadj, vertex* P, const char* vfile);
 void kcore (vertex nVtx, vertex* adj, edge* xadj, vertex* K, const char* vfile);
+void find_mcore (vertex nVtx, vertex* adj, edge* xadj, vertex* K, string kfile);
+void converge12onEgo (vertex nVtx, vertex* adj, edge* xadj, vertex* K, string kfile);
 
 void baseLocal23 (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* T, const char* vfile);
 void nmLocal23 (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* T, const char* vfile);
+void topKs23 (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* T, const char* vfile);
 void ktruss (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* T, const char* vfile);
+void find_mtruss (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* K, string kfile);
+void converge23onEgo (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* K, string kfile);
 
 void baseLocal34 (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* T, const char* vfile);
 void nmLocal34 (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* T, const char* vfile);

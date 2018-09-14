@@ -3,6 +3,10 @@
 
 #include <vector>
 #include <unordered_map>
+typedef long long lol;
+
+typedef int item;
+//typedef lol item; // for big graph runs
 
 struct Naive_Bucket_element
 {
@@ -15,20 +19,20 @@ struct Naive_Bucket
 {
 	Naive_Bucket_element **buckets; /* actual pointers to bucket heads */
 	Naive_Bucket_element *elements; /* for direct access to bucket elements elements[id] is the id-th element */
-	int nb_elements;
-	int max_value;
-	int *values; /* needed for update, in case bucket head changed. */
-	int current_min_value;
+	item nb_elements;
+	item max_value;
+	item *values; /* needed for update, in case bucket head changed. */
+	item current_min_value;
 
 	Naive_Bucket();
 	~Naive_Bucket();
-	void Initialize(int max_value, int nb_element);
+	void Initialize(item max_value, item nb_element);
 	void Free (); /* value == INT_MAX means not present in bucket */
-	void Insert(int id, int value);
-	void Update(int id, int new_value);
-	void DecVal(int id);
-	int PopMin(int* ret_id, int* ret_value); /* returns -1 if empty */
-	int CurrentValue(int id);
+	void Insert(item id, item value);
+	void Update(item id, item new_value);
+	void DecVal(item id);
+	item PopMin(item* ret_id, item* ret_value); /* returns -1 if empty */
+	item CurrentValue(item id);
 };
 
 #endif

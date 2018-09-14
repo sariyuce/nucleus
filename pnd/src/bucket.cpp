@@ -28,12 +28,12 @@ void Naive_Bucket::Free () {
 	values = NULL;
 }
 
-void Naive_Bucket::Initialize(int max_v, int nb_element) {
-	int i;
+void Naive_Bucket::Initialize(item max_v, item nb_element) {
+	item i;
 	max_value = max_v;
 	buckets = (Naive_Bucket_element **) malloc(sizeof(Naive_Bucket_element *) * (max_value+1));
 	elements = (Naive_Bucket_element *) malloc(sizeof(Naive_Bucket_element) * nb_element);
-	values = (int *) malloc(sizeof(int) * nb_element);
+	values = (item *) malloc(sizeof(item) * nb_element);
 	nb_elements = nb_element;
 	if (buckets == NULL || elements == NULL || values == NULL) {
 		free(values);
@@ -51,7 +51,7 @@ void Naive_Bucket::Initialize(int max_v, int nb_element) {
 	current_min_value = max_value + 1;
 }
 
-void Naive_Bucket::Insert (int id, int value) {
+void Naive_Bucket::Insert (item id, item value) {
 	values[id] = value;
 	elements[id].prev = NULL;
 	elements[id].next = buckets[value];
@@ -62,7 +62,7 @@ void Naive_Bucket::Insert (int id, int value) {
 	buckets[value] = &(elements[id]);
 }
 
-int Naive_Bucket::PopMin(int* id, int* ret_value) {
+item Naive_Bucket::PopMin(item* id, item* ret_value) {
 	for (; current_min_value <= max_value; current_min_value++) {
 		if (buckets[current_min_value] != NULL) {
 			*id = buckets[current_min_value] - elements; // pointer arithmetic. finds the index of element that buckets[current_min_value] points to
@@ -77,12 +77,12 @@ int Naive_Bucket::PopMin(int* id, int* ret_value) {
 	return -1; // if the bucket is empty
 }
 
-int Naive_Bucket::CurrentValue(int id) {
+item Naive_Bucket::CurrentValue(item id) {
 	return values[id];
 }
 
-void Naive_Bucket::DecVal(int id) {
-	int old_value = values[id];
+void Naive_Bucket::DecVal(item id) {
+	item old_value = values[id];
 	// adjust the prev and next pointers
 	if (elements[id].prev == NULL)
 		buckets[old_value] = elements[id].next;

@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <unordered_map>
+#include <stdlib.h>
 
 struct Naive_Bucket_element
 {

@@ -2,7 +2,7 @@
 
 #define EL(A, B) (xRight[A]+B)
 
-inline void limitedIntersection (Graph& rightGraph, vertex b, vertex c, Graph& butterflyCounts, vertex a, lol* bCount) {
+inline void limitedIntersection (Graph& rightGraph, Graph& leftGraph, vertex b, vertex c, Graph& butterflyCounts, vertex a, lol* bCount) {
 
 	vertex i = 0, j = 0;
 	while (rightGraph[b][i] < a) // b - a index
@@ -27,6 +27,16 @@ inline void limitedIntersection (Graph& rightGraph, vertex b, vertex c, Graph& b
 			butterflyCounts[b][bd]++;
 			butterflyCounts[c][ca]++;
 			butterflyCounts[c][cd]++;
+			vertex d = rightGraph[c][j];
+			
+			vertex lmin = min (a, d);
+			vertex lmax = max (a, d);
+
+			vertex rmin = min (b, c);
+			vertex rmax = max (b, c);
+
+//			printf ("butterfly: %d %d   %d %d , degrees: %d %d   %d %d\n", lmin, lmax, rmin, rmax, leftGraph[lmin].size(), leftGraph[lmax].size(), rightGraph[rmin].size(), rightGraph[rmax].size());
+
 			(*bCount)++;
 			i++;
 			j++;
@@ -36,17 +46,57 @@ inline void limitedIntersection (Graph& rightGraph, vertex b, vertex c, Graph& b
 
 void countButterflies (Graph& rightGraph, Graph& leftGraph, Graph& butterflyCounts, lol* bCount) {
 
+	lol* leftWedges = (lol *) calloc (leftGraph.size(), sizeof(lol));
+	lol* rightWedges = (lol *) calloc (rightGraph.size(), sizeof(lol));  
+	
 	for (vertex i = 0; i < leftGraph.size(); i++) {
 		vertex a = i;
 		for (vertex j = 0; j < leftGraph[i].size(); j++) {
 			vertex b = leftGraph[i][j];
+			leftWedges[a] += rightGraph[b].size() - 1;
 			for (vertex k = j + 1; k < leftGraph[i].size(); k++) {
 				// intersection set with greater than a's
 				vertex c = leftGraph[i][k];
-				limitedIntersection (rightGraph, b, c, butterflyCounts, a, bCount);
+				limitedIntersection (rightGraph, leftGraph, b, c, butterflyCounts, a, bCount);
 			}
 		}
 	}
+
+        for (vertex i = 0; i < rightGraph.size(); i++) {
+                vertex a = i;
+                for (vertex j = 0; j < rightGraph[i].size(); j++) {
+                        vertex b = rightGraph[i][j];
+                        rightWedges[a] += leftGraph[b].size() - 1;
+		}
+	}
+
+
+
+        for (vertex i = 0; i < rightGraph.size(); i++) {
+                vertex a = i;
+                for (vertex j = 0; j < rightGraph[i].size(); j++) {
+			vertex b = rightGraph[i][j];
+			for (vertex k = j+1; k < rightGraph[i].size(); k++) {
+				vertex c = rightGraph[i][k];
+				// printf ("Left two in wedge: %d %d  ,  %ld %ld\n", b, c, leftWedges[b], leftWedges[c]); 
+			}
+		}
+	}
+		
+		
+
+
+        for (vertex i = 0; i < leftGraph.size(); i++) {
+                vertex a = i;
+                for (vertex j = 0; j < leftGraph[i].size(); j++) {
+                        vertex b = leftGraph[i][j];
+                        for (vertex k = j+1; k < leftGraph[i].size(); k++) {
+                                vertex c = leftGraph[i][k];
+                                // printf ("Right two in wedge: %d %d  ,  %ld %ld\n", b, c, rightWedges[b], rightWedges[c]);
+                        }
+                }
+        }
+
 }
 
 inline vertex getEdgeIndex (vertex a, vertex b, vector<vp>& el, vector<vertex>& xRight) {
@@ -59,6 +109,18 @@ inline vertex getEdgeIndex (vertex a, vertex b, vector<vp>& el, vector<vertex>& 
 // no hierarchy construction
 void wingDecomposition (Graph& leftGraph, Graph& rightGraph, edge nEdge, vector<vertex>& K, bool hierarchy,
 		lol* maxbicore, FILE* fp, lol* bCount) {
+
+//	FILE* lp = fopen ("left-deg", "w");
+//	FILE* rp = fopen ("right-deg", "w");
+//
+//	for (int v = 0; v < leftGraph.size(); v++)
+//		fprintf (lp, "%d  %d\n", v, leftGraph[v].size());
+//
+//	for (int v = 0; v < rightGraph.size(); v++)
+//                fprintf (rp, "%d  %d\n", v, rightGraph[v].size());
+//
+//	fclose (lp);
+//	fclose (rp);
 
 	const auto pr1 = chrono::steady_clock::now();
 	vector<vp> left_el;
@@ -75,12 +137,22 @@ void wingDecomposition (Graph& leftGraph, Graph& rightGraph, edge nEdge, vector<
 	for (vertex i = 0; i < rightGraph.size(); i++)
 		butterflyCounts[i].resize (rightGraph[i].size(), 0);
 	countButterflies (rightGraph, leftGraph, butterflyCounts, bCount); // counts butterflies for each edge
+	
+//	exit (1);
+	
+	lol ccc = 0;
 	vertex maxBc = 0;
-	for (auto g : butterflyCounts)
-		for (auto c : g)
+	for (auto g : butterflyCounts) {
+		for (auto c : g) {
 			if (c > maxBc)
 				maxBc = c;
+			ccc += c;
+		}
+	}
+	cout << "BFLY: " << ccc / 4 << endl;
 	const auto c2 = chrono::steady_clock::now();
+	printf ("# BFLY: %ld\n", ccc / 4);
+	printf ("maxBC: %ld\n", maxBc);
 	fprintf (fp, "# bflys: %lld\t\t maxBc: %lld\n", *bCount, maxBc);
 	print_time (fp, "Counting butterflies per edge time: ", c2 - c1);
 
@@ -113,6 +185,7 @@ void wingDecomposition (Graph& leftGraph, Graph& rightGraph, edge nEdge, vector<
 		vertex u = right_el[e].first;
 		vertex v = right_el[e].second;
 		vertex uvInd = getEdgeIndex (u, v, right_el, xRight);
+		printf ("BFLY: %d     W : %d\n", butterflyCounts[u][uvInd], val);
 		vertex vuInd = getEdgeIndex (v, u, left_el, xLeft);
 
 		// v is left vertex, u is right vertex, t is a right vertex and v's neighbor, w is a left vertex and neighbor to u and t

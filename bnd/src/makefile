@@ -1,7 +1,5 @@
 include makefile.in
 
-INCLUDES = -I/global/homes/a/aerdem/sparsehash-master/src # REPLACE THIS WITH YOUR PATH TO SPARSEHASH library
-
 TARGET     = binucleus
 
 SRCS	= $(CFILES:%=%.c) $(CXXFILES:%=%.cpp) 
