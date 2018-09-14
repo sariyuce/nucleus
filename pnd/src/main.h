@@ -31,6 +31,7 @@
 
 #define PRIME 251231
 using namespace std;
+#define TEST_SIZE 100 // for partialAND exps
 
 typedef long long lol;
 typedef int vertex;
@@ -257,14 +258,11 @@ void baseLocal12 (vertex nVtx, vertex* adj, edge* xadj, vertex* P, const char* v
 void nmLocal12 (vertex nVtx, vertex* adj, edge* xadj, vertex* P, const char* vfile);
 void topKs (vertex nVtx, vertex* adj, edge* xadj, vertex* P, const char* vfile);
 void kcore (vertex nVtx, vertex* adj, edge* xadj, vertex* K, const char* vfile);
-void find_mcore (vertex nVtx, vertex* adj, edge* xadj, vertex* K, string kfile);
 void converge12onEgo (vertex nVtx, vertex* adj, edge* xadj, vertex* K, string kfile);
 
 void baseLocal23 (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* T, const char* vfile);
 void nmLocal23 (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* T, const char* vfile);
-void topKs23 (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* T, const char* vfile);
 void ktruss (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* T, const char* vfile);
-void find_mtruss (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* K, string kfile);
 void converge23onEgo (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* K, string kfile);
 
 void baseLocal34 (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* T, const char* vfile);

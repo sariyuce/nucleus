@@ -1,5 +1,5 @@
 #include "main.h"
-#define TRIAL
+
 inline int getTriangleId (vertex u, vertex v, vertex w, edge* xtl, triangle_id* tlist, vertex* ordered_adj, edge* ordered_xadj) {
 	edge ind = findInd (u, v, ordered_adj, ordered_xadj);
 	for (vertex i = xtl[ind]; i < xtl[ind + 1]; i++)
@@ -65,17 +65,18 @@ lol intersection3for4cliques (edge nEdge, edge* xadj, vertex* ordered_adj, edge*
 					vertex in2 = getTriangleId (u, v, x, xtl, tlist, ordered_adj, ordered_xadj);
 					vertex in3 = getTriangleId (u, w, x, xtl, tlist, ordered_adj, ordered_xadj);
 					vertex in4 = getTriangleId (v, w, x, xtl, tlist, ordered_adj, ordered_xadj);
-//#pragma omp atomic
-//					(tlist[in1].id)++;
+#pragma omp atomic
+					(tlist[in1].id)++;
 
-//#pragma omp atomic
-//					(tlist[in2].id)++;
+#pragma omp atomic
+					(tlist[in2].id)++;
 
-//#pragma omp atomic
-//					(tlist[in3].id)++;
+#pragma omp atomic
+					(tlist[in3].id)++;
 
-//#pragma omp atomic
-//					(tlist[in4].id)++;
+#pragma omp atomic
+					(tlist[in4].id)++;
+
 #ifndef FAST
 #pragma omp atomic
 					count++;
@@ -268,7 +269,7 @@ inline int regularUpdateHI (edge ind, vertex* adj, edge* xadj, triangle_id* tlis
 
 inline void updateAndNotify (int ind, vertex* P, int newP, vector<vertex>& neigs, bool* changed) {
 	P[ind] = newP;
-	changed[ind] = true; // *THIS* todo: Are we sure on this?
+	changed[ind] = true;
 	for (auto w : neigs)
 		if (P[w] >= P[ind])
 			changed[w] = true;
@@ -603,14 +604,6 @@ void nmLocal34 (vertex nVtx, edge nEdge, vertex* adj, edge* xadj, vertex* P, con
 	td += ts4 - ts3;
 #endif
 
-
-#ifdef TRIAL
-	int maxK = 0;
-	for (int i = 0; i < sz; i++)
-		if (P[i] > maxK)
-			maxK = P[i];
-	cout << "maxK: " << maxK << endl;
-#endif
 
 	free (P);
 	free (xel);

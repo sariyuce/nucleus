@@ -1,12 +1,4 @@
 #include "main.h"
-bool connected (int u, int v, int* xadj, int* adj) {
-	for (int i = xadj[v]; i < xadj[v+1]; i++)
-		if (adj[i] == u)
-			return true;
-	return false;
-}
-
-
 
 int main(int argc, char *argv[]) {
 
@@ -40,13 +32,6 @@ int main(int argc, char *argv[]) {
 		vfile += "_CORE";
 		nmLocal12 (nVtx, adj, xadj, P, vfile.c_str());
 		break;
-	case 129:
-		vfile += "_CORE";
-		topKs (nVtx, adj, xadj, P, vfile.c_str());
-		break;
-	case 612:
-		find_mcore (nVtx, adj, xadj, P, gr.substr (gr.find_last_of("/")+1));
-		break;
 	case 912:
 		converge12onEgo (nVtx, adj, xadj, P, gr.substr (gr.find_last_of("/")+1));
 		break;
@@ -61,13 +46,6 @@ int main(int argc, char *argv[]) {
 	case 2300:
 		vfile += "_TRUSS";
 		nmLocal23 (nVtx, nEdge, adj, xadj, P, vfile.c_str());
-		break;
-	case 239:
-		vfile += "_TRUSS";
-		topKs23 (nVtx, nEdge, adj, xadj, P, vfile.c_str());
-		break;
-	case 623:
-		find_mtruss (nVtx, nEdge, adj, xadj, P, gr.substr (gr.find_last_of("/")+1));
 		break;
 	case 923:
 		converge23onEgo (nVtx, nEdge, adj, xadj, P, gr.substr (gr.find_last_of("/")+1));
