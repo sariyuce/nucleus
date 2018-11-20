@@ -185,7 +185,7 @@ void wingDecomposition (Graph& leftGraph, Graph& rightGraph, edge nEdge, vector<
 		vertex u = right_el[e].first;
 		vertex v = right_el[e].second;
 		vertex uvInd = getEdgeIndex (u, v, right_el, xRight);
-		printf ("BFLY: %d     W : %d\n", butterflyCounts[u][uvInd], val);
+		printf ("%d %d\tBFLY: %d     W : %d\n", v, u, butterflyCounts[u][uvInd], val);
 		vertex vuInd = getEdgeIndex (v, u, left_el, xLeft);
 
 		// v is left vertex, u is right vertex, t is a right vertex and v's neighbor, w is a left vertex and neighbor to u and t
