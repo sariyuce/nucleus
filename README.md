@@ -18,6 +18,6 @@ ACM International Conference on Web Search and Data Mining (WSDM), 2018, <a href
     
 [4] Parallel Local Algorithms for Core, Truss, and Nucleus Decompositions<br>
 A. Erdem Sariyuce, C. Seshadhri, Ali Pinar<br>
-<a href="http://sariyuce.com/papers/wsdm18.pdf">pdf</a><br>
+International Conference on Very Large Data Bases (VLDB), 2019, <a href="http://sariyuce.com/papers/vldb18.pdf">pdf</a><br>
     
     
