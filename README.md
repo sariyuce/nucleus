@@ -14,7 +14,7 @@ International Conference on Very Large Data Bases (VLDB), 2017, <a href="sariyuc
     
 [3] Peeling Bipartite Networks for Dense Subgraph Discovery<br>
 A. Erdem Sariyuce, Ali Pinar<br>
-ACM International Conference on Web Search and Data Mining (WSDM), 2018, <a href="arxiv.org/pdf/1611.02756.pdf">arXiv:1611.02756</a>arXiv<br>
+ACM International Conference on Web Search and Data Mining (WSDM), 2018, <a href="sariyuce.com/papers/wsdm18.pdf">pdf</a>arXiv<br>
     
 [4] Parallel Local Algorithms for Core, Truss, and Nucleus Decompositions<br>
 A. Erdem Sariyuce, C. Seshadhri, Ali Pinar<br>
