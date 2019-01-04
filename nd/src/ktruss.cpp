@@ -57,6 +57,11 @@ void base_ktruss (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, v
 	Graph orderedGraph;
 	createOrderedIndexEdges (graph, el, xel, orderedGraph);
 
+
+	//for (int i = 0; i < el.size(); i++)
+	//	printf ("el: %d %d\n", el[i].first, el[i].second);
+
+
 	// Triangle counting for each edge
 	vector<vector<vertex> > TC (nVtx);
 	for (vertex i = 0; i < nVtx; i++)
