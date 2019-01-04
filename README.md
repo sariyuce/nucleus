@@ -6,18 +6,18 @@ This is a collection of the codes on the nucleus decomposition framework.
 
 [1] Finding the Hierarchy of Dense Subgraphs using Nucleus Decompositions<br>
 A. Erdem Sariyuce, C. Seshadhri, Ali Pinar, Umit V. Catalyürek<br>
-International World Wide Web Conference (WWW), 2015, <a href="sariyuce.com/papers/www15.pdf">pdf</a><br>
+International World Wide Web Conference (WWW), 2015, <a href="http://sariyuce.com/papers/www15.pdf">pdf</a><br>
 
 [2] Fast Hierarchy Construction for Dense Subgraphs<br>
 A. Erdem Sariyuce, Ali Pinar<br>
-International Conference on Very Large Data Bases (VLDB), 2017, <a href="sariyuce.com/papers/vldb17.pdf">pdf</a><br>
+International Conference on Very Large Data Bases (VLDB), 2017, <a href="http://sariyuce.com/papers/vldb17.pdf">pdf</a><br>
     
 [3] Peeling Bipartite Networks for Dense Subgraph Discovery<br>
 A. Erdem Sariyuce, Ali Pinar<br>
-ACM International Conference on Web Search and Data Mining (WSDM), 2018, <a href="arxiv.org/pdf/1611.02756.pdf">arXiv:1611.02756</a>arXiv<br>
+ACM International Conference on Web Search and Data Mining (WSDM), 2018, <a href="http://sariyuce.com/papers/wsdm18.pdf">pdf</a><br>
     
 [4] Parallel Local Algorithms for Core, Truss, and Nucleus Decompositions<br>
 A. Erdem Sariyuce, C. Seshadhri, Ali Pinar<br>
-<a href="arxiv.org/pdf/1704.00386.pdf">arXiv:1704.00386</a><br>
+International Conference on Very Large Data Bases (VLDB), 2019, <a href="http://sariyuce.com/papers/vldb18.pdf">pdf</a><br>
     
     
