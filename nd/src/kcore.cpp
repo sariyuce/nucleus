@@ -86,3 +86,12 @@ void base_kcore (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, ve
 		print_time (fp, "Total 1,2 nucleus decomposition time: ", (p2 - p1) + (b2 - b1) + (d2 - d1));
 	}
 }
+
+
+
+void degreeBasedHierarchy (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* maxCore, string vfile, FILE* fp) {
+
+}
+
+
+

@@ -206,3 +206,158 @@ void createSkeleton (vertex u, initializer_list<vertex> neighbors, vertex* nSubc
 void updateUnassigned (vertex t, vector<vertex>& component, vertex* cid, vector<vp>& relations, vector<vertex>& unassigned);
 void buildHierarchy (vertex cn, vector<vp>& relations, vector<subcore>& skeleton, vertex* nSubcores, edge nEdge, vertex nVtx);
 void presentNuclei (int variant, vector<subcore>& skeleton, vector<vertex>& component, Graph& graph, edge nEdge, helpers& ax, string vfile, FILE* gp);
+
+
+
+
+
+
+inline int order_compare (vertex* Reals, vertex* T, vertex e, vertex f) {
+	if ((Reals[e] < Reals[f] && T[e] < T[f]) || (Reals[e] > Reals[f] && T[e] > T[f]) || (Reals[e] == Reals[f] && T[e] == T[f]))
+		return 1;
+	else
+		return -1;
+}
+
+
+inline void EdgeKendallTau (vertex* Reals, vertex* T, vertex a, vertex b, int* count, int* score) {
+	int s = 0;
+	s += order_compare (Reals, T, a, b);
+	if (s == 1) // concordant -- at least one 1, no -1
+		(*score)++;
+	else
+		(*score)--;
+	(*count)++;
+}
+
+inline void TriangleKendallTau (vertex* Reals, vertex* T, vertex a, vertex b, vertex c, int* count, int* score) {
+	int s = 0;
+	s += order_compare (Reals, T, a, b);
+	s += order_compare (Reals, T, a, c);
+	s += order_compare (Reals, T, b, c);
+	if (s == 3) // concordant -- at least one 1, no -1
+		(*score)++;
+	else
+		(*score)--;
+	(*count)++;
+}
+
+// a, b, c, d are ids
+inline void FourCliqueKendallTau (vertex* Reals, vertex* T, vertex a, vertex b, vertex c, vertex d, int* count, int* score) {
+	int s = 0;
+	s += order_compare (Reals, T, a, b);
+	s += order_compare (Reals, T, a, c);
+	s += order_compare (Reals, T, a, d);
+	s += order_compare (Reals, T, b, c);
+	s += order_compare (Reals, T, b, d);
+	s += order_compare (Reals, T, c, d);
+	if (s == 6) // concordant -- at least one 1, no -1
+		(*score)++;
+	else
+		(*score)--;
+	(*count)++;
+}
+
+
+inline double kt (int count, int score) {
+	return (double) score / count;
+}
+
+inline bool isSmaller (vertex* xadj, vertex u, vertex v) {
+	vertex deg_u = xadj[u+1] - xadj[u];
+	vertex deg_v = xadj[v+1] - xadj[v];
+	return (deg_u < deg_v || (deg_u == deg_v && u < v));
+}
+
+// KT computations
+
+inline void compute_KT12 (vertex* Reals, vertex* xadj, Graph& graph, vertex* T, int oc) {
+	int count = 0, score = 0;
+	for (vertex u = 0; u < graph.size(); u++) {
+		for (vertex j = 0; j < graph[u].size(); j++) {
+			vertex = graph[u][j];
+			if (u == isSmaller (xadj, u, v))
+				EdgeKendallTau (Reals, T, u, v, &count, &score);
+		}
+	}
+	printf ("H %d , KendallTau: %lf\n", oc, kt (count, score));
+}
+
+inline void simple_distance12 (vertex* Reals, Graph& graph, vertex* T, int oc) {
+	double score = 0;
+	int count = 0;
+	for (vertex i = 0; i < graph.size(); i++)
+		if (T[i] > 0 && Reals[i] > 0) {
+			if (Reals[i] == T[i])
+				score++;
+			count++;
+		}
+	printf ("H %d , similarity: %lf = %d / %d\n", oc, score/count, (int) score, count);
+}
+
+inline void simple_distance23 (int nEdge, vertex* Reals, vertex* T, int oc) {
+	double score = 0;
+	int count = 0;
+	for (vertex i = 0; i < nEdge; i++)
+		if (T[i] > 0 && Reals[i] > 0) {
+			if (Reals[i] == T[i])
+				score++;
+			count++;
+		}
+	score /= count;
+	printf ("H %d , similarity: %lf\n", oc, score);
+}
+
+inline void compute_KT23 (vertex* Reals, EdgeList2& el, Graph& tris, vertex* T, int oc) {
+	int count = 0, score = 0;
+	for (vertex i = 0; i < el.size(); i++) {
+		int u = get<0>(el[i]);
+		int v = get<1>(el[i]);
+		for (vertex j = 0; j < tris[i].size(); j+=2) {
+			int x = get<0>(el[tris[i][j]]);
+			int y = get<0>(el[tris[i][j+1]]);
+			if ((u == x || u == y) && (v == y || v == x)) {
+				TriangleKendallTau (Reals, T, i, tris[i][j], tris[i][j+1], &count, &score);
+			}
+		}
+	}
+	printf ("H %d , KendallTau: %lf\n", oc, kt (count, score));
+}
+
+inline void simple_distance34 (vector<vertex>& Reals, vertex* F, int oc) {
+	double score = 0;
+	int count = 0;
+	for (vertex i = 0; i < Reals.size(); i++)
+		if (F[i] > 0 && Reals[i] > 0) {
+			if (Reals[i] == F[i])
+				score++;
+			count++;
+		}
+	score /= count;
+	printf ("H %d , similarity: %lf\n", oc, score);
+}
+
+// Kendall-Tau -- each 4clique is counted 4 times but that's fine for final KT
+inline void compute_KT34 (vector<triangle_id>& tlist, vertex* Reals, Graph& TF, vertex* F, int oc) {
+	int count = 0, score = 0;
+	for (vertex i = 0; i < tlist.size(); i++) {
+		int a = get<0>(tlist[i].triple);
+		int b = get<1>(tlist[i].triple);
+		int c = get<2>(tlist[i].triple);
+		for (vertex j = 0; j < TF[i].size(); j+=3) {
+			int u = TF[i][j];
+			int d = get<0>(tlist[u].triple);
+			int e = get<1>(tlist[u].triple);
+			int f = get<2>(tlist[u].triple);
+			int che;
+			if (d != a && d != b && d != c)
+				che = d;
+			else if (e != a && e != b && e != c)
+				che = e;
+			else if (f != a && f != b && f != c)
+				che = f;
+			FourCliqueKendallTau (Reals, F, a, b, c, che, &count, &score);
+		}
+	}
+	printf ("H %d , KendallTau: %lf\t", oc, kt (count, score));
+}
