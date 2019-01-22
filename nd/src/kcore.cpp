@@ -87,11 +87,3 @@ void base_kcore (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, ve
 	}
 }
 
-
-
-void degreeBasedHierarchy (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* maxCore, string vfile, FILE* fp) {
-
-}
-
-
-

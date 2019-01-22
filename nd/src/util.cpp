@@ -223,17 +223,13 @@ void reportSubgraph (int variant, vertex index, unordered_map<vertex, vertex>& o
 				skeleton[index].ed,	skeleton[index].children.empty()?1:0, skeleton[index].parent);
 
 	fprintf(fp, "%d %d %d %d %lf %d %d\t", index, skeleton[index].K, skeleton[index].size, skeleton[index].nEdge, skeleton[index].ed, skeleton[index].children.empty()?1:0, skeleton[index].parent);
-	for (size_t i = 0; i < backup_vset.size(); i++) {
-		fprintf(fp, "%d ", backup_vset[i]);
+
+	for (size_t i = 0; i < vset.size(); i++) {
+		fprintf(fp, "%d ", vset[i]);
 		if (highlight)
-			fprintf(gp, "%d ", backup_vset[i]);
+			fprintf(gp, "%d ", vset[i]);
 	}
-//
-//	for (size_t i = 0; i < vset.size(); i++) {
-//		fprintf(fp, "%d ", vset[i]);
-//		if (highlight)
-//			fprintf(gp, "%d ", vset[i]);
-//	}
+
 	fprintf(fp, "-1\n");
 	if (highlight)
 		fprintf(gp, "-1\n");
@@ -306,10 +302,10 @@ void presentNuclei (int variant, vector<subcore>& skeleton, vector<vertex>& comp
 	while (!subcoreStack.empty()) {
 		vertex i = subcoreStack.top();
 		subcoreStack.pop();
-		if (backup[i].visible && backup[i].children.empty()) {
+		if (backup[i].visible) { // && backup[i].children.empty()) {
 			orderInFile[i] = o++;
 			reportSubgraph (variant, i, orderInFile, component, ax, skeleton, graph, nEdge, fp, gp);
-			//removeChild (i, backup);
+			removeChild (i, backup);
 		}
 	}
 	fclose (fp);
