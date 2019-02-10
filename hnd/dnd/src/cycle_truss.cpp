@@ -1,26 +1,10 @@
 #include "main.h"
 
-inline bool exists (int val, vector<int>& v) {
-	for (size_t i = 1; i < v.size(); i++) {
-		if (v[i] == val)
-			return true;
-		else if (v[i] < 0)
-			return false;
-	}
-	return false;
-}
-
 inline int ind (int val, vector<int>& v) {
 	for (size_t i = 1; i < v.size(); i++)
 		if (v[i] == val)
 			return i;
 	return -1;
-}
-
-inline vertex smaller (Graph& graph, vertex u, vertex v) {
-	if (graph[u].size() < graph[v].size() || (graph[u].size() == graph[v].size() && u < v))
-		return u;
-	return v;
 }
 
 vertex count_cycles (Graph& dgraph, Graph& TC) {
@@ -32,11 +16,11 @@ vertex count_cycles (Graph& dgraph, Graph& TC) {
 				break;
 
 			// another option is that you can check incoming edges of u
-			if (exists (u, dgraph[v])) // u-v must be directed because no edges in cycle is reciprocal
+			if (exists (u, dgraph[v])) // u-v must be directed because no edge in cycle is reciprocal
 				continue;
 
 			vector<vertex> ints;
-			inter (1, 2, dgraph, u, v, ints); // todo: two items written to ints although ints[k] is not used. because inter is generic, can be fixed later
+			inter (1, 2, dgraph, u, v, ints); // green orbit // todo: two items written to ints although ints[k] is not used. because inter is generic, can be fixed later
 
 			for (vertex k = 0; k < ints.size(); k+=2) {
 				vertex w = dgraph[v][ints[k+1]]; // equal to M2P (dgraph[u][k])
@@ -50,7 +34,7 @@ vertex count_cycles (Graph& dgraph, Graph& TC) {
 
 	for (vertex i = 0; i < TC.size(); i++)
 		for (vertex j = 1; j < TC[i].size(); j++)
-			TC[i][j] /= 3; // 3 same type edges in a cycle
+			TC[i][j] /= 3; // 3 green edge orbits in a cycle
 	count /= 3;
 
 	printf ("total cycle count: %d\n", count);
@@ -83,10 +67,10 @@ void cycle_truss (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, v
 	vector<vertex> xel;
 	xel.push_back(0);
 	// each non-reciprocal edge and its cycle-count is inserted to bucket
-	for (size_t i = 0; i < graph.size(); i++) {
+	for (vertex i = 0; i < graph.size(); i++) {
 		vector<vertex> ret;
 		outgoings (graph[i], ret);
-		for (size_t r = 0; r < ret.size(); r++) {
+		for (vertex r = 0; r < ret.size(); r++) {
 			vp c (i, graph[i][ret[r]]);
 			el.push_back(c); // first is source, second is target
 			printf ("cycle count of %d is %d\n", id, TC[i][ret[r]]);
@@ -144,7 +128,7 @@ void cycle_truss (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, v
 	}
 
 	for (auto i = 0; i < K.size(); i++)
-		printf ("truss of %d is %d\n", i, K[i]);
+		printf ("truss of %d is %d\n", i, K[i]); // the ones with -1 kappa do not participate in any cycle
 	return;
 }
 

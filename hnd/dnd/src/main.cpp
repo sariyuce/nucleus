@@ -43,7 +43,7 @@ int main (int argc, char *argv[]) {
 	if (!(
 			nd == "cycle-truss" ||
 			nd == "cycle-core" ||
-			nd == "acyclic" ||
+			nd == "acyclic-truss" ||
 			nd == "out-p" ||
 			nd == "cycle-p" ||
 			nd == "in-p" ||
@@ -86,8 +86,11 @@ int main (int argc, char *argv[]) {
 
 	if (nd == "cycle-truss")
 		cycle_truss (graph, hierarchy, nEdge, K, &maxK, fp);
-	if (nd == "cycle-core")
+	else if (nd == "cycle-core")
 		cycle_core (graph, hierarchy, nEdge, K, &maxK, fp);
+	else if (nd == "acyclic-truss")
+		acyclic_truss (graph, hierarchy, nEdge, K, &maxK, fp);
+
 
 //	else if (nd == "acyclic")
 //		acyclic_truss (graph, nEdge, K, &maxK, vfile.c_str());

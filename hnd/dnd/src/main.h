@@ -365,7 +365,15 @@ inline void simple_distance34 (vector<vertex>& Reals, vertex* F, int oc) {
 			if (Reals[i] == F[i])
 				score++;
 			count++;
-		}
+		}inline bool exists (int val, vector<int>& v) {
+	for (size_t i = 1; i < v.size(); i++) {
+		if (v[i] == val)
+			return true;
+		else if (v[i] < 0)
+			return false;
+	}
+	return false;
+}
 	score /= count;
 	printf ("H %d , similarity: %lf\n", oc, score);
 }
@@ -396,15 +404,25 @@ inline void compute_KT34 (vector<triangle_id>& tlist, vertex* Reals, Graph& TF, 
 }
 */
 
+void outgoings (vector<vertex>& b, vector<vertex>& ret);
 
 void cycle_truss (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* maxK, FILE* fp);
 void cycle_core (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* maxK, FILE* fp);
-void outgoings (vector<vertex>& b, vector<vertex>& ret);
+void acyclic_truss (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* maxK, FILE* fp);
 
 
 
 
 
+inline bool exists (int val, vector<int>& v) {
+	for (size_t i = 1; i < v.size(); i++) {
+		if (v[i] == val)
+			return true;
+		else if (v[i] < 0)
+			return false;
+	}
+	return false;
+}
 
 
 
