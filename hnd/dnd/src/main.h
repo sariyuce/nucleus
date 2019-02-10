@@ -398,7 +398,7 @@ inline void compute_KT34 (vector<triangle_id>& tlist, vertex* Reals, Graph& TF, 
 
 
 void cycle_truss (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* maxK, FILE* fp);
-
+void cycle_core (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* maxK, FILE* fp);
 void outgoings (vector<vertex>& b, vector<vertex>& ret);
 
 

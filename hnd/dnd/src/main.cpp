@@ -40,7 +40,14 @@ int main (int argc, char *argv[]) {
 
 	string nd (argv[2]);
 
-	if (!(nd == "cycle" || nd == "acyclic" || nd == "out-p" || nd == "cycle-p" || nd == "in-p" || nd == "cycle-pp")) {
+	if (!(
+			nd == "cycle-truss" ||
+			nd == "cycle-core" ||
+			nd == "acyclic" ||
+			nd == "out-p" ||
+			nd == "cycle-p" ||
+			nd == "in-p" ||
+			nd == "cycle-pp")) {
 		printf ("Invalid algorithm, options are cycle\n"
 				"acyclic\n"
 				"out-p\n"
@@ -77,8 +84,11 @@ int main (int argc, char *argv[]) {
 	vertex maxK; // maximum K value in the graph
 	vector<vertex> K;
 
-	if (nd == "cycle")
+	if (nd == "cycle-truss")
 		cycle_truss (graph, hierarchy, nEdge, K, &maxK, fp);
+	if (nd == "cycle-core")
+		cycle_core (graph, hierarchy, nEdge, K, &maxK, fp);
+
 //	else if (nd == "acyclic")
 //		acyclic_truss (graph, nEdge, K, &maxK, vfile.c_str());
 //	else if (nd == "out-p")
