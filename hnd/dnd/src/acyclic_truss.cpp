@@ -51,12 +51,12 @@ void acyclic_truss (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K,
 	const auto p1 = chrono::steady_clock::now();
 	K.resize (nEdge, -1);
 	Naive_Bucket nBucket;
-	nBucket.Initialize (graph.size(), nEdge);
+	nBucket.Initialize (nVtx, nEdge);
 	vertex id = 0;
 	vector<vp> el;
 	vector<vertex> xel;
 	xel.push_back(0);
-
+	// each non-reciprocal edge and its acyclic-count is inserted to bucket
 	for (vertex i = 0; i < graph.size(); i++) {
 		vector<vertex> ret;
 		outgoings (graph[i], ret);

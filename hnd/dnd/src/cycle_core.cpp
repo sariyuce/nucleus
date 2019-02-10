@@ -69,6 +69,7 @@ void cycle_core (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, ve
 
 		tc_u = K[u] = val;
 
+		// only one node orbit; has one incoming one outgoing
 		for (vertex j = 1; j < graph[u][0]; j++) { // outgoing edges
 			vertex v = graph[u][j];
 
