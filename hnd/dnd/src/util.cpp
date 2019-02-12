@@ -349,14 +349,16 @@ void incomings (vector<vertex>& a, vector<vertex>& ret) {
 	}
 }
 
-void outgoings_w_ud (vertex u, vector<vertex>& b, vector<vertex>& ret) {
+// undirecteds for which u is the smaller node
+void outgoings_and_undirecteds (vertex u, vector<vertex>& b, vector<vertex>& ret) {
+	if (b.empty())
+		return;
 	vertex j = 1, nj = b[0];
 	while (1) {
 		if (j == b[0])
 			break;
 		else if (nj == b.size()) {
 			while (j < b[0]) {
-//				printf ("j: %d\n", j);
 				ret.push_back (j);
 				j++;
 			}
@@ -365,7 +367,6 @@ void outgoings_w_ud (vertex u, vector<vertex>& b, vector<vertex>& ret) {
 		if (M2P (b[nj]) < b[j])
 			nj++;
 		else if (b[j] < M2P (b[nj])) {
-//			printf ("jj: %d\n", j);
 			ret.push_back (j);
 			j++;
 		}
@@ -407,13 +408,16 @@ void outgoings (vector<vertex>& b, vector<vertex>& ret) {
 	}
 }
 
+
 // ids of bidirectional edges
-void undirecteds (vertex b, Graph& dg, vector<vertex>& ret) {
-	vertex j = 1, nj = dg[b][0];
-	while (j < nj && nj < dg[b].size()) {
-		if (M2P (dg[b][nj]) < dg[b][j])
+void undirecteds (vector<vertex>& b, vector<vertex>& ret) {
+	if (b.empty())
+		return;
+	vertex j = 1, nj = b[0];
+	while (j < nj && nj < b.size()) {
+		if (M2P (b[nj]) < b[j])
 			nj++;
-		else if (dg[b][j] < M2P (dg[b][nj]))
+		else if (b[j] < M2P (b[nj]))
 			j++;
 		else {
 			ret.push_back (j);
@@ -422,6 +426,23 @@ void undirecteds (vertex b, Graph& dg, vector<vertex>& ret) {
 		}
 	}
 }
+
+
+//// ids of bidirectional edges
+//void undirecteds (vertex b, Graph& dg, vector<vertex>& ret) {
+//	vertex j = 1, nj = dg[b][0];
+//	while (j < nj && nj < dg[b].size()) {
+//		if (M2P (dg[b][nj]) < dg[b][j])
+//			nj++;
+//		else if (dg[b][j] < M2P (dg[b][nj]))
+//			j++;
+//		else {
+//			ret.push_back (j);
+//			j++;
+//			nj++;
+//		}
+//	}
+//}
 
 
 void inte (vector<vertex>& a, vector<vertex>& b, vector<vertex>& c, vector<vertex>& d, vector<vertex>& ret) {
@@ -449,11 +470,11 @@ void inter (int F, int G, Graph& dg, vertex a, vertex b, vector<vertex>& ret) {
 	if (dg[a].size() == 1 || dg[b].size() == 1)
 		return;
 	vector<vertex> c, d;
-	if (F == 0)	undirecteds (a, dg, c);
+	if (F == 0)	undirecteds (dg[a], c);
 	else if (F == 1) incomings (dg[a], c);
 	else if (F == 2) outgoings (dg[a], c);
 
-	if (G == 0)	undirecteds (b, dg, d);
+	if (G == 0)	undirecteds (dg[b], d);
 	else if (G == 1) incomings (dg[b], d);
 	else if (G == 2) outgoings (dg[b], d);
 

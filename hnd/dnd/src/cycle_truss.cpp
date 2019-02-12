@@ -1,12 +1,5 @@
 #include "main.h"
 
-inline int ind (int val, vector<int>& v) {
-	for (size_t i = 1; i < v.size(); i++)
-		if (v[i] == val)
-			return i;
-	return -1;
-}
-
 vertex count_cycles (Graph& dgraph, Graph& TC) {
 	vertex count = 0;
 	for (vertex u = 0; u < dgraph.size(); u++) {
@@ -18,7 +11,7 @@ vertex count_cycles (Graph& dgraph, Graph& TC) {
 			inter (1, 2, dgraph, u, v, ints); // green orbit // todo: two items written to ints although ints[k] is not used. because inter is generic, can be fixed later
 
 			for (vertex k = 0; k < ints.size(); k+=2) {
-				vertex w = dgraph[v][ints[k+1]]; // equal to M2P (dgraph[u][k])
+				vertex w = dgraph[v][ints[k+1]]; // equal to M2P (dgraph[u][ints[k]])
 				TC[u][ret[r]]++; // u-v
 				TC[v][ints[k+1]]++; // v-w
 				TC[w][ind (u, dgraph[w])]++; // w-u

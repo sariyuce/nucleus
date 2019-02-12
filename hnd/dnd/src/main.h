@@ -405,12 +405,14 @@ inline void compute_KT34 (vector<triangle_id>& tlist, vertex* Reals, Graph& TF, 
 */
 
 void outgoings (vector<vertex>& b, vector<vertex>& ret);
+void outgoings_and_undirecteds (vertex u, vector<vertex>& b, vector<vertex>& ret);
+void undirecteds (vector<vertex>& b, vector<vertex>& ret);
 
 void cycle_truss (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* maxK, FILE* fp);
 void cycle_core (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* maxK, FILE* fp);
 void acyclic_truss (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* maxK, FILE* fp);
 void acyclic_core (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* maxK, FILE* fp);
-
+void outp_truss (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* maxK, FILE* fp);
 
 
 
@@ -424,6 +426,12 @@ inline bool exists (int val, vector<int>& v) {
 	return false;
 }
 
+inline int ind (int val, vector<int>& v) {
+	for (size_t i = 1; i < v.size(); i++)
+		if (v[i] == val)
+			return i;
+	return -1;
+}
 
 
 

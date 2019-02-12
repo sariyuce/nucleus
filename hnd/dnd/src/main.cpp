@@ -45,7 +45,7 @@ int main (int argc, char *argv[]) {
 			nd == "cycle-core" ||
 			nd == "acyclic-truss" ||
 			nd == "acyclic-core" ||
-			nd == "out-p" ||
+			nd == "outp-truss" ||
 			nd == "cycle-p" ||
 			nd == "in-p" ||
 			nd == "cycle-pp")) {
@@ -93,6 +93,8 @@ int main (int argc, char *argv[]) {
 		acyclic_truss (graph, hierarchy, nEdge, K, &maxK, fp);
 	else if (nd == "acyclic-core")
 		acyclic_core (graph, hierarchy, nEdge, K, &maxK, fp);
+	else if (nd == "outp-truss")
+		outp_truss (graph, hierarchy, nEdge, K, &maxK, fp);
 
 
 //	else if (nd == "acyclic")
