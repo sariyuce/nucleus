@@ -3,15 +3,10 @@
 vertex count_cycles (Graph& dgraph, vector<vertex>& TC) {
 	vertex count = 0;
 	for (vertex u = 0; u < dgraph.size(); u++) {
-		for (vertex j = 1; j < dgraph[u].size(); j++) {
-			vertex v = dgraph[u][j];
-			if (v < 0)
-				break;
-
-			// another option is that you can check incoming edges of u
-			if (exists (u, dgraph[v])) // u-v must be directed because no edge in cycle is reciprocal
-				continue;
-
+		vector<vertex> ret;
+		outgoings (dgraph[u], ret);
+		for (vertex r = 0; r < ret.size(); r++) {
+			vertex v = dgraph[u][ret[r]];
 			vector<vertex> ints;
 			inter (1, 2, dgraph, u, v, ints); // todo: two items written to ints although ints[k] is not used. because inter is generic, can be fixed later
 
