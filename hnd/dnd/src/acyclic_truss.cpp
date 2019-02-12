@@ -4,20 +4,16 @@
 vertex count_acyclics (Graph& dgraph, Graph& TC) {
 	vertex count = 0;
 	for (vertex u = 0; u < dgraph.size(); u++) {
-		for (vertex j = 1; j < dgraph[u].size(); j++) {
-			vertex v = dgraph[u][j];
-			if (v < 0)
-				break;
-
-			if (exists (u, dgraph[v])) // u-v must be directed because no edges in acyclic is reciprocal
-				continue;
-
+		vector<vertex> ret;
+		outgoings (dgraph[u], ret);
+		for (vertex r = 0; r < ret.size(); r++) {
+			vertex v = dgraph[u][ret[r]];
 			vector<vertex> ints;
 			inter (2, 2, dgraph, u, v, ints); // blue orbit
 
 			for (size_t k = 0; k < ints.size(); k+=2) {
 				vertex w = dgraph[u][ints[k]]; // equal to dgraph[v][ints[k+1]]
-				TC[u][j]++; // u-v
+				TC[u][ret[r]]++; // u-v
 				TC[u][ints[k]]++; // u-w
 				TC[v][ints[k+1]]++; // v-w
 				count++;
