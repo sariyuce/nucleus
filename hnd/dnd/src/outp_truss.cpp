@@ -103,6 +103,12 @@ void outp_truss (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, ve
 				vertex w = M2P (graph[u][ints[k]]);
 				id1 = getEdgeId (w, u, xel, el, graph); // directed
 				id2 = getEdgeId (w, v, xel, el, graph); // directed
+				if (K[id1] == -1 && K[id2] == -1) {
+					if (nBucket.CurrentValue(id1) > tc_e)
+						nBucket.DecVal(id1);
+					if (nBucket.CurrentValue(id2) > tc_e)
+						nBucket.DecVal(id2);
+				}
 			}
 		}
 		else { // directed. blue neighborhood
@@ -112,14 +118,13 @@ void outp_truss (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, ve
 				vertex w = graph[u][ints[k]];
 				id1 = getEdgeId (u, w, xel, el, graph); // directed
 				id2 = getEdgeId (min (w, v), -1 * max (w, v), xel, el, graph); // undirected
+				if (K[id1] == -1 && K[id2] == -1) {
+					if (nBucket.CurrentValue(id1) > tc_e)
+						nBucket.DecVal(id1);
+					if (nBucket.CurrentValue(id2) > tc_e)
+						nBucket.DecVal(id2);
+				}
 			}
-		}
-
-		if (K[id1] == -1 && K[id2] == -1) {
-			if (nBucket.CurrentValue(id1) > tc_e)
-				nBucket.DecVal(id1);
-			if (nBucket.CurrentValue(id2) > tc_e)
-				nBucket.DecVal(id2);
 		}
 	}
 
