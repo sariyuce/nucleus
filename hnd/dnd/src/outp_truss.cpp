@@ -11,7 +11,7 @@ vertex count_outps (Graph& dgraph, Graph& TC) {
 			inter (1, 1, dgraph, u, v, ints);
 			for (size_t k = 0; k < ints.size(); k+=2) {
 				vertex w = M2P (dgraph[u][ints[k]]); // equal to M2P (dgraph[v][ints[k+1]])
-				TC[u][ret[r]]++; // u-v: undirected and u < v
+				TC[u][ret[r]]++; // u-v is undirected and u < v
 				TC[w][ind (u, dgraph[w])]++; // w-u
 				TC[w][ind (v, dgraph[w])]++; // w-v
 				count++;
@@ -117,7 +117,7 @@ void outp_truss (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, ve
 		print_time (fp, "Only peeling time: ", p2 - p1);
 		print_time (fp, "Total time: ", (p2 - p1) + (t2 - t1));
 	}
-	for (auto i = 0; i < K.size(); i++)
+	for (auto i = 0; i < el.size(); i++)
 		printf ("truss of %d (%d-%d) is %d\n", i, el[i].first, abs(el[i].second), K[i]); // the ones with -1 kappa either do not participate in any outp or u > v for the corresponding u-v edge
 	return;
 }

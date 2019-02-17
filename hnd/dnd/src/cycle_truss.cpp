@@ -98,8 +98,8 @@ void cycle_truss (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, v
 		print_time (fp, "Only peeling time: ", p2 - p1);
 		print_time (fp, "Total time: ", (p2 - p1) + (t2 - t1));
 	}
-	for (auto i = 0; i < K.size(); i++)
-		printf ("truss of %d is %d\n", i, K[i]); // the ones with -1 kappa do not participate in any cycle
+	for (auto i = 0; i < el.size(); i++)
+		printf ("truss of %d (%d-%d) is %d\n", i, el[i].first, abs(el[i].second), K[i]); // the ones with -1 kappa either do not participate in any outp or u > v for the corresponding u-v edge
 	return;
 }
 

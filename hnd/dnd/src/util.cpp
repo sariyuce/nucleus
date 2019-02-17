@@ -379,6 +379,34 @@ void outgoings_and_asymmetric_undirecteds (vertex u, vector<vertex>& b, vector<v
 	}
 }
 
+void outgoings_and_undirecteds (vector<vertex>& b, vector<vertex>& ret) {
+	if (b.empty())
+		return;
+	vertex j = 1, nj = b[0];
+	while (1) {
+		if (j == b[0])
+			break;
+		else if (nj == b.size()) {
+			while (j < b[0]) {
+				ret.push_back (j);
+				j++;
+			}
+			break;
+		}
+		if (M2P (b[nj]) < b[j])
+			nj++;
+		else if (b[j] < M2P (b[nj])) {
+			ret.push_back (j);
+			j++;
+		}
+		else {
+			ret.push_back(j);
+			j++;
+			nj++;
+		}
+	}
+}
+
 // ids of only outgoing edges
 void outgoings (vector<vertex>& b, vector<vertex>& ret) {
 	if (b.empty())

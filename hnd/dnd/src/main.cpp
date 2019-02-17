@@ -47,7 +47,7 @@ int main (int argc, char *argv[]) {
 			nd == "acyclic-core" ||
 			nd == "outp-truss" ||
 			nd == "outp-core" ||
-			nd == "cycle-p" ||
+			nd == "cyclep-truss" ||
 			nd == "in-p" ||
 			nd == "cycle-pp")) {
 		printf ("Invalid algorithm, options are cycle\n"
@@ -98,6 +98,8 @@ int main (int argc, char *argv[]) {
 		outp_truss (graph, hierarchy, nEdge, K, &maxK, fp);
 	else if (nd == "outp-core")
 		outp_core (graph, hierarchy, nEdge, K, &maxK, fp);
+	else if (nd == "cyclep-truss")
+		cyclep_truss (graph, hierarchy, nEdge, K, &maxK, fp);
 
 
 //	else if (nd == "acyclic")
