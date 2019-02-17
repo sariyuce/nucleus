@@ -350,7 +350,7 @@ void incomings (vector<vertex>& a, vector<vertex>& ret) {
 }
 
 // undirecteds for which u is the smaller node
-void outgoings_and_undirecteds (vertex u, vector<vertex>& b, vector<vertex>& ret) {
+void outgoings_and_asymmetric_undirecteds (vertex u, vector<vertex>& b, vector<vertex>& ret) {
 	if (b.empty())
 		return;
 	vertex j = 1, nj = b[0];
@@ -421,6 +421,26 @@ void undirecteds (vector<vertex>& b, vector<vertex>& ret) {
 			j++;
 		else {
 			ret.push_back (j);
+			j++;
+			nj++;
+		}
+	}
+}
+
+
+// ids of bidirectional edges
+void asymmetric_undirecteds (vertex u, vector<vertex>& b, vector<vertex>& ret) {
+	if (b.empty())
+		return;
+	vertex j = 1, nj = b[0];
+	while (j < nj && nj < b.size()) {
+		if (M2P (b[nj]) < b[j])
+			nj++;
+		else if (b[j] < M2P (b[nj]))
+			j++;
+		else {
+			if (u < b[j])
+				ret.push_back (j);
 			j++;
 			nj++;
 		}

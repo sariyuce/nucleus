@@ -4,15 +4,11 @@ vertex count_outps (Graph& dgraph, Graph& TC) {
 	vertex count = 0;
 	for (vertex u = 0; u < dgraph.size(); u++) {
 		vector<vertex> ret;
-		undirecteds (dgraph[u], ret); // u-v edge is undirected
+		asymmetric_undirecteds (u, dgraph[u], ret); // u-v edge is undirected s.t. u < v
 		for (vertex r = 0; r < ret.size(); r++) {
 			vertex v = dgraph[u][ret[r]];
-			// u-v edge is maintained by u if u < v. Otherwise, v should maintain it.
-			if (u > v)
-				continue;
 			vector<vertex> ints;
 			inter (1, 1, dgraph, u, v, ints);
-
 			for (size_t k = 0; k < ints.size(); k+=2) {
 				vertex w = M2P (dgraph[u][ints[k]]); // equal to M2P (dgraph[v][ints[k+1]])
 				TC[u][ret[r]]++; // u-v: undirected and u < v
@@ -22,23 +18,19 @@ vertex count_outps (Graph& dgraph, Graph& TC) {
 			}
 		}
 	}
-
 	printf ("total out_p count: %d\n", count);
 	return count;
 }
 
-
 void outp_truss (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* maxK, FILE* fp) {
-
 	const auto t1 = chrono::steady_clock::now();
-	// Acyclic counting for each edge
+	// Outp counting for each edge
 	vertex nVtx = graph.size();
 	Graph TC;
 	TC.resize(nVtx);
 	for (vertex i = 0; i < nVtx; i++)
 		TC[i].resize (graph[i].size(), 0);
 	lol tric = count_outps (graph, TC);
-
 	fprintf (fp, "# outps: %lld\n", tric);
 	const auto t2 = chrono::steady_clock::now();
 	print_time (fp, "Outp counting: ", t2 - t1);
@@ -47,16 +39,17 @@ void outp_truss (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, ve
 	const auto p1 = chrono::steady_clock::now();
 	K.resize (nEdge, -1);
 	Naive_Bucket nBucket;
-	nBucket.Initialize (graph.size(), nEdge);
+	nBucket.Initialize (nVtx, nEdge);
 	vertex id = 0;
 	vector<vp> el;
 	vector<vertex> xel;
 	xel.push_back(0);
-	// each non-reciprocal edge and undirected edges are inserted with their outp counts
-	// in el, it's undirected edge if the second item is negative. Note that always u < v, so node 0 cannot exist as the second item.
-	for (size_t i = 0; i < graph.size(); i++) {
+	// both non-reciprocal and undirected edges are inserted
+	// in el, if it's undirected edge, the second item is negative.
+	// Note that always u < v, so node 0 cannot exist as the second item.
+	for (vertex i = 0; i < graph.size(); i++) {
 		vector<vertex> ret;
-		outgoings_and_undirecteds (i, graph[i], ret); // undirecteds if only i < v
+		outgoings_and_asymmetric_undirecteds (i, graph[i], ret); // undirecteds if only i < v
 		for (vertex r = 0; r < ret.size(); r++) {
 			vertex ind = abs (ret[r]);
 			vertex v = graph[i][ind];
@@ -74,31 +67,20 @@ void outp_truss (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, ve
 		}
 		xel.push_back(el.size());
 	}
-
-//	for (auto i = 0; i < xel.size(); i++) {
-//		printf ("xel[%d]: %d\n", i, xel[i]);
-//		for (auto j = xel[i]; j < xel[i+1]; j++)
-//			printf ("%d -> %d\n", el[j].first, el[j].second);
-//	}
-
 	vertex tc_e = 0;
-
 	while (true) {
 		edge e;
 		vertex val;
 		if (nBucket.PopMin(&e, &val) == -1) // if the bucket is empty
 			break;
-
 		tc_e = K[e] = val;
-
 		vertex u = el[e].first; // source
 		vertex v = el[e].second; // target
-
 		vector<vertex> ints;
 		vertex id1, id2;
-		if (v < 0) { // undirected. green neighborhood
+		if (v < 0) { // u-v is undirected. green neighborhood
 			v *= -1;
-			inter (1, 1, graph, u, v, ints); // green neighbors.
+			inter (1, 1, graph, u, v, ints); // green neighbors
 			for (auto k = 0; k < ints.size(); k+=2) {
 				vertex w = M2P (graph[u][ints[k]]);
 				id1 = getEdgeId (w, u, xel, el, graph); // directed
@@ -111,9 +93,9 @@ void outp_truss (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, ve
 				}
 			}
 		}
-		else { // directed. blue neighborhood
+		else { // directed. red neighborhood
 			vector<vertex> ints;
-			inter (2, 0, graph, u, v, ints); // blue neighbors.
+			inter (2, 0, graph, u, v, ints); // red neighbors
 			for (auto k = 0; k < ints.size(); k+=2) {
 				vertex w = graph[u][ints[k]];
 				id1 = getEdgeId (u, w, xel, el, graph); // directed
@@ -127,18 +109,16 @@ void outp_truss (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, ve
 			}
 		}
 	}
-
 	nBucket.Free();
 	*maxK = tc_e;
-
 	const auto p2 = chrono::steady_clock::now();
 
 	if (!hierarchy) {
 		print_time (fp, "Only peeling time: ", p2 - p1);
 		print_time (fp, "Total time: ", (p2 - p1) + (t2 - t1));
 	}
-
 	for (auto i = 0; i < K.size(); i++)
 		printf ("truss of %d (%d-%d) is %d\n", i, el[i].first, abs(el[i].second), K[i]); // the ones with -1 kappa either do not participate in any outp or u > v for the corresponding u-v edge
 	return;
 }
+
