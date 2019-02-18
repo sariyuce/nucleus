@@ -82,12 +82,7 @@ void cycle_truss (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, v
 			vertex w = graph[v][ints[k+1]]; // equal to M2P (graph[u][k])
 			vertex id1 = getEdgeId (w, u, xel, el, graph);
 			vertex id2 = getEdgeId (v, w, xel, el, graph);
-			if (K[id1] == -1 && K[id2] == -1) {
-				if (nBucket.CurrentValue(id1) > tc_e)
-					nBucket.DecVal(id1);
-				if (nBucket.CurrentValue(id2) > tc_e)
-					nBucket.DecVal(id2);
-			}
+			checkAndDec (K[id1], K[id2], id1, id2, &nBucket, tc_e);
 		}
 	}
 	nBucket.Free();

@@ -61,12 +61,7 @@ void acyclic_core (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, 
 				inter (2, 2, graph, u, v, ints);
 				for (auto k = 0; k < ints.size(); k+=2) {
 					vertex w = graph[v][ints[k+1]]; // equal to graph[u][k]
-					if (K[w] == -1) {
-						if (nBucket.CurrentValue(v) > tc_u)
-							nBucket.DecVal(v);
-						if (nBucket.CurrentValue(w) > tc_u)
-							nBucket.DecVal(w);
-					}
+					checkAndDec (K[w], -1, w, v, &nBucket, tc_u);
 				}
 			}
 		}
@@ -78,12 +73,7 @@ void acyclic_core (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, 
 				inter (1, 1, graph, u, v, ints);
 				for (auto k = 0; k < ints.size(); k+=2) {
 					vertex w = M2P (graph[v][ints[k+1]]); // equal to M2P (graph[u][k])
-					if (K[w] == -1) {
-						if (nBucket.CurrentValue(v) > tc_u)
-							nBucket.DecVal(v);
-						if (nBucket.CurrentValue(w) > tc_u)
-							nBucket.DecVal(w);
-					}
+					checkAndDec (K[w], -1, w, v, &nBucket, tc_u);
 				}
 			}
 		}
@@ -97,12 +87,7 @@ void acyclic_core (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, 
 				inter (1, 2, graph, u, v, ints);
 				for (auto k = 0; k < ints.size(); k+=2) {
 					vertex w = graph[v][ints[k+1]]; // equal to M2P (graph[u][k])
-					if (K[w] == -1) {
-						if (nBucket.CurrentValue(v) > tc_u)
-							nBucket.DecVal(v);
-						if (nBucket.CurrentValue(w) > tc_u)
-							nBucket.DecVal(w);
-					}
+					checkAndDec (K[w], -1, w, v, &nBucket, tc_u);
 				}
 			}
 		}

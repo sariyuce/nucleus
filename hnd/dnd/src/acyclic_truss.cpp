@@ -89,12 +89,7 @@ void acyclic_truss (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K,
 				id1 = getEdgeId (u, w, xel, el, graph);
 				id2 = getEdgeId (w, v, xel, el, graph);
 			}
-			if (K[id1] == -1 && K[id2] == -1) {
-				if (nBucket.CurrentValue(id1) > tc_e)
-					nBucket.DecVal(id1);
-				if (nBucket.CurrentValue(id2) > tc_e)
-					nBucket.DecVal(id2);
-			}
+			checkAndDec (K[id1], K[id2], id1, id2, &nBucket, tc_e);
 		}
 	}
 	nBucket.Free();
