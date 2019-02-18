@@ -418,6 +418,9 @@ void outp_truss (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, ve
 void outp_core (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* maxK, FILE* fp);
 void cyclep_truss (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* maxK, FILE* fp);
 void cyclep_core (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* maxK, FILE* fp);
+void inp_truss (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* maxK, FILE* fp);
+void inp_core (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* maxK, FILE* fp);
+
 
 inline bool exists (int val, vector<int>& v) {
 	for (size_t i = 1; i < v.size(); i++) {

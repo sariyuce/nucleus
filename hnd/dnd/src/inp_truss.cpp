@@ -1,6 +1,6 @@
 #include "main.h"
 
-vertex count_outps (Graph& dgraph, Graph& TC) {
+vertex count_inps (Graph& dgraph, Graph& TC) {
 	vertex count = 0;
 	for (vertex u = 0; u < dgraph.size(); u++) {
 		vector<vertex> ret;
@@ -8,32 +8,32 @@ vertex count_outps (Graph& dgraph, Graph& TC) {
 		for (vertex r = 0; r < ret.size(); r++) {
 			vertex v = dgraph[u][ret[r]];
 			vector<vertex> ints;
-			inter (1, 1, dgraph, u, v, ints);
+			inter (2, 2, dgraph, u, v, ints);
 			for (size_t k = 0; k < ints.size(); k+=2) {
-				vertex w = M2P (dgraph[u][ints[k]]); // equal to M2P (dgraph[v][ints[k+1]])
+				vertex w = dgraph[u][ints[k]];
 				TC[u][ret[r]]++; // u-v is undirected and u < v
-				TC[w][ind (u, dgraph[w])]++; // w-u
-				TC[w][ind (v, dgraph[w])]++; // w-v
+				TC[u][ints[k]]++; // u-w
+				TC[v][ints[k+1]]++; // v-w
 				count++;
 			}
 		}
 	}
-	printf ("total outp count: %d\n", count);
+	printf ("total inp count: %d\n", count);
 	return count;
 }
 
-void outp_truss (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* maxK, FILE* fp) {
+void inp_truss (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* maxK, FILE* fp) {
 	const auto t1 = chrono::steady_clock::now();
-	// Outp counting for each edge
+	// Inp counting for each edge
 	vertex nVtx = graph.size();
 	Graph TC;
 	TC.resize(nVtx);
 	for (vertex i = 0; i < nVtx; i++)
 		TC[i].resize (graph[i].size(), 0);
-	lol tric = count_outps (graph, TC);
-	fprintf (fp, "# outps: %lld\n", tric);
+	lol tric = count_inps (graph, TC);
+	fprintf (fp, "# inps: %lld\n", tric);
 	const auto t2 = chrono::steady_clock::now();
-	print_time (fp, "Outp counting: ", t2 - t1);
+	print_time (fp, "Inp counting: ", t2 - t1);
 
 	// Peeling
 	const auto p1 = chrono::steady_clock::now();
@@ -59,7 +59,7 @@ void outp_truss (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, ve
 			else
 				c = make_pair (i, v); // directed
 			el.push_back(c);
-			printf ("outp count of %d (%d-%d) is %d\n", id, i, v, TC[i][ind]);
+			printf ("inp count of %d (%d-%d) is %d\n", id, i, v, TC[i][ind]);
 			if (TC[i][ind] > 0)
 				nBucket.Insert (id++, TC[i][ind]);
 			else
@@ -78,23 +78,23 @@ void outp_truss (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, ve
 		vertex v = el[e].second; // target
 		vector<vertex> ints;
 		vertex id1, id2;
-		if (v < 0) { // u-v is undirected. green neighborhood
+		if (v < 0) { // u-v is undirected
 			v *= -1;
-			inter (1, 1, graph, u, v, ints); // green neighbors
-			for (auto k = 0; k < ints.size(); k+=2) {
-				vertex w = M2P (graph[u][ints[k]]);
-				id1 = getEdgeId (w, u, xel, el, graph); // directed
-				id2 = getEdgeId (w, v, xel, el, graph); // directed
-				checkAndDec (K[id1], K[id2], id1, id2, &nBucket, tc_e);
-			}
-		}
-		else { // directed. red neighborhood
-			ints.clear();
-			inter (2, 0, graph, u, v, ints); // red neighbors
+			inter (2, 2, graph, u, v, ints);
 			for (auto k = 0; k < ints.size(); k+=2) {
 				vertex w = graph[u][ints[k]];
 				id1 = getEdgeId (u, w, xel, el, graph); // directed
-				id2 = getEdgeId (min (w, v), -1 * max (w, v), xel, el, graph); // undirected
+				id2 = getEdgeId (v, w, xel, el, graph); // directed
+				checkAndDec (K[id1], K[id2], id1, id2, &nBucket, tc_e);
+			}
+		}
+		else { // directed
+			ints.clear();
+			inter (0, 1, graph, u, v, ints);
+			for (auto k = 0; k < ints.size(); k+=2) {
+				vertex w = M2P (graph[v][ints[k+1]]);
+				id1 = getEdgeId (w, v, xel, el, graph); // directed
+				id2 = getEdgeId (min (u, w), -1 * max (u, w), xel, el, graph); // undirected
 				checkAndDec (K[id1], K[id2], id1, id2, &nBucket, tc_e);
 			}
 		}
@@ -108,7 +108,7 @@ void outp_truss (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, ve
 		print_time (fp, "Total time: ", (p2 - p1) + (t2 - t1));
 	}
 	for (auto i = 0; i < el.size(); i++)
-		printf ("truss of %d (%d-%d) is %d\n", i, el[i].first, abs(el[i].second), K[i]); // the ones with -1 kappa either do not participate in any outp or u > v for the corresponding u-v edge
+		printf ("truss of %d (%d-%d) is %d\n", i, el[i].first, abs(el[i].second), K[i]); // the ones with -1 kappa either do not participate in any inp or u > v for the corresponding u-v edge
 	return;
 }
 
