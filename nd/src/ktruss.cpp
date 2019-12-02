@@ -65,57 +65,6 @@ lol countTriangles (Graph& graph, Graph& orderedGraph, Graph& TC) {
 	return tc;
 }
 
-
-lol countChords (Graph& graph, Graph& orderedGraph, Graph& TC) {
-
-        lol tc = 0;
-        for (size_t i = 0; i < graph.size(); i++) {
-                for (size_t j = 0; j < graph[i].size(); j++) {
-                        for (size_t k = j + 1; k < graph[i].size(); k++) {
-                                vertex u = graph[i][j];
-                                vertex v = graph[i][k];
-				
-				{
-				vertex a = u, b = v;
-        			if (less_than (b, a, graph))
-    			        	swap (a, b);
-        			for (size_t k = 0; k < orderedGraph[a].size(); k++)
-                			if (orderedGraph[a][k] == b) {
-						// 'i a b' is a triangle
-						vector<vertex> commonNeighbors;
-                				intersection (graph[a], graph[b], commonNeighbors);
-						if (commonNeighbors.size() > 1)
-							for (int i = 0; i < commonNeighbors.size()-1; i++)
-								for (int j = i+1; j < commonNeighbors.size(); j++) {
-									if (a == b || commonNeighbors[i] == commonNeighbors[j]) {
-										printf ("wtf!\n");
-										exit(1);
-									}
-									vertex e = commonNeighbors[i];
-                                                                        vertex f = commonNeighbors[j];
-									printf ("noninduced-chord: %d %d %d %d\n", a<b?a:b, a>b?a:b, e<f?e:f, e>f?e:f);
-									{
-        									if (less_than (f, e, graph))
-                									swap (e, f);
-										int flag = -1;
-        									for (size_t k = 0; k < orderedGraph[e].size(); k++)
-                									if (orderedGraph[e][k] == f) {
-                        									flag = 1;
-												break;
-											}
-										if (flag == -1)
-											printf ("induced-chord: %d %d %d %d\n", a<b?a:b, a>b?a:b, e<f?e:f, e>f?e:f);
-									}
-
-								}
-                			}	
-				}
-			}
-		}
-        }
-        return tc;
-}
-
 void base_ktruss (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* maxtruss, string vfile, FILE* fp) {
 
 	const auto t1 = chrono::steady_clock::now();
