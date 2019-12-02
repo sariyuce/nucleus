@@ -166,7 +166,10 @@ void reportSubgraph (int variant, vertex index, unordered_map<vertex, vertex>& o
 		for (vertex i = 0; i < component.size(); i++) {
 			if (component[i] == index) {
 				vset.push_back (get<0>((*ax.el)[i]));
-				vset.push_back (get<1>((*ax.el)[i]));
+				if (get<1>((*ax.el)[i]) > 0)
+					vset.push_back (get<1>((*ax.el)[i]));
+				else
+					vset.push_back (-1 * get<1>((*ax.el)[i]));
 
 				if (skeleton[index].children.empty()) {
 //					printf ("%d %d ", get<0>((*ax.el)[i]), get<1>((*ax.el)[i]));
@@ -188,9 +191,9 @@ void reportSubgraph (int variant, vertex index, unordered_map<vertex, vertex>& o
 		}
 	}
 
-	if (skeleton[index].children.empty()) {
+//	if (skeleton[index].children.empty()) {
 //		printf ("\n");
-	}
+//	}
 	bool pass = true;
 	pass = pullChildrenSets (fp, skeleton[index].children, orderInFile, vset, skeleton);
 	if (!pass) {
@@ -207,11 +210,37 @@ void reportSubgraph (int variant, vertex index, unordered_map<vertex, vertex>& o
 
 	// edge density
 	edge edge_count = 0;
+//	printf ("vset.size: %d\n", vset.size());
 	if (vset.size() <= UPPERBOUND)
-		for (size_t i = 0; i < vset.size(); i++)
-			edge_count += commons (vset, graph[vset[i]]);
+		for (size_t i = 0; i < vset.size(); i++) {
+			vertex u = vset[i];
+			vector<vertex> ret;
+			outgoings (graph[u], ret);
+			vector<vertex> abc;
+			for (auto v: ret)
+				abc.push_back(graph[u][v]);
+			sort (abc.begin(), abc.end());
+			edge_count += commons (vset, ret);
 
-	edge_count /= 2;
+			ret.clear();
+			abc.clear();
+			incomings (graph[u], ret);
+			for (auto v: ret)
+				abc.push_back (M2P (graph[u][v]));
+			sort (abc.begin(), abc.end());
+			edge_count += commons (vset, abc);
+
+			ret.clear();
+			abc.clear();
+			undirecteds (graph[u], ret);
+			for (auto v: ret)
+				abc.push_back (graph[u][v]);
+			sort (abc.begin(), abc.end());
+			edge_count += commons (vset, abc);
+
+		}
+
+//	edge_count /= 2;
 	skeleton[index].nEdge = edge_count;
 	skeleton[index].size = vset.size();
 	if (vset.size() > 1)
@@ -325,6 +354,8 @@ void presentNuclei (int variant, vector<subcore>& skeleton, vector<vertex>& comp
 
 // ids of only incoming edges
 void incomings (vector<vertex>& a, vector<vertex>& ret) {
+	if (a.empty())
+		return;
 	vertex i = 1, ni = a[0];
 	while (1) {
 		if (i == a[0]) {

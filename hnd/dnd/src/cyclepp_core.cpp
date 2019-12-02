@@ -1,14 +1,14 @@
 #include "main.h"
 
-vertex count_inps (Graph& dgraph, vector<vertex>& TC) {
+vertex count_cyclepps (Graph& dgraph, vector<vertex>& TC) {
 	vertex count = 0;
 	for (vertex u = 0; u < dgraph.size(); u++) {
 		vector<vertex> ret;
-		asymmetric_undirecteds (u, dgraph[u], ret); // u-v edge is undirected s.t. u < v
+		outgoings (dgraph[u], ret);
 		for (vertex r = 0; r < ret.size(); r++) {
 			vertex v = dgraph[u][ret[r]];
 			vector<vertex> ints;
-			inter (2, 2, dgraph, u, v, ints);
+			inter (0, 0, dgraph, u, v, ints);
 			for (size_t k = 0; k < ints.size(); k+=2) {
 				vertex w = dgraph[u][ints[k]];
 				TC[u]++;
@@ -18,28 +18,28 @@ vertex count_inps (Graph& dgraph, vector<vertex>& TC) {
 			}
 		}
 	}
-	printf ("total inp count: %d\n", count);
+	printf ("total cyclepp count: %d\n", count);
 	return count;
 }
 
-void inp_core (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* maxK, FILE* fp) {
+void cyclepp_core (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* maxK, FILE* fp) {
 	const auto t1 = chrono::steady_clock::now();
-	// Inp counting for each node
+	// Cyclepp counting for each node
 	vertex nVtx = graph.size();
 	vector<vertex> TC (nVtx, 0);
-	lol tric = count_inps (graph, TC);
-	fprintf (fp, "# outps: %lld\n", tric);
+	lol tric = count_cyclepps (graph, TC);
+	fprintf (fp, "# cyclepps: %lld\n", tric);
 	const auto t2 = chrono::steady_clock::now();
-	print_time (fp, "Outp counting: ", t2 - t1);
+	print_time (fp, "Cyclepp counting: ", t2 - t1);
 
 	// Peeling
 	const auto p1 = chrono::steady_clock::now();
 	K.resize (nVtx, -1);
 	Naive_Bucket nBucket;
 	nBucket.Initialize (nEdge, nVtx);
-	// each node and its inp count is inserted to bucket
+	// each node and its oupt counts is inserted to bucket
 	for (vertex i = 0; i < graph.size(); i++) {
-		printf ("inp count of %d is %d\n", i, TC[i]);
+		printf ("cyclepp count of %d is %d\n", i, TC[i]);
 		if (TC[i] > 0)
 			nBucket.Insert (i, TC[i]);
 		else
@@ -51,32 +51,35 @@ void inp_core (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vert
 		if (nBucket.PopMin(&u, &val) == -1) // if the bucket is empty
 			break;
 		tc_u = K[u] = val;
-		// u as the circle node
+		// 4 cases
 		vector<vertex> ret;
 		undirecteds (graph[u], ret);
 		for (vertex r = 0; r < ret.size(); r++) {
-			vertex v = graph[u][ret[r]]; // circle node
-			if (K[v] == -1) { // v might not be a part of inp, but must have -1 kappa if so anyways
+			vertex v = graph[u][ret[r]];
+			if (K[v] == -1) {
 				vector<vertex> ints;
-				inter (2, 2, graph, u, v, ints);
+				inter (0, 2, graph, u, v, ints); // purple
 				for (auto k = 0; k < ints.size(); k+=2) {
-					vertex w = graph[u][ints[k]]; // triangle node
+					vertex w = graph[v][ints[k+1]];
 					checkAndDec (K[w], -1, w, v, &nBucket, tc_u);
 				}
-			}
-		}
-		// u as the triangle node
-		ret.clear();
-		incomings (graph[u], ret);
-		for (vertex r = 0; r < ret.size(); r++) {
-			vertex v = M2P (graph[u][ret[r]]); // circle node orbit
-			if (K[v] == -1) { // v might not be a part of outp, but must have -1 kappa if so anyways
-				vector<vertex> ints;
-				inter (1, 0, graph, u, v, ints);
+				ints.clear();
+				inter (0, 1, graph, u, v, ints); // red
 				for (auto k = 0; k < ints.size(); k+=2) {
-					vertex w = M2P (graph[u][ints[k]]); // circle node
-					if (v < w) // otherwise v-w pair is processed twice
-						checkAndDec (K[w], -1, w, v, &nBucket, tc_u);
+					vertex w = M2P (graph[v][ints[k+1]]);
+					checkAndDec (K[w], -1, w, v, &nBucket, tc_u);
+				}
+				ints.clear();
+				inter (2, 0, graph, u, v, ints); // green
+				for (auto k = 0; k < ints.size(); k+=2) {
+					vertex w = graph[u][ints[k]];
+					checkAndDec (K[w], -1, w, v, &nBucket, tc_u);
+				}
+				ints.clear();
+				inter (1, 0, graph, u, v, ints); // blue
+				for (auto k = 0; k < ints.size(); k+=2) {
+					vertex w = M2P (graph[u][ints[k]]);
+					checkAndDec (K[w], -1, w, v, &nBucket, tc_u);
 				}
 			}
 		}
@@ -94,24 +97,24 @@ void inp_core (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vert
 	return;
 }
 
-void inp_core_SUBS (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* maxK, FILE* fp, string vfile) {
+void cyclepp_core_SUBS (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* maxK, FILE* fp, string vfile) {
 	const auto t1 = chrono::steady_clock::now();
-	// Inp counting for each node
+	// Cyclepp counting for each node
 	vertex nVtx = graph.size();
 	vector<vertex> TC (nVtx, 0);
-	lol tric = count_inps (graph, TC);
-	fprintf (fp, "# outps: %lld\n", tric);
+	lol tric = count_cyclepps (graph, TC);
+	fprintf (fp, "# cyclepps: %lld\n", tric);
 	const auto t2 = chrono::steady_clock::now();
-	print_time (fp, "Outp counting: ", t2 - t1);
+	print_time (fp, "Cyclepp counting: ", t2 - t1);
 
 	// Peeling
 	const auto p1 = chrono::steady_clock::now();
 	K.resize (nVtx, -1);
 	Naive_Bucket nBucket;
 	nBucket.Initialize (nEdge, nVtx);
-	// each node and its inp count is inserted to bucket
+	// each node and its oupt counts is inserted to bucket
 	for (vertex i = 0; i < graph.size(); i++) {
-		printf ("inp count of %d is %d\n", i, TC[i]);
+		printf ("cyclepp count of %d is %d\n", i, TC[i]);
 		if (TC[i] > 0)
 			nBucket.Insert (i, TC[i]);
 		else
@@ -144,31 +147,38 @@ void inp_core_SUBS (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K,
 		}
 
 		tc_u = K[u] = val;
-		// u as the circle node
+		// 4 cases
 		vector<vertex> ret;
 		undirecteds (graph[u], ret);
 		for (vertex r = 0; r < ret.size(); r++) {
-			vertex v = graph[u][ret[r]]; // circle node
+			vertex v = graph[u][ret[r]];
 			vector<vertex> ints;
-			inter (2, 2, graph, u, v, ints);
+			inter (0, 2, graph, u, v, ints); // purple
 			for (auto k = 0; k < ints.size(); k+=2) {
-				vertex w = graph[u][ints[k]]; // triangle node
-//				checkAndDec (K[w], -1, w, v, &nBucket, tc_u);
+				vertex w = graph[v][ints[k+1]];
+//					checkAndDec (K[w], -1, w, v, &nBucket, tc_u);
 				checkAndDecAndHier (w, v, &nBucket, tc_u, u, hierarchy, &nSubcores, K, skeleton, component, unassigned, relations);
 			}
-		}
-		// u as the triangle node
-		ret.clear();
-		incomings (graph[u], ret);
-		for (vertex r = 0; r < ret.size(); r++) {
-			vertex v = M2P (graph[u][ret[r]]); // circle node orbit
-			vector<vertex> ints;
-			inter (1, 0, graph, u, v, ints);
+			ints.clear();
+			inter (0, 1, graph, u, v, ints); // red
 			for (auto k = 0; k < ints.size(); k+=2) {
-				vertex w = M2P (graph[u][ints[k]]); // circle node
-				if (v < w) // otherwise v-w pair is processed twice
-					checkAndDecAndHier (w, v, &nBucket, tc_u, u, hierarchy, &nSubcores, K, skeleton, component, unassigned, relations);
+				vertex w = M2P (graph[v][ints[k+1]]);
 //					checkAndDec (K[w], -1, w, v, &nBucket, tc_u);
+				checkAndDecAndHier (w, v, &nBucket, tc_u, u, hierarchy, &nSubcores, K, skeleton, component, unassigned, relations);
+			}
+			ints.clear();
+			inter (2, 0, graph, u, v, ints); // green
+			for (auto k = 0; k < ints.size(); k+=2) {
+				vertex w = graph[u][ints[k]];
+//					checkAndDec (K[w], -1, w, v, &nBucket, tc_u);
+				checkAndDecAndHier (w, v, &nBucket, tc_u, u, hierarchy, &nSubcores, K, skeleton, component, unassigned, relations);
+			}
+			ints.clear();
+			inter (1, 0, graph, u, v, ints); // blue
+			for (auto k = 0; k < ints.size(); k+=2) {
+				vertex w = M2P (graph[u][ints[k]]);
+//					checkAndDec (K[w], -1, w, v, &nBucket, tc_u);
+				checkAndDecAndHier (w, v, &nBucket, tc_u, u, hierarchy, &nSubcores, K, skeleton, component, unassigned, relations);
 			}
 		}
 
@@ -191,7 +201,7 @@ void inp_core_SUBS (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K,
 		const auto b2 = chrono::steady_clock::now();
 
 		print_time (fp, "Building hierarchy time: ", b2 - b1);
-		print_time (fp, "Total inp-core nucleus decomposition time (excluding density computation): ", (p2 - p1) + (t2 - t1) + (b2 - b1));
+		print_time (fp, "Total cyclepp-core nucleus decomposition time (excluding density computation): ", (p2 - p1) + (t2 - t1) + (b2 - b1));
 
 		fprintf (fp, "# subcores: %d\t\t # subsubcores: %d\t\t |V|: %d\n", nSubcores, skeleton.size(), graph.size());
 
@@ -200,7 +210,7 @@ void inp_core_SUBS (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K,
 		presentNuclei (12, skeleton, component, graph, nEdge, hp, vfile, fp);
 		const auto d2 = chrono::steady_clock::now();
 
-		print_time (fp, "Total inp-core nucleus decomposition time: ", (p2 - p1) + (t2 - t1) + (b2 - b1) + (d2 - d1));
+		print_time (fp, "Total cyclepp-core nucleus decomposition time: ", (p2 - p1) + (t2 - t1) + (b2 - b1) + (d2 - d1));
 	}
 
 	for (auto i = 0; i < K.size(); i++)

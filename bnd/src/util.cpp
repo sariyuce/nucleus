@@ -313,6 +313,17 @@ void weighted_projection (Graph& left, Graph& right, string filename) {
 	}
 	nedge /= 2;
 
+	///////////////////////
+	printf ("nVtx: %d\n", wg.size());
+	for (int i = 0; i < wg.size(); i++)
+		if (wg[i].size() > 0)
+			printf ("deg of %d is %d\n", i, wg[i].size());
+	printf ("nEdge: %d\n", nedge);
+	exit(1);
+
+	
+	
+	//
 	string fn = filename + "_W_projection";
 	writeWeightedRegularBinary (fn, wg.size(), nedge, wg);
 }

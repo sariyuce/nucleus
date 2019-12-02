@@ -1,5 +1,6 @@
 #include "main.h"
 
+
 #define MAXLINE 1000000
 #define WRITE_BINARY
 
@@ -180,6 +181,7 @@ void readGraph (char *filename, vector<vector<VtxType>>& graph, EdgeType* nEdge)
 	}
 #endif
 
+
 	return;
 }
 
@@ -301,13 +303,46 @@ void readDirectedGraph (char *filename, vector<vector<VtxType>>& graph, EdgeType
 		readEdgeListInDirectedFormat<VtxType, EdgeType> (false, filename, graph, nEdge);
 
 #ifdef WRITE_BINARY
+#ifndef SIGNS
 	if (ext != ".bin") {
 		vertex nVtx = graph.size();
 		writeBinary<VtxType, EdgeType> (filename, nVtx, *nEdge, graph);
 		printf ("Binary graph is written\n");
 	}
 #endif
+#endif
 
+#ifdef SIGNS
+	FILE* fp = fopen(filename, "r");
+	char* line = (char*) malloc (sizeof (char) * MAXLINE);
+	// skip comments
+	do
+		fgets(line, MAXLINE, fp);
+	while (line[0] == '%' || line[0] == '#');
+
+	signs.resize(graph.size());
+	for (vertex i = 0; i < graph.size(); i++)
+		signs[i].resize (graph[i].size(), 0);
+
+	vertex u, v, sign;
+	while (fgets(line, MAXLINE, fp)) {
+		stringstream ss (line);
+		ss >> u >> v >> sign;
+		if (u == v)
+			continue;
+		if (ind (v, graph[u]) >= signs[u].size()) {
+			printf ("%d %d %d \t\t%d is ge to %d\n", u, v, sign, ind (v, graph[u]), signs[u].size());
+			exit (1);
+		}
+		signs[u][ind (v, graph[u])] = sign;
+	}
+	fclose (fp);
+
+//	for (auto u = 0; u < graph.size(); u++)
+//		for (auto i = 0; i < graph[u].size(); i++)
+//			printf ("%d %d with sign %d\n", u, graph[u][i], signs[u][i]);
+
+#endif
 	return;
 }
 

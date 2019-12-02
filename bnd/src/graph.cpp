@@ -313,7 +313,8 @@ void readBipartiteOut (char *filename, EdgeType* nEdge, vector<vector<VtxType>>&
 	string dum, sum;
 	unordered_map<pair<int, int>, int> mp;
 	int maxU = 0, maxV = 0;
-	while (fgets (line, MAXLINE, fp) != NULL) {
+	
+	do {
 		stringstream ss (line);
 		ss >> u >> v;
 		auto at = mp.find (make_pair(u, v));
@@ -341,12 +342,33 @@ void readBipartiteOut (char *filename, EdgeType* nEdge, vector<vector<VtxType>>&
 			print_time (stdout, "time: ", t2 - t1);
 
 		}
-	}
+	}  while (fgets (line, MAXLINE, fp) != NULL);
+
 	for (size_t i = 0; i < leftGraph.size(); i++)
 		sort (leftGraph[i].begin(), leftGraph[i].end());
 
 	for (size_t i = 0; i < rightGraph.size(); i++)
 		sort (rightGraph[i].begin(), rightGraph[i].end());
+
+/*
+ 	for (int i = 0; i < leftGraph.size(); i++) {
+		printf ("size of %d is %d\n", i, leftGraph[i].size());
+		for (int j = 0; j < leftGraph[i].size(); j++) {
+			for (int k = j+1; k < leftGraph[i].size(); k++) {
+				printf ("edge %d %d\n", leftGraph[i][j], leftGraph[i][k]);
+			}
+		}
+	}
+
+*/
+ 	for (int i = 0; i < rightGraph.size(); i++) {
+                printf ("size of %d is %d\n", i, rightGraph[i].size());
+                for (int j = 0; j < rightGraph[i].size(); j++) {
+                        for (int k = j+1; k < rightGraph[i].size(); k++) {
+                                printf ("edge %d %d\n", rightGraph[i][j], rightGraph[i][k]);
+                        }
+                }
+        }
 
 	fclose (fp);
 

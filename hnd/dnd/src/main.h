@@ -24,10 +24,13 @@
 #include <sys/stat.h>
 #include "bucket.h"
 
+//#define SIGNS
 using namespace std;
 
+#define DEG_DIST 0
+#define COUNT_ONLY 0 // make it 1 to count motifs only (and terminate)
 #define LOWERBOUND 0
-#define UPPERBOUND 1000000 // compute densities of subgraphs with at most this size, set to INT_MAX to compute all -- takes a lot of time
+#define UPPERBOUND 100 // 500 // compute densities of subgraphs with at most this size, set to INT_MAX to compute all -- takes a lot of time
 #define THRESHOLD 0.0
 #define PRIME 251231 // for hash function
 
@@ -43,6 +46,14 @@ typedef chrono::duration<double> tms;
 typedef tuple<vertex, vertex> couple;
 typedef tuple<vertex, vertex, vertex> triple;
 
+#ifdef SIGNS
+	extern Graph signs;
+	extern int MODE;
+#endif
+
+#ifdef ORBITS
+	extern unordered_map<couple, int> orb1, orb2, orb3;
+#endif
 
 struct subcore {
 	bool visible;
@@ -94,19 +105,71 @@ inline void hash_combine(std::size_t & seed, const T & v)
 	seed ^= hasher(v) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
 }
 
-namespace std
+namespace std{
+namespace
 {
-template<typename S, typename T> struct hash<pair<S, T>>
+
+// Code from boost
+// Reciprocal of the golden ratio helps spread entropy
+//     and handles duplicates.
+// See Mike Seymour in magic-numbers-in-boosthash-combine:
+//     https://stackoverflow.com/questions/4948780
+
+template <class T>
+inline void hash_combine(std::size_t& seed, T const& v)
 {
-	inline size_t operator()(const pair<S, T> & v) const
+	seed ^= hash<T>()(v) + 0x9e3779b9 + (seed<<6) + (seed>>2);
+}
+
+// Recursive template code derived from Matthieu M.
+template <class Tuple, size_t Index = std::tuple_size<Tuple>::value - 1>
+struct HashValueImpl
+{
+	static void apply(size_t& seed, Tuple const& tuple)
 	{
-		size_t seed = 0;
-		::hash_combine(seed, v.first);
-		::hash_combine(seed, v.second);
-		return seed;
+		HashValueImpl<Tuple, Index-1>::apply(seed, tuple);
+		hash_combine(seed, get<Index>(tuple));
+	}
+};
+
+template <class Tuple>
+struct HashValueImpl<Tuple,0>
+{
+	static void apply(size_t& seed, Tuple const& tuple)
+	{
+		hash_combine(seed, get<0>(tuple));
 	}
 };
 }
+
+template <typename ... TT>
+struct hash<std::tuple<TT...>>
+{
+	size_t
+	operator()(std::tuple<TT...> const& tt) const
+	{
+		size_t seed = 0;
+		HashValueImpl<std::tuple<TT...> >::apply(seed, tt);
+		return seed;
+	}
+
+};
+}
+
+//namespace std
+//{
+//template<typename S, typename T> struct hash<pair<S, T>>
+//{
+//	inline size_t operator()(const pair<S, T> & v) const
+//	{
+//		size_t seed = 0;
+//		::hash_combine(seed, v.first);
+//		::hash_combine(seed, v.second);
+//		return seed;
+//	}
+//};
+//}
+
 
 inline bool uniquify (vector<vertex>& vertices) {
 	unordered_map<vertex, bool> hermap;
@@ -423,6 +486,19 @@ void inp_core (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vert
 void cyclepp_truss (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* maxK, FILE* fp);
 void cyclepp_core (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* maxK, FILE* fp);
 
+void cycle_truss_SUBS (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* maxK, FILE* fp, string vfile);
+void cycle_core_SUBS (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* maxK, FILE* fp, string vfile);
+void acyclic_truss_SUBS (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* maxK, FILE* fp, string vfile);
+void acyclic_core_SUBS (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* maxK, FILE* fp, string vfile);
+void outp_truss_SUBS (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* maxK, FILE* fp, string vfile);
+void outp_core_SUBS (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* maxK, FILE* fp, string vfile);
+void cyclep_truss_SUBS (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* maxK, FILE* fp, string vfile);
+void cyclep_core_SUBS (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* maxK, FILE* fp, string vfile);
+void inp_truss_SUBS (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* maxK, FILE* fp, string vfile);
+void inp_core_SUBS (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* maxK, FILE* fp, string vfile);
+void cyclepp_truss_SUBS (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* maxK, FILE* fp, string vfile);
+void cyclepp_core_SUBS (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* maxK, FILE* fp, string vfile);
+
 
 inline bool exists (int val, vector<int>& v) {
 	for (size_t i = 1; i < v.size(); i++) {
@@ -450,6 +526,21 @@ inline void checkAndDec (vertex kw, vertex kv, vertex w, vertex v, Naive_Bucket*
 			(*nBucket).DecVal(w);
 	}
 }
+
+inline void checkAndDecAndHier (vertex w, vertex v, Naive_Bucket* nBucket, vertex tc, vertex u,
+		bool hierarchy, vertex* nSubcores, vector<vertex>& K, vector<subcore>& skeleton,
+		vector<vertex>& component, vector<vertex>& unassigned, vector<vp>& relations) {
+	if (K[v] == -1 && K[w] == -1) {
+		if ((*nBucket).CurrentValue(v) > tc)
+			(*nBucket).DecVal(v);
+		if ((*nBucket).CurrentValue(w) > tc)
+			(*nBucket).DecVal(w);
+	}
+	else if (hierarchy)
+		createSkeleton (u, {v, w}, nSubcores, K, skeleton, component, unassigned, relations);
+}
+
+
 
 
 

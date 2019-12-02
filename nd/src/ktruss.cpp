@@ -1,5 +1,24 @@
 #include "main.h"
 
+float calculateSD(vector<int>& data)
+{
+    float sum = 0.0, mean, standardDeviation = 0.0;
+
+    int i;
+
+    for(i = 0; i < data.size(); ++i)
+    {
+        sum += data[i];
+    }
+
+    mean = sum/data.size();
+
+    for(i = 0; i < data.size(); ++i)
+        standardDeviation += pow(data[i] - mean, 2);
+
+    return sqrt(standardDeviation / data.size());
+}
+
 inline int checkConnectedness (Graph& graph, Graph& orderedGraph, Graph& TC, vertex u, vertex v, vector<vertex>* xel = NULL) {
 
 	vertex a = u, b = v;
@@ -46,6 +65,57 @@ lol countTriangles (Graph& graph, Graph& orderedGraph, Graph& TC) {
 	return tc;
 }
 
+
+lol countChords (Graph& graph, Graph& orderedGraph, Graph& TC) {
+
+        lol tc = 0;
+        for (size_t i = 0; i < graph.size(); i++) {
+                for (size_t j = 0; j < graph[i].size(); j++) {
+                        for (size_t k = j + 1; k < graph[i].size(); k++) {
+                                vertex u = graph[i][j];
+                                vertex v = graph[i][k];
+				
+				{
+				vertex a = u, b = v;
+        			if (less_than (b, a, graph))
+    			        	swap (a, b);
+        			for (size_t k = 0; k < orderedGraph[a].size(); k++)
+                			if (orderedGraph[a][k] == b) {
+						// 'i a b' is a triangle
+						vector<vertex> commonNeighbors;
+                				intersection (graph[a], graph[b], commonNeighbors);
+						if (commonNeighbors.size() > 1)
+							for (int i = 0; i < commonNeighbors.size()-1; i++)
+								for (int j = i+1; j < commonNeighbors.size(); j++) {
+									if (a == b || commonNeighbors[i] == commonNeighbors[j]) {
+										printf ("wtf!\n");
+										exit(1);
+									}
+									vertex e = commonNeighbors[i];
+                                                                        vertex f = commonNeighbors[j];
+									printf ("noninduced-chord: %d %d %d %d\n", a<b?a:b, a>b?a:b, e<f?e:f, e>f?e:f);
+									{
+        									if (less_than (f, e, graph))
+                									swap (e, f);
+										int flag = -1;
+        									for (size_t k = 0; k < orderedGraph[e].size(); k++)
+                									if (orderedGraph[e][k] == f) {
+                        									flag = 1;
+												break;
+											}
+										if (flag == -1)
+											printf ("induced-chord: %d %d %d %d\n", a<b?a:b, a>b?a:b, e<f?e:f, e>f?e:f);
+									}
+
+								}
+                			}	
+				}
+			}
+		}
+        }
+        return tc;
+}
+
 void base_ktruss (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* maxtruss, string vfile, FILE* fp) {
 
 	const auto t1 = chrono::steady_clock::now();
@@ -68,6 +138,8 @@ void base_ktruss (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, v
 		TC[i].resize (orderedGraph[i].size(), 0);
 
 	lol tric;
+
+
 #ifndef LOAD_TRIS
 	// Compute
 	tric = countTriangles (graph, orderedGraph, TC);
@@ -91,12 +163,14 @@ void base_ktruss (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, v
 	// Peeling
 	const auto p1 = chrono::steady_clock::now();
 	K.resize (nEdge, -1);
+	K.resize (el.size(), -1);
 	printf ("nEdge: %d\n", nEdge);
 	Naive_Bucket nBucket;
 	nBucket.Initialize (nVtx, nEdge); // maximum triangle count of an edge is nVtx
 	vertex id = 0;
 	for (size_t i = 0; i < orderedGraph.size(); i++)
 		for (size_t j = 0; j < orderedGraph[i].size(); j++) {
+		////	printf ("tric %d %d\n", id, TC[i][j]);
 			if (TC[i][j] > 0)
 				nBucket.Insert (id++, TC[i][j]);
 			else
@@ -186,6 +260,35 @@ void base_ktruss (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, v
 
 		print_time (fp, "Total 2,3 nucleus decomposition time: ", (p2 - p1) + (t2 - t1) + (b2 - b1) + (d2 - d1));
 	}
+/*
+	vector<vector<vertex>> alldata (graph.size()+1);
+	for (vertex i = 0; i < K.size(); i++) {
+		alldata[el[i].first].push_back (K[i]);
+		alldata[el[i].second].push_back (K[i]);
+	}
+	for (vertex i = 0; i < graph.size(); i++) {
+		if (graph[i].size() > 0) {
+			sort (alldata[i].begin(), alldata[i].end());
+			int max = alldata[i][alldata[i].size()-1];
+			int min = alldata[i][0];
+			float stdev = calculateSD (alldata[i]);
+			if (max > min) {
+				printf ("%d -- count: %d\tstdev/range: %f\t\t%d\t%d\t\t", i, graph[i].size(), stdev/(max-min), min, max, stdev);
+				for (auto a : alldata[i])
+					printf ("%d ", a);
+				printf ("\n");
+			}
+
+		}
+	}
+*/
+
+
+
+
+
+
+
 }
 
 // per edge

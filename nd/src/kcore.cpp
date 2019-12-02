@@ -14,6 +14,7 @@ void base_kcore (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, ve
 	Naive_Bucket nBucket;
 	nBucket.Initialize(maxDeg, nVtx);
 	for (vertex i = 0; i < graph.size(); i++) {
+		//printf ("deg of %d is %d\n", i, graph[i].size());
 		if (graph[i].size() > 0)
 			nBucket.Insert (i, graph[i].size());
 		else
