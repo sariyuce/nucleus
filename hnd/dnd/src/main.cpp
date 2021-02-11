@@ -70,28 +70,28 @@ int main (int argc, char *argv[]) {
 	string gname = tmp.substr (tmp.find_last_of("/") + 1);
 
 	string nd (argv[2]);
-
-	if (!(
-			nd == "cycle-truss" ||
-			nd == "cycle-core" ||
-			nd == "acyclic-truss" ||
-			nd == "acyclic-core" ||
-			nd == "outp-truss" ||
-			nd == "outp-core" ||
-			nd == "cyclep-truss" ||
-			nd == "cyclep-core" ||
-			nd == "inp-truss" ||
-			nd == "inp-core" ||
-			nd == "cyclepp-truss" ||
-			nd == "cyclepp-core")) {
-		printf ("Invalid algorithm, options are cycle\n"
-				"acyclic\n"
-				"out-p\n"
-				"cycle-p\n"
-				"in-p\n"
-				"cycle-pp\n");
-		exit(1);
-	}
+//
+//	if (!(
+//			nd == "cycle-truss" ||
+//			nd == "cycle-core" ||
+//			nd == "acyclic-truss" ||
+//			nd == "acyclic-core" ||
+//			nd == "outp-truss" ||
+//			nd == "outp-core" ||
+//			nd == "cyclep-truss" ||
+//			nd == "cyclep-core" ||
+//			nd == "inp-truss" ||
+//			nd == "inp-core" ||
+//			nd == "cyclepp-truss" ||
+//			nd == "cyclepp-core")) {
+//		printf ("Invalid algorithm, options are cycle\n"
+//				"acyclic\n"
+//				"out-p\n"
+//				"cycle-p\n"
+//				"in-p\n"
+//				"cycle-pp\n");
+//		exit(1);
+//	}
 
 	// read the graph, give sorted edges in graph
 	edge nEdge = 0;
@@ -104,9 +104,31 @@ int main (int argc, char *argv[]) {
 
 					Graph rawgraph;
 					readDirectedGraph<vertex, edge> (filename, rawgraph, &nEdge);
+#ifdef SIGNS
+	if (0){
+		for (int i = 0; i < rawgraph.size(); i++) {
+			vector<vertex> ret;
+                	outgoings (rawgraph[i], ret);
+                	for (vertex r = 0; r < ret.size(); r++) {
+                        	vertex v = rawgraph[i][ret[r]];
+				vertex s = signs[i][ind (v, rawgraph[i])];
+				printf ("edge %d %d %d\n", i, v, s);
+			}
+		}
 
+		for (int i = 0; i < rawgraph.size(); i++) {
+                        vector<vertex> ret;
+                        incomings (rawgraph[i], ret);
+                        for (vertex r = 0; r < ret.size(); r++) {
+                                vertex v = M2P (rawgraph[i][ret[r]]);
+                                vertex s = signs[v][ind (i, rawgraph[v])];
+                                printf ("rev %d %d %d\n", v, i, s);
+                        }
+                }
+		exit (1);
 
-
+	}
+#endif
 
 
 
@@ -147,116 +169,126 @@ int main (int argc, char *argv[]) {
 			Graph graph (rawgraph);
 			unordered_map<int, bool> numbers;
 			istringstream iss(line);
-			while (iss >> num)
-			{
+			while (iss >> num) {
 				numbers.emplace(num, true);
 			}
 
+			Graph boundary (rawgraph);
+			unordered_map<int, bool> crossing;
+			// find the ones near the crossing line
+			for (int i = 0; i < boundary.size(); i++) {
+				if (!boundary[i].empty() && numbers.find(i) != numbers.end()) {
+					vector<int> newneigs;
+					int endOfOut = boundary[i][0];
+					// go over outgoing edges
+					for (int j = 1; j < endOfOut; j++) {
+						vertex v = boundary[i][j];
+						if (numbers.find(v) == numbers.end())
+							crossing.emplace (v, true);
+					}
+
+					//go over incoming edges
+					for (int j = endOfOut; j < boundary[i].size(); j++) {
+						vertex v = M2P(boundary[i][j]);
+						if (numbers.find(v) == numbers.end())
+							crossing.emplace (v, true);
+					}
+				}
+			}
 
 
-			// filter the graph to find the induced subgraph
-			int newE = 0;
+			unordered_map<int, bool> total (numbers);
+			for (auto& x: crossing)
+				total.emplace (x.first, true);
+
+
+			int totalE = 0;
 			// first ditch all the adj lists of non-existing nodes
-			for (int i = 0; i < graph.size(); i++) {
-				if (numbers.find(i) == numbers.end())
-					graph[i].clear();
+			for (int i = 0; i < boundary.size(); i++) {
+				if (total.find(i) == total.end())
+					boundary[i].clear();
 			}
 
 			// then ditch the non-existing nodes from adj lists of existing nodes
-			for (int i = 0; i < graph.size(); i++) {
-				if (!graph[i].empty()) {
+			for (int i = 0; i < boundary.size(); i++) {
+				if (!boundary[i].empty()) {
 					vector<int> newneigs;
-					int endOfOut = graph[i][0];
+					int endOfOut = boundary[i][0];
 					// go over outgoing edges
 					int newEndOfOut = 1;
 					for (int j = 1; j < endOfOut; j++) {
-						vertex v = graph[i][j];
-						if (numbers.find(v) != numbers.end()) {
-							newneigs.push_back (graph[i][j]);
+						vertex v = boundary[i][j];
+						if (total.find(v) != total.end()) {
+							newneigs.push_back (boundary[i][j]);
 							newEndOfOut++;
 						}
 					}
 
 					//go over incoming edges
-					for (int j = endOfOut; j < graph[i].size(); j++) {
-						vertex v = M2P(graph[i][j]);
-						if (numbers.find(v) != numbers.end())
-							newneigs.push_back (graph[i][j]);
+					for (int j = endOfOut; j < boundary[i].size(); j++) {
+						vertex v = M2P(boundary[i][j]);
+						if (total.find(v) != total.end())
+							newneigs.push_back (boundary[i][j]);
 					}
 
-					newE += newneigs.size();
+					totalE += newneigs.size();
 					newneigs.insert (newneigs.begin(), newEndOfOut);
-					graph[i].assign (newneigs.begin(), newneigs.end());
+					boundary[i].assign (newneigs.begin(), newneigs.end());
 				}
 			}
 
 
-			printf ("|V|: %d\t |E|: %d\t", numbers.size(), newE);
+			if (total.size() != numbers.size() + crossing.size())
+				printf ("sth is wrong: %d + %d != %d\n", numbers.size(), crossing.size(), total.size());
+			printf ("total \n");
+			printf ("|V|: %d\t |E|: %d\n", total.size(), totalE);
+			double cond;
 
-			if (nd == "cycle-core")
-				cycle_core_SUBS (graph, hierarchy, nEdge, K, &maxK, fp, vfile);
-		//		cycle_core (graph, hierarchy, nEdge, K, &maxK, fp);
-			else if (nd == "acyclic-core")
-				acyclic_core_SUBS (graph, hierarchy, nEdge, K, &maxK, fp, vfile);
-		//		acyclic_core (graph, hierarchy, nEdge, K, &maxK, fp);
-			else if (nd == "outp-core")
-				outp_core_SUBS (graph, hierarchy, nEdge, K, &maxK, fp, vfile);
-		//		outp_core (graph, hierarchy, nEdge, K, &maxK, fp);
-			else if (nd == "cyclep-core")
-				cyclep_core_SUBS (graph, hierarchy, nEdge, K, &maxK, fp, vfile);
-		//		cyclep_core (graph, hierarchy, nEdge, K, &maxK, fp);
-			else if (nd == "inp-core")
-				inp_core_SUBS (graph, hierarchy, nEdge, K, &maxK, fp, vfile);
-		//		inp_core (graph, hierarchy, nEdge, K, &maxK, fp);
-			else if (nd == "cyclepp-core")
-				cyclepp_core_SUBS (graph, hierarchy, nEdge, K, &maxK, fp, vfile);
-		//		cyclepp_core (graph, hierarchy, nEdge, K, &maxK, fp);
-			else if (nd == "cycle-truss")
+			if (nd == "cycle-truss")
+				cond = simple_count_cycles (boundary, numbers, crossing);
+			else if (nd == "acyclic-truss")
+				cond = simple_count_acyclics (boundary, numbers, crossing);
+			else if (nd == "outp-truss")
+				cond = simple_count_outps (boundary, numbers, crossing);
+			else if (nd == "cyclep-truss")
+				cond = simple_count_cycleps (boundary, numbers, crossing);
+			else if (nd == "inp-truss")
+				cond = simple_count_inps (boundary, numbers, crossing);
+			else if (nd == "cyclepp-truss")
+				cond = simple_count_cyclepps (boundary, numbers, crossing);
+
+			printf ("cond: %lf\n", cond);
+		}
+	}
+	else {
+		Graph graph (rawgraph);
+//		if (nd == "cycle-core")
+//				cycle_core_SUBS (graph, hierarchy, nEdge, K, &maxK, fp, vfile);
+//		//		cycle_core (graph, hierarchy, nEdge, K, &maxK, fp);
+//			else if (nd == "acyclic-core")
+//				acyclic_core_SUBS (graph, hierarchy, nEdge, K, &maxK, fp, vfile);
+//		//		acyclic_core (graph, hierarchy, nEdge, K, &maxK, fp);
+//			else if (nd == "outp-core")
+//				outp_core_SUBS (graph, hierarchy, nEdge, K, &maxK, fp, vfile);
+//		//		outp_core (graph, hierarchy, nEdge, K, &maxK, fp);
+//			else if (nd == "cyclep-core")
+//				cyclep_core_SUBS (graph, hierarchy, nEdge, K, &maxK, fp, vfile);
+//		//		cyclep_core (graph, hierarchy, nEdge, K, &maxK, fp);
+//			else if (nd == "inp-core")
+//				inp_core_SUBS (graph, hierarchy, nEdge, K, &maxK, fp, vfile);
+//		//		inp_core (graph, hierarchy, nEdge, K, &maxK, fp);
+//			else if (nd == "cyclepp-core")
+//				cyclepp_core_SUBS (graph, hierarchy, nEdge, K, &maxK, fp, vfile);
+//		//		cyclepp_core (graph, hierarchy, nEdge, K, &maxK, fp);
+
+			if (nd == "cycle-truss")
 				cycle_truss_SUBS (graph, hierarchy, nEdge, K, &maxK, fp, vfile);
 		//		cycle_truss (graph, hierarchy, nEdge, K, &maxK, fp);
 			else if (nd == "acyclic-truss")
 				acyclic_truss_SUBS (graph, hierarchy, nEdge, K, &maxK, fp, vfile);
 		//		acyclic_truss (graph, hierarchy, nEdge, K, &maxK, fp);
-			else if (nd == "outp-truss")
-				outp_truss_SUBS (graph, hierarchy, nEdge, K, &maxK, fp, vfile);
-		//		outp_truss (graph, hierarchy, nEdge, K, &maxK, fp);
-			else if (nd == "cyclep-truss")
-				cyclep_truss_SUBS (graph, hierarchy, nEdge, K, &maxK, fp, vfile);
-		//		cyclep_truss (graph, hierarchy, nEdge, K, &maxK, fp);
-			else if (nd == "inp-truss")
-				inp_truss_SUBS (graph, hierarchy, nEdge, K, &maxK, fp, vfile);
-		//		inp_truss (graph, hierarchy, nEdge, K, &maxK, fp);
-			else if (nd == "cyclepp-truss")
-				cyclepp_truss_SUBS (graph, hierarchy, nEdge, K, &maxK, fp, vfile);
-		//		cyclepp_truss (graph, hierarchy, nEdge, K, &maxK, fp);
-
-		}
-	}
-	else {
-		Graph graph (rawgraph);
-		if (nd == "cycle-core")
-				cycle_core_SUBS (graph, hierarchy, nEdge, K, &maxK, fp, vfile);
-		//		cycle_core (graph, hierarchy, nEdge, K, &maxK, fp);
-			else if (nd == "acyclic-core")
-				acyclic_core_SUBS (graph, hierarchy, nEdge, K, &maxK, fp, vfile);
-		//		acyclic_core (graph, hierarchy, nEdge, K, &maxK, fp);
-			else if (nd == "outp-core")
-				outp_core_SUBS (graph, hierarchy, nEdge, K, &maxK, fp, vfile);
-		//		outp_core (graph, hierarchy, nEdge, K, &maxK, fp);
-			else if (nd == "cyclep-core")
-				cyclep_core_SUBS (graph, hierarchy, nEdge, K, &maxK, fp, vfile);
-		//		cyclep_core (graph, hierarchy, nEdge, K, &maxK, fp);
-			else if (nd == "inp-core")
-				inp_core_SUBS (graph, hierarchy, nEdge, K, &maxK, fp, vfile);
-		//		inp_core (graph, hierarchy, nEdge, K, &maxK, fp);
-			else if (nd == "cyclepp-core")
-				cyclepp_core_SUBS (graph, hierarchy, nEdge, K, &maxK, fp, vfile);
-		//		cyclepp_core (graph, hierarchy, nEdge, K, &maxK, fp);
-			else if (nd == "cycle-truss")
-				cycle_truss_SUBS (graph, hierarchy, nEdge, K, &maxK, fp, vfile);
-		//		cycle_truss (graph, hierarchy, nEdge, K, &maxK, fp);
-			else if (nd == "acyclic-truss")
-				acyclic_truss_SUBS (graph, hierarchy, nEdge, K, &maxK, fp, vfile);
+			else if (nd == "acyclic-truss-RA")
+				acyclic_truss_SUBS_roleAware (graph, hierarchy, nEdge, K, &maxK, fp, vfile);
 		//		acyclic_truss (graph, hierarchy, nEdge, K, &maxK, fp);
 			else if (nd == "outp-truss")
 				outp_truss_SUBS (graph, hierarchy, nEdge, K, &maxK, fp, vfile);

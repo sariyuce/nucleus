@@ -1,5 +1,48 @@
 #include "main.h"
 
+double simple_count_cyclepps (Graph& dgraph, unordered_map<int, bool>& numbers, unordered_map<int, bool>& crossing) {
+	vertex cut = 0, vol = 0, count = 0;
+	for (vertex u = 0; u < dgraph.size(); u++) {
+		vector<vertex> ret;
+		outgoings (dgraph[u], ret);
+		for (vertex r = 0; r < ret.size(); r++) {
+			vertex v = dgraph[u][ret[r]];
+			vector<vertex> ints;
+			inter (0, 0, dgraph, u, v, ints);
+			for (size_t k = 0; k < ints.size(); k+=2) {
+				vertex w = dgraph[u][ints[k]];
+
+				int asdf = 0;
+				if (crossing.find(u) != crossing.end())
+					asdf++;
+				if (crossing.find(v) != crossing.end())
+					asdf++;
+				if (crossing.find(w) != crossing.end())
+					asdf++;
+
+				if (asdf < 3) {
+					if (numbers.find(u) != numbers.end())
+						vol++;
+					if (numbers.find(v) != numbers.end())
+						vol++;
+					if (numbers.find(w) != numbers.end())
+						vol++;
+					if (asdf > 0)
+						cut++;
+					if (asdf == 0)
+						count++;
+				}
+			}
+		}
+	}
+	printf ("cut: %d vol: %d -- cond: %lf\n", cut, vol, ((double) cut) / vol);
+
+	int nv = numbers.size();
+	printf ("count: %d numOfNodes: %d -- avg. motif degree: %lf\n", count, nv, ((double) count) / nv);
+
+	return ((double) cut) / vol;
+}
+
 vertex count_cyclepps (Graph& dgraph, Graph& TC) {
 	vertex count = 0;
 	for (vertex u = 0; u < dgraph.size(); u++) {
