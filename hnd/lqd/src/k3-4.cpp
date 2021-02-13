@@ -100,7 +100,7 @@ void create_triangleList (Graph& orderedGraph, vector<vp>& el, Graph& orderedTri
 }
 
 // per triangle
-lol count4cliques (Graph& graph, Graph& orderedGraph, vector<vp>& el, vector<vertex>& xel, Graph& orderedTris, vector<vt>& tris, vector<vertex>& xtris, Graph& FC) {
+lol count4cliques (Graph& graph, Graph& orderedGraph, vector<vp>& el, vector<vertex>& xel, Graph& orderedTris, vector<vt>& tris, vector<vertex>& xtris, Graph& FC, vector<int>& gender, int labelType) {
 
 	lol fc = 0;
 	for (auto t : tris) {
@@ -116,12 +116,21 @@ lol count4cliques (Graph& graph, Graph& orderedGraph, vector<vp>& el, vector<ver
 
 			if (a == b && a == c) {
 				vertex x = a;
-				increment (u, v, w, xtris, el, xel, orderedTris, graph, FC);
-				increment (u, v, x, xtris, el, xel, orderedTris, graph, FC);
-				increment (u, w, x, xtris, el, xel, orderedTris, graph, FC);
-				increment (v, w, x, xtris, el, xel, orderedTris, graph, FC);
+				vector<int> nums {u, v, w, x};
+				if (genderCheck (gender, labelType, nums)) {
+					increment (u, v, w, xtris, el, xel, orderedTris, graph, FC);
+					increment (u, v, x, xtris, el, xel, orderedTris, graph, FC);
+					increment (u, w, x, xtris, el, xel, orderedTris, graph, FC);
+					increment (v, w, x, xtris, el, xel, orderedTris, graph, FC);
+
+					sort(nums.begin(), nums.end());
+					printf ("%d %d %d %d for %d %d %d %d\n",
+							gender[nums[0]], gender[nums[1]], gender[nums[2]], gender[nums[3]],
+							nums[0], nums[1], nums[2], nums[3]);
+
+					fc++;
+				}
 				i++; j++; k++;
-				fc++;
 			}
 			else {
 				vertex m = max ({a, b, c});
@@ -135,9 +144,10 @@ lol count4cliques (Graph& graph, Graph& orderedGraph, vector<vp>& el, vector<ver
 		}
 	}
 	return fc;
+	exit (1);
 }
 
-void base_k34 (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* max34, string vfile, FILE* fp) {
+void base_k34 (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* max34, string vfile, FILE* fp, vector<int>& gender, int labelType) {
 
 	const auto t1 = chrono::steady_clock::now();
 	vertex nVtx = graph.size();
@@ -160,7 +170,7 @@ void base_k34 (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vert
 
 	const auto f1 = chrono::steady_clock::now();
 	// 4-clique counting for each triangle
-	lol fc = count4cliques (graph, orderedGraph, el, xel, orderedTris, tris, xtris, FC);
+	lol fc = count4cliques (graph, orderedGraph, el, xel, orderedTris, tris, xtris, FC, gender, labelType);
 	fprintf (fp, "# 4-cliques: %lld\n", fc);
 	const auto f2 = chrono::steady_clock::now();
 	print_time (fp, "4-clique counting: ", f2 - f1);
@@ -224,19 +234,22 @@ void base_k34 (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vert
 		vector<vertex> commonNeighbors;
 		threeWay (graph[u], graph[v], graph[w], commonNeighbors);
 		for (auto x : commonNeighbors) { // decrease the FC of the neighbor triangles with greater FC
-			vertex p = getTriangleId (u, v, x, xtris, el, xel, orderedTris, graph);
-			vertex r = getTriangleId (u, w, x, xtris, el, xel, orderedTris, graph);
-			vertex s = getTriangleId (v, w, x, xtris, el, xel, orderedTris, graph);
-			if (K[p] == -1 && K[r] == -1 && K[s] == -1) {
-				if (nBucket.CurrentValue(p) > fc_t)
-					nBucket.DecVal(p);
-				if (nBucket.CurrentValue(r) > fc_t)
-					nBucket.DecVal(r);
-				if (nBucket.CurrentValue(s) > fc_t)
-					nBucket.DecVal(s);
+			vector<int> nums {u, v, w, x};
+			if (genderCheck (gender, labelType, nums)) {
+				vertex p = getTriangleId (u, v, x, xtris, el, xel, orderedTris, graph);
+				vertex r = getTriangleId (u, w, x, xtris, el, xel, orderedTris, graph);
+				vertex s = getTriangleId (v, w, x, xtris, el, xel, orderedTris, graph);
+				if (K[p] == -1 && K[r] == -1 && K[s] == -1) {
+					if (nBucket.CurrentValue(p) > fc_t)
+						nBucket.DecVal(p);
+					if (nBucket.CurrentValue(r) > fc_t)
+						nBucket.DecVal(r);
+					if (nBucket.CurrentValue(s) > fc_t)
+						nBucket.DecVal(s);
+				}
+				else if (hierarchy)
+					createSkeleton (t, {p, r, s}, &nSubcores, K, skeleton, component, unassigned, relations);
 			}
-			else if (hierarchy)
-				createSkeleton (t, {p, r, s}, &nSubcores, K, skeleton, component, unassigned, relations);
 		}
 
 		if (hierarchy)

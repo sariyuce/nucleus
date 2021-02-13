@@ -217,22 +217,26 @@ void reportSubgraph (int variant, vertex index, unordered_map<vertex, vertex>& o
 	if (vset.size() > 1)
 		skeleton[index].ed = (double) edge_count / (skeleton[index].size * (skeleton[index].size - 1) / 2);
 
-	//bool highlight = (skeleton[index].children.empty() && skeleton[index].ed >= THRESHOLD && skeleton[index].size >= LOWERBOUND) ? true : false;
-	//if (highlight)
-	//	fprintf(gp, "id: %lld  K: %d  |V|: %d  |E|: %d  ed: %.2lf  LEAF?: %d  parent id: %lld\t", index, skeleton[index].K, skeleton[index].size, skeleton[index].nEdge,
-	//			skeleton[index].ed,	skeleton[index].children.empty()?1:0, skeleton[index].parent);
+	bool highlight = (skeleton[index].children.empty() && skeleton[index].ed >= THRESHOLD && skeleton[index].size >= LOWERBOUND) ? true : false;
+	if (highlight)
+		fprintf(gp, "id: %lld  K: %d  |V|: %d  |E|: %d  ed: %.2lf  LEAF?: %d  parent id: %lld\t", index, skeleton[index].K, skeleton[index].size, skeleton[index].nEdge,
+				skeleton[index].ed,	skeleton[index].children.empty()?1:0, skeleton[index].parent);
 
 	fprintf(fp, "%d %d %d %d %lf %d %d\t", index, skeleton[index].K, skeleton[index].size, skeleton[index].nEdge, skeleton[index].ed, skeleton[index].children.empty()?1:0, skeleton[index].parent);
-
-	for (size_t i = 0; i < vset.size(); i++) {
-		fprintf(fp, "%d ", vset[i]);
-		//if (highlight)
-		//	fprintf(gp, "%d ", vset[i]);
+	for (size_t i = 0; i < backup_vset.size(); i++) {
+		fprintf(fp, "%d ", backup_vset[i]);
+		if (highlight)
+			fprintf(gp, "%d ", backup_vset[i]);
 	}
-
+//
+//	for (size_t i = 0; i < vset.size(); i++) {
+//		fprintf(fp, "%d ", vset[i]);
+//		if (highlight)
+//			fprintf(gp, "%d ", vset[i]);
+//	}
 	fprintf(fp, "-1\n");
-	//if (highlight)
-	//	fprintf(gp, "-1\n");
+	if (highlight)
+		fprintf(gp, "-1\n");
 }
 
 void bfsHierarchy (vector<subcore>& skeleton, stack<vertex>& scs) {
@@ -302,17 +306,11 @@ void presentNuclei (int variant, vector<subcore>& skeleton, vector<vertex>& comp
 	while (!subcoreStack.empty()) {
 		vertex i = subcoreStack.top();
 		subcoreStack.pop();
-#ifdef ONLY_LEAF
-		if (skeleton[i].children.empty()) {
-#endif
-		if (backup[i].visible) { // && backup[i].children.empty()) {
+		if (backup[i].visible && backup[i].children.empty()) {
 			orderInFile[i] = o++;
 			reportSubgraph (variant, i, orderInFile, component, ax, skeleton, graph, nEdge, fp, gp);
-			removeChild (i, backup);
+			//removeChild (i, backup);
 		}
-#ifdef ONLY_LEAF
-		}
-#endif
 	}
 	fclose (fp);
 
@@ -320,6 +318,6 @@ void presentNuclei (int variant, vector<subcore>& skeleton, vector<vertex>& comp
     string temp (vfile);
     string cfl = temp + "_circle.json";
     FILE* gip = fopen (cfl.c_str(), "w");
- //   print_nested_circle (skeleton, skeleton.size() - 1, gip, cfl);
+    print_nested_circle (skeleton, skeleton.size() - 1, gip, cfl);
     fclose(gip);
 }

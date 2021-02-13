@@ -1,6 +1,6 @@
 CODE_DIR = src
 
-nuc: 
+nucleus: 
 	$(MAKE) -C $(CODE_DIR) 
 clean: 
 	$(MAKE) -C $(CODE_DIR) clean 
