@@ -3,8 +3,8 @@ include makefile.in
 TARGET     = quark
 
 SRCS	= $(CFILES:%=%.c) $(CXXFILES:%=%.cpp)
-dinuc: main.o hierarchy.o util.o bucket.o graph.o cycle_truss.o acyclic_truss.o outp_truss.o cyclep_truss.o inp_truss.o cyclepp_truss.o
-	$(LD) $(LDFLAGS) -o ../$@ main.o hierarchy.o util.o bucket.o graph.o cycle_truss.o acyclic_truss.o outp_truss.o cyclep_truss.o inp_truss.o cyclepp_truss.o $(LIBS)
+dinuc: main.o hierarchy.o util.o bucket.o graph.o cycle.o acyclic.o outp.o cyclep.o inp.o cyclepp.o
+	$(LD) $(LDFLAGS) -o ../$@ main.o hierarchy.o util.o bucket.o graph.o cycle.o acyclic.o outp.o cyclep.o inp.o cyclepp.o $(LIBS)
 	/bin/rm *.o
 
 clean: 
