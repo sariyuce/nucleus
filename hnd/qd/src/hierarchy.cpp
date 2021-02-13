@@ -73,7 +73,6 @@ void createSkeleton (vertex u, initializer_list<vertex> neighbors, vertex* nSubc
 		return;
 
 	if (K[smallest] == K[u]) {
-//		printf ("ever seen eq deg?\n");
 		merge (u, smallest, component, skeleton, nSubcores);
 	}
 	else

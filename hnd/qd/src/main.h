@@ -24,13 +24,12 @@
 #include <sys/stat.h>
 #include "bucket.h"
 
-//#define SIGNS
 using namespace std;
 
 #define DEG_DIST 0
 #define COUNT_ONLY 0 // make it 1 to count motifs only (and terminate)
 #define LOWERBOUND 0
-#define UPPERBOUND INT_MAX // 500 // compute densities of subgraphs with at most this size, set to INT_MAX to compute all -- takes a lot of time
+#define UPPERBOUND 5000 // compute densities of subgraphs with at most this size, set to INT_MAX to compute all but it could take a lot of time
 #define THRESHOLD 0.0
 #define PRIME 251231 // for hash function
 
@@ -49,10 +48,6 @@ typedef tuple<vertex, vertex, vertex> triple;
 #ifdef SIGNS
 	extern Graph signs;
 	extern int MODE;
-#endif
-
-#ifdef ORBITS
-	extern unordered_map<couple, int> orb1, orb2, orb3;
 #endif
 
 struct subcore {
@@ -90,8 +85,6 @@ struct helpers {
 	vector<vp>* el;
 	vector<vt>* tris;
 };
-
-
 
 
 inline vertex P2M_ (vertex a) {return (-1 * a) - 1;}
@@ -155,21 +148,6 @@ struct hash<std::tuple<TT...>>
 
 };
 }
-
-//namespace std
-//{
-//template<typename S, typename T> struct hash<pair<S, T>>
-//{
-//	inline size_t operator()(const pair<S, T> & v) const
-//	{
-//		size_t seed = 0;
-//		::hash_combine(seed, v.first);
-//		::hash_combine(seed, v.second);
-//		return seed;
-//	}
-//};
-//}
-
 
 inline bool uniquify (vector<vertex>& vertices) {
 	unordered_map<vertex, bool> hermap;
@@ -250,8 +228,6 @@ inline void createOrdered (Graph& orderedGraph, Graph& graph) {
 inline vertex getEdgeId (vertex u, vertex v, vector<vertex>& xel, vector<vp>& el, Graph& graph) {
 
 	vertex a = u, b = v;
-//	if (less_than (b, a, graph))
-//		swap (a, b);
 
 	for (vertex i = xel[a]; i < xel[a+1]; i++)
 		if (el[i].second == b)
@@ -276,44 +252,12 @@ inline void intersection (vector<vertex>& a, vector<vertex>& b, vector<vertex>& 
 	}
 }
 
-
-void inte (vector<vertex>& a, vector<vertex>& b, vector<vertex>& c, vector<vertex>& d, vector<vertex>& ret);
-void inter (int F, int G, Graph& dg, vertex a, vertex b, vector<vertex>& ret);
-
-template <typename VtxType, typename EdgeType>
-void readGraph (char *filename, vector<vector<VtxType>>& graph, EdgeType* nEdge);
-
-template <typename VtxType, typename EdgeType>
-void readDirectedGraph (char *filename, vector<vector<VtxType>>& graph, EdgeType* nEdge);
-
-void base_kcore (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* maxCore, string vfile, FILE* fp);
-void base_k13 (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* maxCore, string vfile, FILE* fp);
-void base_k14 (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* maxCore, string vfile, FILE* fp);
-void base_ktruss (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* maxtruss, string vfile, FILE* fp);
-void base_ktruss_storeTriangles (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* maxtruss, string vfile, FILE* fp);
-void base_k24 (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* max24, string vfile, FILE* fp);
-void base_k34 (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* max34, string vfile, FILE* fp);
-
-void createSkeleton (vertex u, initializer_list<vertex> neighbors, vertex* nSubcores, vector<vertex>& K, vector<subcore>& skeleton,	vector<vertex>& component, vector<vertex>& unassigned, vector<vp>& relations);
-void updateUnassigned (vertex t, vector<vertex>& component, vertex* cid, vector<vp>& relations, vector<vertex>& unassigned);
-void buildHierarchy (vertex cn, vector<vp>& relations, vector<subcore>& skeleton, vertex* nSubcores, edge nEdge, vertex nVtx);
-void presentNuclei (int variant, vector<subcore>& skeleton, vector<vertex>& component, Graph& graph, edge nEdge, helpers& ax, string vfile, FILE* gp);
-
-
-void degreeBasedHierarchy (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* maxCore, string vfile, FILE* fp);
-
-void tcBasedHierarchy (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* maxtruss, string vfile, FILE* fp);
-
-
-
-
 inline int order_compare (vertex* Reals, vertex* T, vertex e, vertex f) {
 	if ((Reals[e] < Reals[f] && T[e] < T[f]) || (Reals[e] > Reals[f] && T[e] > T[f]) || (Reals[e] == Reals[f] && T[e] == T[f]))
 		return 1;
 	else
 		return -1;
 }
-
 
 inline void EdgeKendallTau (vertex* Reals, vertex* T, vertex a, vertex b, int* count, int* score) {
 	int s = 0;
@@ -364,150 +308,6 @@ inline bool isSmaller (vertex* xadj, vertex u, vertex v) {
 	return (deg_u < deg_v || (deg_u == deg_v && u < v));
 }
 
-// KT computations
-
-inline void compute_KT12 (vertex* Reals, vertex* xadj, Graph& graph, vertex* T, int oc) {
-	int count = 0, score = 0;
-	for (vertex u = 0; u < graph.size(); u++) {
-		for (vertex j = 0; j < graph[u].size(); j++) {
-			vertex v = graph[u][j];
-			if (u == isSmaller (xadj, u, v))
-				EdgeKendallTau (Reals, T, u, v, &count, &score);
-		}
-	}
-	printf ("H %d , KendallTau: %lf\n", oc, kt (count, score));
-}
-
-inline void simple_distance12 (vertex* Reals, Graph& graph, vertex* T, int oc) {
-	double score = 0;
-	int count = 0;
-	for (vertex i = 0; i < graph.size(); i++)
-		if (T[i] > 0 && Reals[i] > 0) {
-			if (Reals[i] == T[i])
-				score++;
-			count++;
-		}
-	printf ("H %d , similarity: %lf = %d / %d\n", oc, score/count, (int) score, count);
-}
-
-inline void simple_distance23 (int nEdge, vertex* Reals, vertex* T, int oc) {
-	double score = 0;
-	int count = 0;
-	for (vertex i = 0; i < nEdge; i++)
-		if (T[i] > 0 && Reals[i] > 0) {
-			if (Reals[i] == T[i])
-				score++;
-			count++;
-		}
-	score /= count;
-	printf ("H %d , similarity: %lf\n", oc, score);
-}
-
-inline void compute_KT23 (vertex* Reals, vector<vp> el, Graph& tris, vertex* T, int oc) {
-	int count = 0, score = 0;
-	for (vertex i = 0; i < el.size(); i++) {
-		int u = get<0>(el[i]);
-		int v = get<1>(el[i]);
-		for (vertex j = 0; j < tris[i].size(); j+=2) {
-			int x = get<0>(el[tris[i][j]]);
-			int y = get<0>(el[tris[i][j+1]]);
-			if ((u == x || u == y) && (v == y || v == x)) {
-				TriangleKendallTau (Reals, T, i, tris[i][j], tris[i][j+1], &count, &score);
-			}
-		}
-	}
-	printf ("H %d , KendallTau: %lf\n", oc, kt (count, score));
-}
-
-/*
-inline void simple_distance34 (vector<vertex>& Reals, vertex* F, int oc) {
-	double score = 0;
-	int count = 0;
-	for (vertex i = 0; i < Reals.size(); i++)
-		if (F[i] > 0 && Reals[i] > 0) {
-			if (Reals[i] == F[i])
-				score++;
-			count++;
-		}inline bool exists (int val, vector<int>& v) {
-	for (size_t i = 1; i < v.size(); i++) {
-		if (v[i] == val)
-			return true;
-		else if (v[i] < 0)
-			return false;
-	}
-	return false;
-}
-	score /= count;
-	printf ("H %d , similarity: %lf\n", oc, score);
-}
-
-// Kendall-Tau -- each 4clique is counted 4 times but that's fine for final KT
-inline void compute_KT34 (vector<triangle_id>& tlist, vertex* Reals, Graph& TF, vertex* F, int oc) {
-	int count = 0, score = 0;
-	for (vertex i = 0; i < tlist.size(); i++) {
-		int a = get<0>(tlist[i].triple);
-		int b = get<1>(tlist[i].triple);
-		int c = get<2>(tlist[i].triple);
-		for (vertex j = 0; j < TF[i].size(); j+=3) {
-			int u = TF[i][j];
-			int d = get<0>(tlist[u].triple);
-			int e = get<1>(tlist[u].triple);
-			int f = get<2>(tlist[u].triple);
-			int che;
-			if (d != a && d != b && d != c)
-				che = d;
-			else if (e != a && e != b && e != c)
-				che = e;
-			else if (f != a && f != b && f != c)
-				che = f;
-			FourCliqueKendallTau (Reals, F, a, b, c, che, &count, &score);
-		}
-	}
-	printf ("H %d , KendallTau: %lf\t", oc, kt (count, score));
-}
-*/
-
-void outgoings (vector<vertex>& b, vector<vertex>& ret);
-void outgoings_and_asymmetric_undirecteds (vertex u, vector<vertex>& b, vector<vertex>& ret);
-void asymmetric_undirecteds (vertex u, vector<vertex>& b, vector<vertex>& ret);
-void undirecteds (vector<vertex>& b, vector<vertex>& ret);
-void incomings (vector<vertex>& a, vector<vertex>& ret);
-
-void cycle_truss (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* maxK, FILE* fp);
-//void cycle_core (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* maxK, FILE* fp);
-void acyclic_truss (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* maxK, FILE* fp);
-//void acyclic_core (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* maxK, FILE* fp);
-void outp_truss (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* maxK, FILE* fp);
-//void outp_core (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* maxK, FILE* fp);
-void cyclep_truss (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* maxK, FILE* fp);
-//void cyclep_core (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* maxK, FILE* fp);
-void inp_truss (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* maxK, FILE* fp);
-//void inp_core (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* maxK, FILE* fp);
-void cyclepp_truss (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* maxK, FILE* fp);
-//void cyclepp_core (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* maxK, FILE* fp);
-
-void cycle_truss_SUBS (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* maxK, FILE* fp, string vfile);
-//void cycle_core_SUBS (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* maxK, FILE* fp, string vfile);
-void acyclic_truss_SUBS (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* maxK, FILE* fp, string vfile);
-void acyclic_truss_SUBS_roleAware (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* maxK, FILE* fp, string vfile);
-//void acyclic_core_SUBS (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* maxK, FILE* fp, string vfile);
-void outp_truss_SUBS (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* maxK, FILE* fp, string vfile);
-//void outp_core_SUBS (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* maxK, FILE* fp, string vfile);
-void cyclep_truss_SUBS (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* maxK, FILE* fp, string vfile);
-//void cyclep_core_SUBS (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* maxK, FILE* fp, string vfile);
-void inp_truss_SUBS (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* maxK, FILE* fp, string vfile);
-//void inp_core_SUBS (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* maxK, FILE* fp, string vfile);
-void cyclepp_truss_SUBS (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* maxK, FILE* fp, string vfile);
-//void cyclepp_core_SUBS (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* maxK, FILE* fp, string vfile);
-
-
-double simple_count_acyclics (Graph& dgraph, unordered_map<int, bool>& numbers, unordered_map<int, bool>& crossing);
-double simple_count_cycles (Graph& dgraph, unordered_map<int, bool>& numbers, unordered_map<int, bool>& crossing);
-double simple_count_cycleps (Graph& dgraph, unordered_map<int, bool>& numbers, unordered_map<int, bool>& crossing);
-double simple_count_cyclepps (Graph& dgraph, unordered_map<int, bool>& numbers, unordered_map<int, bool>& crossing);
-double simple_count_outps (Graph& dgraph, unordered_map<int, bool>& numbers, unordered_map<int, bool>& crossing);
-double simple_count_inps (Graph& dgraph, unordered_map<int, bool>& numbers, unordered_map<int, bool>& crossing);
-
 inline bool exists (int val, vector<int>& v) {
 	for (size_t i = 1; i < v.size(); i++) {
 		if (v[i] == val)
@@ -550,6 +350,36 @@ inline void checkAndDecAndHier (vertex w, vertex v, Naive_Bucket* nBucket, verte
 
 
 
+void inte (vector<vertex>& a, vector<vertex>& b, vector<vertex>& c, vector<vertex>& d, vector<vertex>& ret);
+void inter (int F, int G, Graph& dg, vertex a, vertex b, vector<vertex>& ret);
 
+template <typename VtxType, typename EdgeType>
+void readGraph (char *filename, vector<vector<VtxType>>& graph, EdgeType* nEdge);
 
+template <typename VtxType, typename EdgeType>
+void readDirectedGraph (char *filename, vector<vector<VtxType>>& graph, EdgeType* nEdge);
 
+void createSkeleton (vertex u, initializer_list<vertex> neighbors, vertex* nSubcores, vector<vertex>& K, vector<subcore>& skeleton,	vector<vertex>& component, vector<vertex>& unassigned, vector<vp>& relations);
+void updateUnassigned (vertex t, vector<vertex>& component, vertex* cid, vector<vp>& relations, vector<vertex>& unassigned);
+void buildHierarchy (vertex cn, vector<vp>& relations, vector<subcore>& skeleton, vertex* nSubcores, edge nEdge, vertex nVtx);
+void presentNuclei (int variant, vector<subcore>& skeleton, vector<vertex>& component, Graph& graph, edge nEdge, helpers& ax, string vfile, FILE* gp);
+
+void outgoings (vector<vertex>& b, vector<vertex>& ret);
+void outgoings_and_asymmetric_undirecteds (vertex u, vector<vertex>& b, vector<vertex>& ret);
+void asymmetric_undirecteds (vertex u, vector<vertex>& b, vector<vertex>& ret);
+void undirecteds (vector<vertex>& b, vector<vertex>& ret);
+void incomings (vector<vertex>& a, vector<vertex>& ret);
+
+void cycle_truss (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* maxK, FILE* fp);
+void acyclic_truss (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* maxK, FILE* fp);
+void outp_truss (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* maxK, FILE* fp);
+void cyclep_truss (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* maxK, FILE* fp);
+void inp_truss (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* maxK, FILE* fp);
+void cyclepp_truss (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* maxK, FILE* fp);
+
+double simple_count_acyclics (Graph& dgraph, unordered_map<int, bool>& numbers, unordered_map<int, bool>& crossing);
+double simple_count_cycles (Graph& dgraph, unordered_map<int, bool>& numbers, unordered_map<int, bool>& crossing);
+double simple_count_cycleps (Graph& dgraph, unordered_map<int, bool>& numbers, unordered_map<int, bool>& crossing);
+double simple_count_cyclepps (Graph& dgraph, unordered_map<int, bool>& numbers, unordered_map<int, bool>& crossing);
+double simple_count_outps (Graph& dgraph, unordered_map<int, bool>& numbers, unordered_map<int, bool>& crossing);
+double simple_count_inps (Graph& dgraph, unordered_map<int, bool>& numbers, unordered_map<int, bool>& crossing);
