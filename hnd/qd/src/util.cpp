@@ -1,45 +1,5 @@
 #include "main.h"
 
-
-double color (double ed) {
-        double a = (1 - ed) / 0.25;
-        int X = floor(a);
-        int Y = floor(255 * (a-X));
-        if (X < 4)
-                return (3 - X) + (255 - (double) Y) / 255;
-        else
-                return 0;
-}
-
-void print_nested_circle (vector<subcore>& hrc, int ind, FILE* fp, string cfl) {
-	if (hrc[ind].size < LOWERBOUND)
-            return;
-        double parent_color = color(hrc[ind].ed);
-        fprintf(fp, "{\"color\": %lf, \"fl\": \"%s\", \"index\": \"%d\", \"name\": \"%ld %.2lf (%d)\", \"size\": %ld",
-                        parent_color, cfl.c_str(), ind, hrc[ind].size, hrc[ind].ed, hrc[ind].K, hrc[ind].size);
-        if (hrc[ind].children.size() == 1) {
-                fprintf(fp, ", \"children\": [\n");
-                int ch = hrc[ind].children[0];
-                // ghost child
-                fprintf(fp, "{\"color\": %lf, \"fl\": \"\", \"name\": \"\", \"size\": %ld}, ",
-                                parent_color, hrc[hrc[ch].parent].size - hrc[ch].size);
-                // real child
-                print_nested_circle (hrc, ch, fp, cfl);
-                fprintf(fp, "\n]\n");
-        }
-        else if (hrc[ind].children.size() > 1) {
-                fprintf(fp, ", \n\"children\": [\n");
-                size_t i;
-                for (i = 0; i < hrc[ind].children.size() - 1; i++) {
-                        print_nested_circle (hrc, hrc[ind].children[i], fp, cfl);
-                        fprintf(fp, ",\n");
-                }
-                print_nested_circle (hrc, hrc[ind].children[i], fp, cfl);
-                fprintf(fp, "\n]");
-        }
-        fprintf(fp, "}\n");
-}
-
 inline vertex commons (vector<vertex>& a, vector<vertex>& b) {
 	vertex i = 0, j = 0;
 	vertex count = 0;
@@ -151,15 +111,11 @@ void reportSubgraph (int variant, vertex index, unordered_map<vertex, vertex>& o
 		return;
 	}
 
-//	printf ("LEAF: ");
 	vector<vertex> vset;
 	if (variant == 12 || variant == 13 || variant == 14) {
 		for (vertex i = 0; i < component.size(); i++) {
 			if (component[i] == index)
 				vset.push_back (i);
-			if (skeleton[index].children.empty()) {
-//				printf ("%d ", i);
-			}
 		}
 	}
 	else if (variant == 23 || variant == 24) {
@@ -170,10 +126,6 @@ void reportSubgraph (int variant, vertex index, unordered_map<vertex, vertex>& o
 					vset.push_back (get<1>((*ax.el)[i]));
 				else
 					vset.push_back (-1 * get<1>((*ax.el)[i]));
-
-				if (skeleton[index].children.empty()) {
-//					printf ("%d %d ", get<0>((*ax.el)[i]), get<1>((*ax.el)[i]));
-				}
 			}
 		}
 	}
@@ -183,17 +135,10 @@ void reportSubgraph (int variant, vertex index, unordered_map<vertex, vertex>& o
 				vset.push_back (get<0>((*ax.tris)[i]));
 				vset.push_back (get<1>((*ax.tris)[i]));
 				vset.push_back (get<2>((*ax.tris)[i]));
-
-				if (skeleton[index].children.empty()) {
-//					printf ("%d %d %d ", get<0>((*ax.tris)[i]), get<1>((*ax.tris)[i]), get<2>((*ax.tris)[i]));
-				}
 			}
 		}
 	}
 
-//	if (skeleton[index].children.empty()) {
-//		printf ("\n");
-//	}
 	bool pass = true;
 	pass = pullChildrenSets (fp, skeleton[index].children, orderInFile, vset, skeleton);
 	if (!pass) {
@@ -210,7 +155,6 @@ void reportSubgraph (int variant, vertex index, unordered_map<vertex, vertex>& o
 
 	// edge density
 	edge edge_count = 0;
-//	printf ("vset.size: %d\n", vset.size());
 	if (vset.size() <= UPPERBOUND)
 		for (size_t i = 0; i < vset.size(); i++) {
 			vertex u = vset[i];
@@ -240,28 +184,18 @@ void reportSubgraph (int variant, vertex index, unordered_map<vertex, vertex>& o
 
 		}
 
-//	edge_count /= 2;
 	skeleton[index].nEdge = edge_count;
 	skeleton[index].size = vset.size();
 	if (vset.size() > 1)
 		skeleton[index].ed = (double) edge_count / (skeleton[index].size * (skeleton[index].size - 1) / 2);
 
-	//bool highlight = (skeleton[index].children.empty() && skeleton[index].ed >= THRESHOLD && skeleton[index].size >= LOWERBOUND) ? true : false;
-	//if (highlight)
-	//	fprintf(gp, "id: %lld  K: %d  |V|: %d  |E|: %d  ed: %.2lf  LEAF?: %d  parent id: %lld\t", index, skeleton[index].K, skeleton[index].size, skeleton[index].nEdge,
-	//			skeleton[index].ed,	skeleton[index].children.empty()?1:0, skeleton[index].parent);
-
 	fprintf(fp, "%d %d %d %d %lf %d %d\t", index, skeleton[index].K, skeleton[index].size, skeleton[index].nEdge, skeleton[index].ed, skeleton[index].children.empty()?1:0, skeleton[index].parent);
 
 	for (size_t i = 0; i < vset.size(); i++) {
 		fprintf(fp, "%d ", vset[i]);
-		//if (highlight)
-		//	fprintf(gp, "%d ", vset[i]);
 	}
 
 	fprintf(fp, "-1\n");
-	//if (highlight)
-	//	fprintf(gp, "-1\n");
 }
 
 void bfsHierarchy (vector<subcore>& skeleton, stack<vertex>& scs) {
@@ -326,8 +260,6 @@ void presentNuclei (int variant, vector<subcore>& skeleton, vector<vertex>& comp
 	unordered_map<vertex, vertex> orderInFile; // key is the skeleton index, value is the order
 	vertex o = 0; // order of subcores in file
 
-
-
 	while (!subcoreStack.empty()) {
 		vertex i = subcoreStack.top();
 		subcoreStack.pop();
@@ -338,17 +270,7 @@ void presentNuclei (int variant, vector<subcore>& skeleton, vector<vertex>& comp
 		}
 	}
 	fclose (fp);
-
-
-    string temp (vfile);
-    string cfl = temp + "_circle.json";
-    FILE* gip = fopen (cfl.c_str(), "w");
-    print_nested_circle (skeleton, skeleton.size() - 1, gip, cfl);
-    fclose(gip);
 }
-
-
-
 
 
 
@@ -467,7 +389,6 @@ void outgoings (vector<vertex>& b, vector<vertex>& ret) {
 	}
 }
 
-
 // ids of bidirectional edges
 void undirecteds (vector<vertex>& b, vector<vertex>& ret) {
 	if (b.empty())
@@ -485,7 +406,6 @@ void undirecteds (vector<vertex>& b, vector<vertex>& ret) {
 		}
 	}
 }
-
 
 // ids of bidirectional edges
 void asymmetric_undirecteds (vertex u, vector<vertex>& b, vector<vertex>& ret) {
@@ -506,24 +426,6 @@ void asymmetric_undirecteds (vertex u, vector<vertex>& b, vector<vertex>& ret) {
 	}
 }
 
-
-//// ids of bidirectional edges
-//void undirecteds (vertex b, Graph& dg, vector<vertex>& ret) {
-//	vertex j = 1, nj = dg[b][0];
-//	while (j < nj && nj < dg[b].size()) {
-//		if (M2P (dg[b][nj]) < dg[b][j])
-//			nj++;
-//		else if (dg[b][j] < M2P (dg[b][nj]))
-//			j++;
-//		else {
-//			ret.push_back (j);
-//			j++;
-//			nj++;
-//		}
-//	}
-//}
-
-
 void inte (vector<vertex>& a, vector<vertex>& b, vector<vertex>& c, vector<vertex>& d, vector<vertex>& ret) {
 	vertex i, j;
 	i = j = 0;
@@ -543,7 +445,6 @@ void inte (vector<vertex>& a, vector<vertex>& b, vector<vertex>& c, vector<verte
 		}
 	}
 }
-
 
 void inter (int F, int G, Graph& dg, vertex a, vertex b, vector<vertex>& ret) {
 	if (dg[a].size() == 1 || dg[b].size() == 1)
