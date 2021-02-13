@@ -165,9 +165,9 @@ int main (int argc, char *argv[]) {
 		if (nd == "cycle")
 			cycle_truss_SUBS (graph, hierarchy, nEdge, K, &maxK, fp, vfile);
 		else if (nd == "acyclic")
-			acyclic_truss_SUBS (graph, hierarchy, nEdge, K, &maxK, fp, vfile);
+			acyclic_truss (graph, hierarchy, nEdge, K, &maxK, fp, vfile);
 		else if (nd == "acyclic-RA")
-			acyclic_truss_SUBS_roleAware (graph, hierarchy, nEdge, K, &maxK, fp, vfile);
+			acyclic_truss_roleAware (graph, hierarchy, nEdge, K, &maxK, fp, vfile);
 		else if (nd == "outp")
 			outp_truss_SUBS (graph, hierarchy, nEdge, K, &maxK, fp, vfile);
 		else if (nd == "cyclep")

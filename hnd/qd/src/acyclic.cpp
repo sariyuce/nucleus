@@ -350,7 +350,7 @@ void acyclic_truss_roleAware (Graph& graph, bool hierarchy, edge nEdge, vector<v
 		TC3[i].resize (graph[i].size(), 0);
 	}
 	lol tric = count_acyclics_roleAware (graph, TC1, TC2, TC3);
-	
+
 	fprintf (fp, "# acyclis: %lld\n", tric);
 	const auto t2 = chrono::steady_clock::now();
 	print_time (fp, "Acyclic counting: ", t2 - t1);
@@ -372,7 +372,7 @@ void acyclic_truss_roleAware (Graph& graph, bool hierarchy, edge nEdge, vector<v
 
 	vector<int> dist (nVtx+1, 0);
 
-// each non-reciprocal edge and its acyclic-count is inserted to bucket
+	// each non-reciprocal edge and its acyclic-count is inserted to bucket
 	for (vertex i = 0; i < graph.size(); i++) {
 		vector<vertex> ret;
 		outgoings (graph[i], ret);
@@ -523,116 +523,116 @@ void acyclic_truss_roleAware (Graph& graph, bool hierarchy, edge nEdge, vector<v
 
 		int quarkNumber;
 		for (int iter = 1; iter <= 3; iter++)
-		for (auto i = 0; i < el.size(); i++) {
-			queue<vp> q;
-			if (iter == 1 && !visited_1[i] && K1[i] == *maxK) {
-				quarkNumber = K1[i];
-				if (quarkNumber > 0) {
-					printf ("startOfLoop\n");
-					q.push(make_pair (i, 1));
-					visited_1[i] = true;
+			for (auto i = 0; i < el.size(); i++) {
+				queue<vp> q;
+				if (iter == 1 && !visited_1[i] && K1[i] == *maxK) {
+					quarkNumber = K1[i];
+					if (quarkNumber > 0) {
+						printf ("startOfLoop\n");
+						q.push(make_pair (i, 1));
+						visited_1[i] = true;
+					}
 				}
-			}
-			if (iter == 2 && !visited_2[i] && K2[i] == *maxK) {
-				quarkNumber = K2[i];
-				if (quarkNumber > 0) {
-					printf ("startOfLoop\n");
-					q.push(make_pair (i, 2));
-					visited_2[i] = true;
+				if (iter == 2 && !visited_2[i] && K2[i] == *maxK) {
+					quarkNumber = K2[i];
+					if (quarkNumber > 0) {
+						printf ("startOfLoop\n");
+						q.push(make_pair (i, 2));
+						visited_2[i] = true;
+					}
 				}
-			}
-			if (iter == 3 && !visited_3[i] && K1[i] == *maxK) {
-				quarkNumber = K3[i];
-				if (quarkNumber > 0) {
-					printf ("startOfLoop\n");
-					q.push(make_pair (i, 3));
-					visited_3[i] = true;
-				}
-			}
-
-			vector<bool> marked (nEdge, false);
-			marked[i] = true;
-			while (!q.empty()) {
-				auto c = q.front();
-				q.pop();
-				int e = c.first;
-				int type = c.second;
-				vertex u = el[e].first; // source
-				vertex v = el[e].second; // target
-				int quark_val;
-				if (type == 1) quark_val = K1[e];
-				else if (type == 2) quark_val = K2[e];
-				else if (type == 3) quark_val = K3[e];
-				printf ("%d %d -- K: %d type: %d\n", u, v, quark_val, type);
-				vector<vertex> ints;
-				if (type == 1) {
-					inter (2, 2, graph, u, v, ints); // u-v is type TC1
-				}
-				else if (type == 2) {
-					inter (2, 1, graph, u, v, ints); // u-v is type TC2
-				}
-				else if (type == 3) {
-					inter (1, 1, graph, u, v, ints); // u-v is type TC3
+				if (iter == 3 && !visited_3[i] && K1[i] == *maxK) {
+					quarkNumber = K3[i];
+					if (quarkNumber > 0) {
+						printf ("startOfLoop\n");
+						q.push(make_pair (i, 3));
+						visited_3[i] = true;
+					}
 				}
 
-				vertex id1, id2;
+				vector<bool> marked (nEdge, false);
+				marked[i] = true;
+				while (!q.empty()) {
+					auto c = q.front();
+					q.pop();
+					int e = c.first;
+					int type = c.second;
+					vertex u = el[e].first; // source
+					vertex v = el[e].second; // target
+					int quark_val;
+					if (type == 1) quark_val = K1[e];
+					else if (type == 2) quark_val = K2[e];
+					else if (type == 3) quark_val = K3[e];
+					printf ("%d %d -- K: %d type: %d\n", u, v, quark_val, type);
+					vector<vertex> ints;
+					if (type == 1) {
+						inter (2, 2, graph, u, v, ints); // u-v is type TC1
+					}
+					else if (type == 2) {
+						inter (2, 1, graph, u, v, ints); // u-v is type TC2
+					}
+					else if (type == 3) {
+						inter (1, 1, graph, u, v, ints); // u-v is type TC3
+					}
 
-				for (auto k = 0; k < ints.size(); k+=2) {
-					vertex w = graph[u][ints[k]];
-					vertex x = graph[v][ints[k+1]];
-					if (w >= 0 && x >= 0) { // blue orbit - TC1
-						id1 = getEdgeId (u, w, xel, el, graph); // 2
-						id2 = getEdgeId (v, w, xel, el, graph); // 3
-						if (K2[id1] >= quarkNumber && K3[id2] >= quarkNumber) {
-							if (	!marked[id1]) {
-								marked[id1] = true;
-								visited_2[id1] = true;
-								q.push(make_pair (id1, 2));
+					vertex id1, id2;
+
+					for (auto k = 0; k < ints.size(); k+=2) {
+						vertex w = graph[u][ints[k]];
+						vertex x = graph[v][ints[k+1]];
+						if (w >= 0 && x >= 0) { // blue orbit - TC1
+							id1 = getEdgeId (u, w, xel, el, graph); // 2
+							id2 = getEdgeId (v, w, xel, el, graph); // 3
+							if (K2[id1] >= quarkNumber && K3[id2] >= quarkNumber) {
+								if (	!marked[id1]) {
+									marked[id1] = true;
+									visited_2[id1] = true;
+									q.push(make_pair (id1, 2));
+								}
+								if (!marked[id2]) {
+									marked[id2] = true;
+									visited_3[id2] = true;
+									q.push(make_pair (id2, 3));
+								}
 							}
-							if (!marked[id2]) {
-								marked[id2] = true;
-								visited_3[id2] = true;
-								q.push(make_pair (id2, 3));
+						}
+						else if (w < 0 && x < 0) { // green orbit - TC 3
+							w = M2P (w);
+							id1 = getEdgeId (w, u, xel, el, graph); // 1
+							id2 = getEdgeId (w, v, xel, el, graph); // 2
+							if (K1[id1] >= quarkNumber && K2[id2] >= quarkNumber) {
+								if (!marked[id1]) {
+									marked[id1] = true;
+									visited_1[id1] = true;
+									q.push(make_pair (id1, 1));
+								}
+								if (!marked[id2]) {
+									marked[id2] = true;
+									visited_2[id2] = true;
+									q.push(make_pair (id2, 2));
+								}
+							}
+						}
+						else if (w >= 0 && x < 0) { // purple orbit - TC 2
+							id1 = getEdgeId (u, w, xel, el, graph);
+							id2 = getEdgeId (w, v, xel, el, graph);
+							if (K1[id1] >= quarkNumber && K3[id2] >= quarkNumber) {
+								if (!marked[id1]) {
+									marked[id1] = true;
+									visited_1[id1] = true;
+									q.push(make_pair (id1, 1));
+								}
+								if (!marked[id2]) {
+									marked[id2] = true;
+									visited_3[id2] = true;
+									q.push(make_pair (id2, 3));
+								}
 							}
 						}
 					}
-					else if (w < 0 && x < 0) { // green orbit - TC 3
-						w = M2P (w);
-						id1 = getEdgeId (w, u, xel, el, graph); // 1
-						id2 = getEdgeId (w, v, xel, el, graph); // 2
-						if (K1[id1] >= quarkNumber && K2[id2] >= quarkNumber) {
-							if (!marked[id1]) {
-								marked[id1] = true;
-								visited_1[id1] = true;
-								q.push(make_pair (id1, 1));
-							}
-							if (!marked[id2]) {
-								marked[id2] = true;
-								visited_2[id2] = true;
-								q.push(make_pair (id2, 2));
-							}
-						}
-					}
-					else if (w >= 0 && x < 0) { // purple orbit - TC 2
-						id1 = getEdgeId (u, w, xel, el, graph);
-						id2 = getEdgeId (w, v, xel, el, graph);
-						if (K1[id1] >= quarkNumber && K3[id2] >= quarkNumber) {
-							if (!marked[id1]) {
-								marked[id1] = true;
-								visited_1[id1] = true;
-								q.push(make_pair (id1, 1));
-							}
-							if (!marked[id2]) {
-								marked[id2] = true;
-								visited_3[id2] = true;
-								q.push(make_pair (id2, 3));
-							}
-						}
-					}
 				}
-			}
 
-		}
+			}
 	}
 
 	return;
