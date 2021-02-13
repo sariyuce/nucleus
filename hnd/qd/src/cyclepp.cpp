@@ -58,160 +58,15 @@ vertex count_cyclepps (Graph& dgraph, Graph& TC) {
 				TC[min (u, w)][ind (max (u, w), dgraph[min (u, w)])]++; // u-w is undirected
 				TC[min (v, w)][ind (max (v, w), dgraph[min (v, w)])]++; // v-w is undirected
 				count++;
-#ifdef ORBITS
-				vector<vertex> a = {u, v};
-				sort (a.begin(), a.end());
-				auto t = make_tuple (a[0], a[1]);
-				orb1[t]++;
-
-				a = {v, w};
-				sort (a.begin(), a.end());
-				t = make_tuple (a[0], a[1]);
-				orb2[t]++;
-
-				a = {u, w};
-				sort (a.begin(), a.end());
-				t = make_tuple (a[0], a[1]);
-				orb3[t]++;
-#endif
-
 			}
 		}
 	}
 	printf ("total cyclepp count: %d\n", count);
 
-#ifdef ORBITS
-	for (auto it = orb1.begin(); it != orb1.end(); it++)
-		printf ("orb1 of %d %d is %d\n", get<0>(it->first), get<1>(it->first), it->second);
-
-	for (auto it = orb2.begin(); it != orb2.end(); it++)
-		printf ("orb2 of %d %d is %d\n", get<0>(it->first), get<1>(it->first), it->second);
-
-	for (auto it = orb3.begin(); it != orb3.end(); it++)
-		printf ("orb3 of %d %d is %d\n", get<0>(it->first), get<1>(it->first), it->second);
-
-	exit(1);
-#endif
-
 	return count;
 }
-//
-//void cyclepp_truss (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* maxK, FILE* fp) {
-//	const auto t1 = chrono::steady_clock::now();
-//	// Cyclepp counting for each edge
-//	vertex nVtx = graph.size();
-//	Graph TC;
-//	TC.resize(nVtx);
-//	for (vertex i = 0; i < nVtx; i++)
-//		TC[i].resize (graph[i].size(), 0);
-//	lol tric = count_cyclepps (graph, TC);
-//	fprintf (fp, "# cyclepps: %lld\n", tric);
-//	const auto t2 = chrono::steady_clock::now();
-//	print_time (fp, "Cyclepp counting: ", t2 - t1);
-//
-//	// Peeling
-//	const auto p1 = chrono::steady_clock::now();
-//	K.resize (nEdge, -1);
-//	Naive_Bucket nBucket;
-//	nBucket.Initialize (nVtx, nEdge);
-//	vertex id = 0;
-//	vector<vp> el;
-//	vector<vertex> xel;
-//	xel.push_back(0);
-//	// both non-reciprocal and undirected edges are inserted
-//	// in el, if it's undirected edge, the second item is negative.
-//	// Note that always u < v, so node 0 cannot exist as the second item.
-//	for (vertex i = 0; i < graph.size(); i++) {
-//		vector<vertex> ret;
-//		outgoings_and_asymmetric_undirecteds (i, graph[i], ret);
-//		for (vertex r = 0; r < ret.size(); r++) {
-//			vertex ind = abs (ret[r]);
-//			vertex v = graph[i][ind];
-//			vp c;
-//			if (ret[r] < 0)
-//				c = make_pair (i, -v); // undirected
-//			else
-//				c = make_pair (i, v); // directed
-//			el.push_back(c);
-//			printf ("cyclepp count of %d (%d-%d) is %d\n", id, i, v, TC[i][ind]);
-//			if (TC[i][ind] > 0)
-//				nBucket.Insert (id++, TC[i][ind]);
-//			else
-//				K[id++] = 0;
-//		}
-//		xel.push_back(el.size());
-//	}
-//	vertex tc_e = 0;
-//	while (true) {
-//		edge e;
-//		vertex val;
-//		if (nBucket.PopMin(&e, &val) == -1) // if the bucket is empty
-//			break;
-//		tc_e = K[e] = val;
-//		vertex u = el[e].first; // source
-//		vertex v = el[e].second; // target
-//		vector<vertex> ints;
-//		vertex id1, id2;
-//		if (v < 0) { // u-v is undirected
-//			v *= -1;
-//			// there are four possibilities
-//			inter (0, 2, graph, u, v, ints); // purple
-//			for (auto k = 0; k < ints.size(); k+=2) {
-//				vertex w = graph[v][ints[k+1]];
-//				id1 = getEdgeId (v, w, xel, el, graph); // directed
-//				id2 = getEdgeId (min (u, w), -1 * max (u, w), xel, el, graph); // undirected
-//				checkAndDec (K[id1], K[id2], id1, id2, &nBucket, tc_e);
-//			}
-//			ints.clear();
-//			inter (0, 1, graph, u, v, ints); // red
-//			for (auto k = 0; k < ints.size(); k+=2) {
-//				vertex w = M2P (graph[v][ints[k+1]]);
-//				id1 = getEdgeId (w, v, xel, el, graph); // directed
-//				id2 = getEdgeId (min (u, w), -1 * max (u, w), xel, el, graph); // undirected
-//				checkAndDec (K[id1], K[id2], id1, id2, &nBucket, tc_e);
-//			}
-//			ints.clear();
-//			inter (2, 0, graph, u, v, ints); // green
-//			for (auto k = 0; k < ints.size(); k+=2) {
-//				vertex w = graph[u][ints[k]];
-//				id1 = getEdgeId (u, w, xel, el, graph); // directed
-//				id2 = getEdgeId (min (v, w), -1 * max (v, w), xel, el, graph); // undirected
-//				checkAndDec (K[id1], K[id2], id1, id2, &nBucket, tc_e);
-//			}
-//			ints.clear();
-//			inter (1, 0, graph, u, v, ints); // blue
-//			for (auto k = 0; k < ints.size(); k+=2) {
-//				vertex w = M2P (graph[u][ints[k]]);
-//				id1 = getEdgeId (w, u, xel, el, graph); // directed
-//				id2 = getEdgeId (min (v, w), -1 * max (v, w), xel, el, graph); // undirected
-//				checkAndDec (K[id1], K[id2], id1, id2, &nBucket, tc_e);
-//			}
-//		}
-//		else { // directed
-//			ints.clear();
-//			inter (0, 0, graph, u, v, ints);
-//			for (auto k = 0; k < ints.size(); k+=2) {
-//				vertex w = graph[u][ints[k]];
-//				id1 = getEdgeId (min (u, w), -1 * max (u, w), xel, el, graph); // undirected
-//				id2 = getEdgeId (min (v, w), -1 * max (v, w), xel, el, graph); // undirected
-//				checkAndDec (K[id1], K[id2], id1, id2, &nBucket, tc_e);
-//			}
-//		}
-//	}
-//	nBucket.Free();
-//	*maxK = tc_e;
-//	const auto p2 = chrono::steady_clock::now();
-//
-//	if (!hierarchy) {
-//		print_time (fp, "Only peeling time: ", p2 - p1);
-//		print_time (fp, "Total time: ", (p2 - p1) + (t2 - t1));
-//	}
-//	for (auto i = 0; i < el.size(); i++)
-//		printf ("truss of %d (%d-%d) is %d\n", i, el[i].first, abs(el[i].second), K[i]); // the ones with -1 kappa either do not participate in any cyclepp or u > v for the corresponding u-v edge
-//	return;
-//}
 
-void cyclepp_truss_SUBS (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* maxK, FILE* fp, string vfile) {
+void cyclepp_truss (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* maxK, FILE* fp, string vfile) {
 	const auto t1 = chrono::steady_clock::now();
 	// Cyclepp counting for each edge
 	vertex nVtx = graph.size();
@@ -254,7 +109,6 @@ void cyclepp_truss_SUBS (Graph& graph, bool hierarchy, edge nEdge, vector<vertex
 			else
 				c = make_pair (i, v); // directed
 			el.push_back(c);
-//			printf ("cyclepp count of %d (%d-%d) is %d\n", id, i, v, TC[i][ind]);
 			if (TC[i][ind] > 0) {
 				nBucket.Insert (id++, TC[i][ind]);
 				dist[TC[i][ind]]++;
@@ -313,7 +167,6 @@ void cyclepp_truss_SUBS (Graph& graph, bool hierarchy, edge nEdge, vector<vertex
 				vertex w = graph[v][ints[k+1]];
 				id1 = getEdgeId (v, w, xel, el, graph); // directed
 				id2 = getEdgeId (min (u, w), -1 * max (u, w), xel, el, graph); // undirected
-//				checkAndDec (K[id1], K[id2], id1, id2, &nBucket, tc_e);
 				checkAndDecAndHier (id1, id2, &nBucket, tc_e, e, hierarchy, &nSubcores, K, skeleton, component, unassigned, relations);
 			}
 			ints.clear();
@@ -322,7 +175,6 @@ void cyclepp_truss_SUBS (Graph& graph, bool hierarchy, edge nEdge, vector<vertex
 				vertex w = M2P (graph[v][ints[k+1]]);
 				id1 = getEdgeId (w, v, xel, el, graph); // directed
 				id2 = getEdgeId (min (u, w), -1 * max (u, w), xel, el, graph); // undirected
-//				checkAndDec (K[id1], K[id2], id1, id2, &nBucket, tc_e);
 				checkAndDecAndHier (id1, id2, &nBucket, tc_e, e, hierarchy, &nSubcores, K, skeleton, component, unassigned, relations);
 			}
 			ints.clear();
@@ -331,7 +183,6 @@ void cyclepp_truss_SUBS (Graph& graph, bool hierarchy, edge nEdge, vector<vertex
 				vertex w = graph[u][ints[k]];
 				id1 = getEdgeId (u, w, xel, el, graph); // directed
 				id2 = getEdgeId (min (v, w), -1 * max (v, w), xel, el, graph); // undirected
-//				checkAndDec (K[id1], K[id2], id1, id2, &nBucket, tc_e);
 				checkAndDecAndHier (id1, id2, &nBucket, tc_e, e, hierarchy, &nSubcores, K, skeleton, component, unassigned, relations);
 			}
 			ints.clear();
@@ -340,7 +191,6 @@ void cyclepp_truss_SUBS (Graph& graph, bool hierarchy, edge nEdge, vector<vertex
 				vertex w = M2P (graph[u][ints[k]]);
 				id1 = getEdgeId (w, u, xel, el, graph); // directed
 				id2 = getEdgeId (min (v, w), -1 * max (v, w), xel, el, graph); // undirected
-//				checkAndDec (K[id1], K[id2], id1, id2, &nBucket, tc_e);
 				checkAndDecAndHier (id1, id2, &nBucket, tc_e, e, hierarchy, &nSubcores, K, skeleton, component, unassigned, relations);
 			}
 		}
@@ -351,7 +201,6 @@ void cyclepp_truss_SUBS (Graph& graph, bool hierarchy, edge nEdge, vector<vertex
 				vertex w = graph[u][ints[k]];
 				id1 = getEdgeId (min (u, w), -1 * max (u, w), xel, el, graph); // undirected
 				id2 = getEdgeId (min (v, w), -1 * max (v, w), xel, el, graph); // undirected
-//				checkAndDec (K[id1], K[id2], id1, id2, &nBucket, tc_e);
 				checkAndDecAndHier (id1, id2, &nBucket, tc_e, e, hierarchy, &nSubcores, K, skeleton, component, unassigned, relations);
 			}
 		}
@@ -388,9 +237,6 @@ void cyclepp_truss_SUBS (Graph& graph, bool hierarchy, edge nEdge, vector<vertex
 		print_time (fp, "Total cyclepp-truss nucleus decomposition time: ", (p2 - p1) + (t2 - t1) + (b2 - b1) + (d2 - d1));
 	}
 
-//	for (auto i = 0; i < el.size(); i++)
-//		printf ("truss of %d (%d-%d) is %d\n", i, el[i].first, abs(el[i].second), K[i]); // the ones with -1 kappa either do not participate in any cyclepp or u > v for the corresponding u-v edge
 	return;
 }
-
 

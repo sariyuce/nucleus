@@ -169,13 +169,13 @@ int main (int argc, char *argv[]) {
 		else if (nd == "acyclic-RA")
 			acyclic_truss_roleAware (graph, hierarchy, nEdge, K, &maxK, fp, vfile);
 		else if (nd == "outp")
-			outp_truss_SUBS (graph, hierarchy, nEdge, K, &maxK, fp, vfile);
+			outp_truss (graph, hierarchy, nEdge, K, &maxK, fp, vfile);
 		else if (nd == "cyclep")
-			cyclep_truss_SUBS (graph, hierarchy, nEdge, K, &maxK, fp, vfile);
+			cyclep_truss (graph, hierarchy, nEdge, K, &maxK, fp, vfile);
 		else if (nd == "inp")
-			inp_truss_SUBS (graph, hierarchy, nEdge, K, &maxK, fp, vfile);
+			inp_truss (graph, hierarchy, nEdge, K, &maxK, fp, vfile);
 		else if (nd == "cyclepp")
-			cyclepp_truss_SUBS (graph, hierarchy, nEdge, K, &maxK, fp, vfile);
+			cyclepp_truss (graph, hierarchy, nEdge, K, &maxK, fp, vfile);
 	}
 
 	const auto t2 = chrono::steady_clock::now();
