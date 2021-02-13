@@ -1,0 +1,269 @@
+There are 3 folders: qd, nd, lqd
+    - qd has the quark decomposition code for directed and signed_directed networks (for Sections 5.1 and 5.2)
+    - uqd has the quark decomposition code for networks with only reciprocal edges, where if u->v then v->u (for Section 5.1)
+    - lqd has the quark decomposition code for node-labeled networks (for Section 5.3)
+
+<graph> is the input graph file
+<motif> is cycle, acyclic, outp, inp, cyclep, or cyclepp
+<MCmotif> is M1 to M7
+<graph_rec> is a variant of a <graph>; it contains only the reciprocal edges in <graph> (see datasets/directed/README to how to generate that for a given graph)
+
+
+TABLE 1
+-------
+All directed datasets are under datasets/directed.
+
+1. To get the motif counts in columns 6-11 and maximum quark numbers in columns 13-18, run: 
+    $ ./quark <graph> <motif> NO
+
+2. To get the motif counts (column 12) and maximum quark number (column 19) for reciprocal, go to uqd directory and run:
+    $ ./undirected_quark <graph_rec> 23 NO
+
+
+
+
+
+FIGURE 3
+--------
+EAT network is under datasets/directed. The following can also be applied to other directed graphs. There are two algorithms compared: quark decomposition and motif clustering.
+	
+Quark Decomposition:
+--------------------
+1. To generate the quark decomposition results in Fig. 3b-3d (and other motifs that are omitted), run:
+    $ ./quark <graph> <motif> YES
+
+2. Let <nuclei> is the output file <graph>_<motif>_NUCLEI, which contains the resulting quarks.
+
+3. We ignore any quark with less than 10 nodes and compute the average motif degree and conductance scores as follows:
+    
+    a. Filter the quarks with >=10 nodes in <nuclei> (and ignore the last line which corresponds to the entire graph):
+        $ awk '{if ($3>=10 && NF>=17) {for (i=8;i<NF;i++) printf ("%d ", $i);print ""}}' <nuclei> > <output_file>
+
+    b. Set the "COUNT_ONLY" macro in main.h to 1 and compile the code.
+
+    c. Compute the average motif degree and conductance scores for each line (i.e., quark), along with the size information, in <output_file>:
+        $ ./quark <graph> <motif> NO <output_file> >results
+
+    d. To make it better readable:
+        $ grep cut results >r1; grep avg results>r2; paste r1 r2
+
+4. To generate Fig. 3a, go to uqd directory and run:
+    $ ./undirected_quark <graph_rec> 23 YES
+<graph_rec> is a variant of a <graph>; it contains only the reciprocal edges in <graph> (see datasets/directed/README to how to generate that for a given graph)
+
+5. Rest is similar to above; "COUNT_ONLY" macro also exist in main.h here. Run the following to compute avg. motif degree and conductance:
+    $ ./nuclues <graph> NO <output_file> >results
+
+Motif Clustering:
+-----------------
+6. See the code at http://snap.stanford.edu/higher-order/code.html and follow the instructions to install. The code requires the installation of ARPACK. As of Oct 2020, the available ARPACK packages have some compatibility issues with the motif clustering code. The fix is to change the line 1037 in snap-higher-order/snap-adv/motifcluster.cpp as follows: replace "if (ido == 1) {" with "if (ido == 1 || ido == -1) {". Make sure to compile the snap library from scratch.
+
+7. Provided datasets can be used for motif clustering runs, too.
+
+8. We use iterative recursive bisection to find multiple clusters. In each step, a single cluster is found and the residual (graph minus cluster) is extracted. If the conductance of a cluster is greater than 0.5 or the size of the cluster (or residual) is less than 10 nodes, we terminate the bisection. Run the following to compute recursive bisection:
+    $ scripts/recbisection.sh <graph> <MCmotif>
+
+Note that <MCmotif> here is M1 to M7; the correspondence with the directed triangles in this work is M1: cycle, M2:cycle+, M3: cycle++, M4: reciprocal, M5: acyclic, M6: out+, M7: in+.
+The output file is named <graph>-<MCmotif>-RECBI-CLUSTERS and contains a cluster in each line. The first cluster is the one with near-optimal conductance, denoted by MC-SINGLE. The rest are shown by MC-REC-BISECTION.
+
+9. Average motif degree and conductance scores are computed as in the step 3 of the quark decomposition above (replace <nuclei> by the <graph>-<MCmotif>-RECBI-CLUSTERS)
+
+
+
+
+
+FIGURE 4
+--------
+EAT network is under datasets/directed. The following can also be applied to other directed graphs. There are two algorithms compared: quark decomposition and Takaguchi and Yoshida (TY).
+
+Quark Decomposition:
+--------------------
+1. Simply follow the steps 1-5 above in FIGURE 3.
+
+Takaguchi and Yoshida (TY):
+---------------------------
+2. See the code at https://github.com/yyoshida/k-truss and follow the instructions to install.
+
+3. Provided datasets can be used for TY runs, too.
+
+4. For Fig. 4a, run the cycle variant of TY. Maximum cycle-truss number is found 3. Code outputs triples: an edge and its truss number. Select the edges with cycle-truss number 3 to obtain the maximum truss subgraph. Put the nodes in the subgraph in a file, single line. Then use FIGURE 3, steps 3b-3d to get the average motif degree of the subgraph.
+
+5. For Fig. 4b, run the flow variant of TY. Maximum flow-truss number is found 10. Code outputs triples: an edge and its truss number. Select the edges with flow-truss number 10 to obtain the maximum truss subgraph. Put the nodes in the subgraph in a file, single line. Then use FIGURE 3, steps 3b-3d to get the average motif degree of the subgraph.
+
+
+
+
+
+FIGURE 5
+--------
+EAT network and metadata for its nodes (metadata/eat_map.txt) are under datasets/directed. There are two algorithms compared: quark decomposition and truss decomposition (which ignores edge directions).
+
+Quark Decomposition:
+--------------------
+1. Simply follow the steps 1-2 above in FIGURE 3 to get all the <nuclei> files for all motifs. To get the metadata (i.e., word) for each node, run the following for the <nuclei> file:
+    $ scripts/node_metadata.sh <nuclei> metadata/eat_map.txt
+This gives each subgraph separated by empty lines.
+
+Truss Decomposition:
+--------------------
+2. Go to uqd directory and run:
+    $ ./undirected_quark <graph> 23 YES
+Note that this <graph> is the same graph used in the step 1 above (i.e., this is not <graph_rec>).
+To get the metadata, just use the <nuclei> file and follow the step 1.
+
+
+
+
+
+TABLE 2
+-------
+foodweb network is under datasets/directed. There are two algorithms compared for out+ motif: quark decomposition and motif clustering by k-means.
+
+Quark Decomposition:
+--------------------
+1. Simply follow the steps 1-2 above in FIGURE 3 to get the <nuclei> for out+ motif; there'll be 7 k-quarks.
+
+2. This comparison requires disjoint subgraphs. So if a node participates in multiple quarks, it is only considered in the largest k-quark that it's part of.
+
+3. Classifications are obtained from [8, 64]. The 4 metrics are computed by the Python's scikit learn library.
+
+Motif Clustering by k-means:
+----------------------------
+
+4. The matlab code at http://snap.stanford.edu/higher-order/code.html is used to get the clusters; two variants are run; one with 4 clusters (as reported in [8]) and one with 7 clusters (since quark decomposition also finds 7 quarks)
+
+5. Classifications are obtained from [8, 64]. The 4 metrics are computed by the Python's scikit learn library.
+
+
+
+
+
+LAST PARAGRAPH IN SECTION 5.1.3
+-------------------------------
+foodweb network and metadata for its nodes (metadata/foodweb_map.txt) are under datasets/directed. Here we only considered the role-aware quark numbers for edges by acyclic motif (which has 3 orbits). In foodweb, edge directions denote carbon transfers; so for u, v, w nodes with u->v, v->w, u->w edges; we call u "prey", w "predator", and v "balancer".
+
+Role-aware quark decomposition:
+-------------------------------
+1. Run the following to get the 3 role-aware quark numbers for each edge in foodweb network:
+    $ ./quark <graph> acyclicRA NO > <output>
+The <output> has the 3 role-aware quark numbers for each edge. For the end points of each edge, we determine how strong its preyness/predatorness/balancerness by looking at the corresponding quark number. The order of orbits in <output> is u->v, u->w, v->w.
+
+2. Metadata for the nodes is available at metadata/foodweb_map.txt
+
+
+
+
+
+TABLE 3
+-------
+All datasets are under datasets/directed. There are two algorithms compared for all the motifs: quark decomposition and motif clustering single (MC-SINGLE) which only gives the near-optimal cluster.
+
+Quark Decomposition:
+--------------------
+1. To get the runtimes, run:
+    $ ./quark <graph> <motif> NO
+It gives <graph>_<motif>_K file, which contains several runtimes. "Total time" is the actual computation time (and excludes I/O time) and reported in the papers.
+
+Motif Clustering:
+-----------------
+2. See the code at http://snap.stanford.edu/higher-order/code.html and follow the instructions to install. The code requires the installation of ARPACK. As of Oct 2020, the available ARPACK packages have some compatibility issues with the motif clustering code. The fix is to change the line 1037 in snap-higher-order/snap-adv/motifcluster.cpp as follows: replace "if (ido == 1) {" with "if (ido == 1 || ido == -1) {". Make sure to compile the snap library from scratch.
+
+3. Provided datasets can be used for motif clustering runs.
+
+4. Run the following to compute MC-SINGLE variant:
+    $ ./motifclustermain -i:<graph> -m:<MCmotif> -o:<output>
+The <output> contains the runtime result at the last line.
+ 
+
+
+
+
+TABLE 4
+-------
+All datasets are under datasets/signed_directed.
+
+1. To get the all the motif counts and maximum quark numbers, run:
+    $ ./quark <graph> <motif> <sign> NO
+<graph> is an input graph under directed/signed_directed
+<motif> is cycle or acyclic                
+<sign> is 3,1,-1,-3 for +++,++-,+--,---; 11,12,13 for ++-a,++-b,++-c; -11,-12,-13 for +--a,+--b,+--c (last six are only for acyclic-truss)
+
+
+
+
+
+FIGURE 7
+--------
+reddit-body network is under datasets/signed_directed. The following can also be applied to other signed-directed graphs. Steps 1-3 can be applied for other signed-directed motifs in Figure 6 (steps 3b-3d only implemented for acyclic variants, can also easily be implemented for cycle variants). There are two algorithms compared: quark decomposition and motif clustering.
+	
+Quark Decomposition:
+--------------------
+1. To generate the quark decomposition results for acyclic+++, run:
+    $ ./quark <graph> acyclic 3 YES
+
+2. Let <nuclei> is the output file <graph>_acyclic_3_NUCLEI, which contains the resulting quarks.
+
+3. We ignore any quark with less than 10 nodes and compute the average motif degree and conductance scores as follows:
+    
+    a. Filter the quarks with >=10 nodes in <nuclei> (and ignore the last line which corresponds to the entire graph):
+        $ awk '{if ($3>=10 && NF>=17) {for (i=8;i<NF;i++) printf ("%d ", $i);print ""}}' <nuclei> > <output_file>
+
+    b. Set the "COUNT_ONLY" macro in main.h to 1 and compile the code.
+
+    c. Compute the average motif degree and conductance scores for each line (i.e., quark) in <output_file>:
+        $ ./quark <graph> acyclic 3 NO <output_file> >results
+
+    d. To make it better readable:
+        $ grep cut results >r1; grep avg results>r2; paste r1 r2
+
+
+Motif Clustering:
+-----------------
+4. See the code at http://snap.stanford.edu/higher-order/code.html and follow the instructions to install. The code requires the installation of ARPACK. As of Oct 2020, the available ARPACK packages have some compatibility issues with the motif clustering code. The fix is to change the line 1037 in snap-higher-order/snap-adv/motifcluster.cpp as follows: replace "if (ido == 1) {" with "if (ido == 1 || ido == -1) {". Make sure to compile the snap library from scratch.
+
+5. Since the motif is acyclic+++, a new graph can be built, say <filtered_graph>, that only has the positive edges in reddit-body network.
+
+6. We use iterative recursive bisection to find multiple clusters. In each step, a single cluster is found and the residual (graph minus cluster) is extracted. If the conductance of a cluster is greater than 0.5 or the size of the cluster (or residual) is less than 10 nodes, we terminate the bisection. Run the following to compute recursive bisection:
+    $ scripts/recbisection.sh <filtered_graph> M5
+
+The output file is named <filtered_graph>-M5-RECBI-CLUSTERS and contains a cluster in each line. The first cluster is the one with near-optimal conductance, denoted by MC-SINGLE. The rest are shown by MC-REC-BISECTION.
+
+7. Average motif degree and conductance scores are computed as in the step 3 of the quark decomposition above (replace <nuclei> by the <graph>-M5-RECBI-CLUSTERS)
+
+
+
+
+
+LAST PARAGRAPH IN SECTION 5.2.2
+-------------------------------
+reddit-body network and metadata for its nodes (metadata/body_reddit_map.txt) are under datasets/signed_directed.
+
+1. Simply follow the steps 1-2 above in FIGURE 7 to get the <nuclei> file for acycle+++ (or any other signed-directed motifs in Figure 6). To get the metadata (i.e., subreddit name) for each node, run the following for the <nuclei> file:
+    $ scripts/node_metadata.sh <nuclei> metadata/body_reddit_map.txt
+This gives each subgraph separated by empty lines.
+
+
+
+
+
+TABLE 5 and FIGURE 8
+--------------------
+fb100 networks and metadata for their nodes are under datasets/node_labeled. There are two algorithms compared: quark decomposition and nucleus decomposition. Go to lqd folder and see the compilation inst.
+Both algorithms can be run in the same way.
+
+1. To generate the quark (or nucleus) decomposition results for triangle motifs, run:
+    $ ./labeled_quark <graph> 23 YES <lmotif>
+where <lmotif> is FMM or FFM for quark decomposition, and XXX for nucleus decomposition (which ignores metadata)
+
+2. To generate the quark (or nucleus) decomposition results for four-clique motifs, run:
+    $ ./labeled_quark <graph> 34 YES <lmotif>
+where <lmotif> is FMMM, FFMM, or FFFM for quark decomposition, and XXXX for nucleus decomposition (which ignores metadata)
+
+2. Let <nuclei> is the output file <graph>_<type>_<lmotif>_NUCLEI, which contains the resulting quarks (<type> is 23 or 34)
+
+3. Run the following to get the female ratios (number of female to total) for any leaf quark (see Def. 5) with at least 10 nodes:
+    $ scripts/femaleRatio.sh <nuclei> <metadata>
+where <metadata> is the corresponding metadata file for this graph.
+The output shows the female ratios for each leaf quark (with >=10 nodes) in the last column, the number of nodes and edges in the 3rd and 4th columns, and the edge density in the 5th column. Also, the last line shows the average of female ratios, which are reported in columns 5-11 in Table 5.
+
+
