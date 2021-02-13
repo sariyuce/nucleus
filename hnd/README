@@ -1,12 +1,141 @@
-There are 3 folders: qd, nd, lqd
-    - qd has the quark decomposition code for directed and signed_directed networks (for Sections 5.1 and 5.2)
-    - uqd has the quark decomposition code for networks with only reciprocal edges, where if u->v then v->u (for Section 5.1)
-    - lqd has the quark decomposition code for node-labeled networks (for Section 5.3)
+Here we explain how to compile the codes and reproduce the experiments. If you have any questions, please email me at erdem@buffalo.edu
 
-<graph> is the input graph file
-<motif> is cycle, acyclic, outp, inp, cyclep, or cyclepp
-<MCmotif> is M1 to M7
-<graph_rec> is a variant of a <graph>; it contains only the reciprocal edges in <graph> (see datasets/directed/README to how to generate that for a given graph)
+If you use this code, cite the following:
+
+Ahmet Erdem Sarıyüce. 2021. Motif-driven Dense Subgraph Discovery in Directed and Labeled Networks. In Proceedings of the Web Conference 2021 (WWW ’21), April 19–23, 2021, Ljubljana, Slovenia. ACM, New York, NY, USA, 13 pages. https://doi.org/10.1145/3442381.3450055
+
+
+There are 3 folders:
+    - qd: quark decomposition code for directed and signed_directed networks (for Sections 5.1 and 5.2)
+    - uqd: quark decomposition code for directed and signed_directed networks with only reciprocal edges, where if u->v then v->u (for Section 5.1)
+    - lqd: quark decomposition code for node-labeled networks (for Section 5.3)
+
+All the datasets can be found at http://sariyuce.com/WWW21_datasets.tar (3.8 GB). There are 4 folders in datasets:
+    - directed: 11 directed networks in Table 1 and metadata for some
+    - signed_directed: 4 signed-directed networks in Table 4 and metadata for some
+    - node_labeled: 100 networks from fb100 dataset and metadata for all
+    - scripts: some scripts that are useful for the experiments (more details are given below)
+
+In the descriptions below:
+    - <graph> is the input graph file
+    - <motif> is cycle, acyclic, outp, inp, cyclep, or cyclepp
+    - <MCmotif> is M1 to M7 (as done in [8])
+    - <graph_rec> is a variant of a <graph>; it contains only the reciprocal edges in <graph> (see datasets/directed/README to how to generate that for a given graph)
+
+
+Compilation
+-----------
+For directed triangles:
+
+For the motifs in Fig. 1, except reciprocal:
+
+1. Go to qd:
+    $ cd qd
+
+2. Compile:
+    $ make
+
+3. Run:
+    $ ./quark <graph> <motif> <hierarchy?>
+where <graph> is the input graph in the edge list format.
+      <motif> is one of the following: cycle, acyclic, inp, outp, cyclep, cyclepp
+	  <hierarchy> is YES or NO. YES computes the hierarchy, subgraphs, and densities. NO computes only K values and outputs <graph>_<motif>_K file.
+When <hierarchy> is YES, there are 2 output files
+		- <graph>_<motif>_Hierarchy: Runtimes and statistics.
+		- <graph>_<motif>_NUCLEI: Each line is a subgraph (node ids), but first 6 numbers are the subgraph-id, K value, |V|, |E|, edge density, and 1 (0) if the quark is (not) a leaf in the hierarchy. Ignore the -1 at the end.
+
+4. Example:
+    $ ./quark eat.txt inp-truss YES
+uses in+ motif for quark decomposition with hierarchy construction.
+
+For reciprocal motif:
+
+5. Go to uqd:
+    $ cd uqd
+
+6. Compile:
+    $ make
+
+7. Run:
+    $ ./undirected_quark <graph_rec> 23 <hierarchy?>
+where <graph_rec> is a variant of a <graph>; it contains only the reciprocal edges in <graph> (see datasets/directed/README to how to generate that for a given graph).
+	  <hierarchy> is YES or NO. YES computes the hierarchy, subgraphs, and densities. NO computes only K values and outputs <graph>_<motif>_K file.
+When <hierarchy> is YES, there are 2 output files
+		- <graph>_23_Hierarchy: Runtimes and statistics.
+		- <graph>_23_NUCLEI: Each line is a subgraph (node ids), but first 6 numbers are the subgraph-id, K value, |V|, |E|, edge density, and 1 (0) if the quark is (not) a leaf in the hierarchy. Ignore the -1 at the end.
+
+8. Example:
+    $ ./undirected_quark eat_rec.txt 23 YES
+uses reciprocal motif for quark decomposition with hierarchy construction.
+
+
+
+
+
+For signed-directed motifs (Fig. 6):
+
+1. Go to qd:
+    $ cd qd
+    
+2. Enable SIGNS flag and compile:
+    $ SIGNS=yes make -e
+
+3. Run:
+    $ ./quark <graph> <motif> <sign> <hierarchy?>
+where <graph> is the input graph in edge list format; third column is -1 or 1 for neagtive/positive edges
+      <motif> is acyclic or cycle
+      <hierarchy> is YES or NO. YES computes the hierarchy, subgraphs, and densities. NO computes only K values.
+      <sign> is 3, 1, -1, -3 for +++, ++-, +--, ---; 11, 12, 13 for ++-a, ++-b, ++-c; -11, -12, -13 for +--a, +--b, +--c; last six are only for acyclic (see Fig. 6)
+When <hierarchy> is YES, there are 2 output files
+		- <graph>_<motif>_<sign>_Hierarchy: Runtimes and statistics.
+		- <graph>_<motif>_<sign>_NUCLEI: Each line is a subgraph (node ids), but first 6 numbers are the subgraph-id, K value, |V|, |E|, edge density, and 1 (0) if the quark is (not) a leaf in the hierarchy. Ignore the -1 at the end.
+
+4. Example:
+    $ ./quark body-reddit.txt acyclic-truss YES -12
+uses acyclic+--b motif for quark decomposition with hierarchy construction.
+
+
+
+
+
+For node-labeled motifs (Sec. 5.3)
+
+1. Go to lqd:
+    $ cd lqd
+    
+2. Compile:
+    $ make -e
+
+3. Run:
+    $ ./labeled_quark <graph> <type> <lmotif> <hierarchy?>
+where <graph> is the input graph in edge list format
+      <type> is 23 (for triangles) and 34 (for four-cliques)
+      <hierarchy> is YES or NO. YES computes the hierarchy, subgraphs, and densities. NO computes only K values.
+      <lmotif> is FMM or FFM when type is 23, and it is FMMM, FFMM, or FFFM when type is 34
+      <hierarchy> is YES or NO. YES computes the hierarchy, subgraphs, and densities. NO computes only K values.
+When <hierarchy> is YES, there are 2 output files
+		- <graph>_<type>_<lmotif>_Hierarchy: Runtimes and statistics.
+		- <graph>_<type>_<lmotif>_NUCLEI: Each line is a subgraph (node ids), but first 6 numbers are the subgraph-id, K value, |V|, |E|, edge density, and 1 (0) if the quark is (not) a leaf in the hierarchy. Ignore the -1 at the end.
+
+4. Example:
+    $ ./labeled_quark UCLA26.tx 23 FFM YES
+uses FFM triangle motif for quark decomposition with hierarchy construction.
+
+
+
+
+
+
+
+
+
+
+
+
+
+Reproducing the experiments
+---------------------------
+
 
 
 TABLE 1
@@ -34,25 +163,24 @@ Quark Decomposition:
 
 2. Let <nuclei> is the output file <graph>_<motif>_NUCLEI, which contains the resulting quarks.
 
-3. We ignore any quark with less than 10 nodes and compute the average motif degree and conductance scores as follows:
+3. We compute the average motif degree and conductance scores as follows:
     
-    a. Filter the quarks with >=10 nodes in <nuclei> (and ignore the last line which corresponds to the entire graph):
-        $ awk '{if ($3>=10 && NF>=17) {for (i=8;i<NF;i++) printf ("%d ", $i);print ""}}' <nuclei> > <output_file>
+    a. Set the "COUNT_ONLY" macro in main.h to 1 and compile the code.
 
-    b. Set the "COUNT_ONLY" macro in main.h to 1 and compile the code.
+    b. For <nuclei>, compute the average motif degree and conductance scores for each line (i.e., quark), along with the size information:
+        $ ./quark <graph> <motif> NO <nuclei> >results
 
-    c. Compute the average motif degree and conductance scores for each line (i.e., quark), along with the size information, in <output_file>:
-        $ ./quark <graph> <motif> NO <output_file> >results
-
-    d. To make it better readable:
+    c. To make it better readable:
         $ grep cut results >r1; grep avg results>r2; paste r1 r2
 
 4. To generate Fig. 3a, go to uqd directory and run:
     $ ./undirected_quark <graph_rec> 23 YES
-<graph_rec> is a variant of a <graph>; it contains only the reciprocal edges in <graph> (see datasets/directed/README to how to generate that for a given graph)
+<graph_rec> is a variant of a <graph>; it contains only the reciprocal edges in <graph> (see datasets/directed/README to how to generate that for a given graph).
+As above, let <nuclei> is the output file <graph_rec>_23_NUCLEI, which contains the resulting quarks.
 
 5. Rest is similar to above; "COUNT_ONLY" macro also exist in main.h here. Run the following to compute avg. motif degree and conductance:
-    $ ./nuclues <graph> NO <output_file> >results
+    $ ./undirected_quark <graph> 23 NO <nuclei> >results
+    $ grep cut results >r1; grep avg results>r2; paste r1 r2
 
 Motif Clustering:
 -----------------
@@ -66,7 +194,7 @@ Motif Clustering:
 Note that <MCmotif> here is M1 to M7; the correspondence with the directed triangles in this work is M1: cycle, M2:cycle+, M3: cycle++, M4: reciprocal, M5: acyclic, M6: out+, M7: in+.
 The output file is named <graph>-<MCmotif>-RECBI-CLUSTERS and contains a cluster in each line. The first cluster is the one with near-optimal conductance, denoted by MC-SINGLE. The rest are shown by MC-REC-BISECTION.
 
-9. Average motif degree and conductance scores are computed as in the step 3 of the quark decomposition above (replace <nuclei> by the <graph>-<MCmotif>-RECBI-CLUSTERS)
+9. Average motif degree and conductance scores are computed as in the step 3 and 5 of the quark decomposition above (replace <nuclei> by the <graph>-<MCmotif>-RECBI-CLUSTERS)
 
 
 
@@ -86,9 +214,9 @@ Takaguchi and Yoshida (TY):
 
 3. Provided datasets can be used for TY runs, too.
 
-4. For Fig. 4a, run the cycle variant of TY. Maximum cycle-truss number is found 3. Code outputs triples: an edge and its truss number. Select the edges with cycle-truss number 3 to obtain the maximum truss subgraph. Put the nodes in the subgraph in a file, single line. Then use FIGURE 3, steps 3b-3d to get the average motif degree of the subgraph.
+4. For Fig. 4a, run the cycle variant of TY. Maximum cycle-truss number is found 3. Code outputs triples: an edge and its truss number. Select the edges with cycle-truss number 3 to obtain the maximum truss subgraph. Put the nodes in the subgraph in a file, single line. Then use FIGURE 3, steps 3a-3c to get the average motif degree of the subgraph.
 
-5. For Fig. 4b, run the flow variant of TY. Maximum flow-truss number is found 10. Code outputs triples: an edge and its truss number. Select the edges with flow-truss number 10 to obtain the maximum truss subgraph. Put the nodes in the subgraph in a file, single line. Then use FIGURE 3, steps 3b-3d to get the average motif degree of the subgraph.
+5. For Fig. 4b, run the flow variant of TY. Maximum flow-truss number is found 10. Code outputs triples: an edge and its truss number. Select the edges with flow-truss number 10 to obtain the maximum truss subgraph. Put the nodes in the subgraph in a file, single line. Then use FIGURE 3, steps 3a-3c to get the average motif degree of the subgraph.
 
 
 
@@ -140,13 +268,13 @@ Motif Clustering by k-means:
 
 LAST PARAGRAPH IN SECTION 5.1.3
 -------------------------------
-foodweb network and metadata for its nodes (metadata/foodweb_map.txt) are under datasets/directed. Here we only considered the role-aware quark numbers for edges by acyclic motif (which has 3 orbits). In foodweb, edge directions denote carbon transfers; so for u, v, w nodes with u->v, v->w, u->w edges; we call u "prey", w "predator", and v "balancer".
+foodweb network and metadata for its nodes (metadata/foodweb_map.txt) are under datasets/directed. Here we only considered the role-aware quark numbers for edges by acyclic motif (which has 3 orbits). Role-aware quark decomposition is not implemented (yet) for other motifs. In foodweb, edge directions denote carbon transfers; so for u, v, w nodes with u->v, v->w, u->w edges; we call u "prey", w "predator", and v "balancer".
 
 Role-aware quark decomposition:
 -------------------------------
 1. Run the following to get the 3 role-aware quark numbers for each edge in foodweb network:
-    $ ./quark <graph> acyclicRA NO > <output>
-The <output> has the 3 role-aware quark numbers for each edge. For the end points of each edge, we determine how strong its preyness/predatorness/balancerness by looking at the corresponding quark number. The order of orbits in <output> is u->v, u->w, v->w.
+    $ ./quark <graph> acyclicRA NO
+This outputs <graph>_acyclic-RA_K file, which has the 3 role-aware quark numbers for each edge. For the end points of each edge, we determine how strong its preyness/predatorness/balancerness by looking at the corresponding quark number. The order of orbits in the output file is u->v, u->w, v->w (corresponding to K1 K2 K3).
 
 2. Metadata for the nodes is available at metadata/foodweb_map.txt
 
@@ -194,26 +322,23 @@ All datasets are under datasets/signed_directed.
 
 FIGURE 7
 --------
-reddit-body network is under datasets/signed_directed. The following can also be applied to other signed-directed graphs. Steps 1-3 can be applied for other signed-directed motifs in Figure 6 (steps 3b-3d only implemented for acyclic variants, can also easily be implemented for cycle variants). There are two algorithms compared: quark decomposition and motif clustering.
+reddit-body network is under datasets/signed_directed. The following can also be applied to other signed-directed graphs. Steps 1-3 can be applied for other signed-directed motifs in Figure 6 (steps 3a-3c are only implemented for acyclic variants, can also easily be implemented for cycle variants). There are two algorithms compared: quark decomposition and motif clustering.
 	
 Quark Decomposition:
 --------------------
 1. To generate the quark decomposition results for acyclic+++, run:
-    $ ./quark <graph> acyclic 3 YES
+    $ ./quark <graph> acyclic YES 3
 
 2. Let <nuclei> is the output file <graph>_acyclic_3_NUCLEI, which contains the resulting quarks.
 
 3. We ignore any quark with less than 10 nodes and compute the average motif degree and conductance scores as follows:
     
-    a. Filter the quarks with >=10 nodes in <nuclei> (and ignore the last line which corresponds to the entire graph):
-        $ awk '{if ($3>=10 && NF>=17) {for (i=8;i<NF;i++) printf ("%d ", $i);print ""}}' <nuclei> > <output_file>
+    a. Set the "COUNT_ONLY" macro in main.h to 1 and compile the code.
 
-    b. Set the "COUNT_ONLY" macro in main.h to 1 and compile the code.
+    b. For <nuclei>, compute the average motif degree and conductance scores for each line (i.e., quark), along with the size information:
+        $ ./quark <graph> acyclic NO 3 <nuclei> >results
 
-    c. Compute the average motif degree and conductance scores for each line (i.e., quark) in <output_file>:
-        $ ./quark <graph> acyclic 3 NO <output_file> >results
-
-    d. To make it better readable:
+    c. To make it better readable:
         $ grep cut results >r1; grep avg results>r2; paste r1 r2
 
 
@@ -252,11 +377,11 @@ fb100 networks and metadata for their nodes are under datasets/node_labeled. The
 Both algorithms can be run in the same way.
 
 1. To generate the quark (or nucleus) decomposition results for triangle motifs, run:
-    $ ./labeled_quark <graph> 23 YES <lmotif>
+    $ ./labeled_quark <graph> 23 <lmotif> YES
 where <lmotif> is FMM or FFM for quark decomposition, and XXX for nucleus decomposition (which ignores metadata)
 
 2. To generate the quark (or nucleus) decomposition results for four-clique motifs, run:
-    $ ./labeled_quark <graph> 34 YES <lmotif>
+    $ ./labeled_quark <graph> 34 <lmotif> YES
 where <lmotif> is FMMM, FFMM, or FFFM for quark decomposition, and XXXX for nucleus decomposition (which ignores metadata)
 
 2. Let <nuclei> is the output file <graph>_<type>_<lmotif>_NUCLEI, which contains the resulting quarks (<type> is 23 or 34)
@@ -265,5 +390,6 @@ where <lmotif> is FMMM, FFMM, or FFFM for quark decomposition, and XXXX for nucl
     $ scripts/femaleRatio.sh <nuclei> <metadata>
 where <metadata> is the corresponding metadata file for this graph.
 The output shows the female ratios for each leaf quark (with >=10 nodes) in the last column, the number of nodes and edges in the 3rd and 4th columns, and the edge density in the 5th column. Also, the last line shows the average of female ratios, which are reported in columns 5-11 in Table 5.
+
 
 
