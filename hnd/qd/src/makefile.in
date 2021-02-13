@@ -19,11 +19,6 @@ ifeq ($(SIGNS),yes)
 FLAGS      = -D SIGNS
 endif
 
-ifeq ($(ORBITS),yes)
-FLAGS      = -D ORBITS
-endif
-
-
 ifeq ($(DEBUG),yes)
 CFLAGS    += -g
 CXXFLAGS    += -g 
@@ -36,11 +31,6 @@ CXXFLAGS    += -O2
 LDFLAGS   += 
 endif
 
-#ifeq ($(OPT),yes)
-#CFLAGS    += -O2 -DNDEBUG
-#CXXFLAGS    += -O2 -DNDEBUG
-#LDFLAGS   += -DNDEBUG
-#endif
 
 ifeq ($(DUMP_K),yes)
 CFLAGS    += -D DUMP_K
