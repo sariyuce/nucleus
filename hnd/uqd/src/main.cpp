@@ -122,7 +122,7 @@ int main (int argc, char *argv[]) {
 		}
 	}
 	else {
-		if (nd == "23") {
+		if (nd == "23")
 			base_ktruss (graph, hierarchy, nEdge, K, &maxK, vfile, fp);
 	}
 
