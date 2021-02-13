@@ -6,7 +6,8 @@ int main (int argc, char *argv[]) {
 	if (argc < 3) {
 		fprintf(stderr, "usage: %s "
 				"\n <filename>"
-				"\n <nucleus type: 12, 13, 14, 23, 24, 34>"
+				"\n <23 for triangles, 34 for four-cliques>"
+				"\n <FFM FMM for 23; FFFM FFMM FMMM for 34"
 				"\n <hierarchy?: YES or NO>\n", argv[0]);
 		exit(1);
 	}
@@ -16,8 +17,8 @@ int main (int argc, char *argv[]) {
 	string gname = tmp.substr (tmp.find_last_of("/") + 1);
 	string rest = tmp.substr (0, tmp.find_last_of("/"));
 	string nd (argv[2]);
-	if (!(nd == "12" || nd == "13" || nd == "14" || nd == "23" || nd == "24" || nd == "34")) {
-		printf ("Invalid algorithm, options are 12, 13, 14, 23, 24, and 34\n");
+	if (!(nd == "23" || nd == "34")) {
+		printf ("Invalid algorithm, options are 23 and 34\n");
 		exit(1);
 	}
 
@@ -25,7 +26,7 @@ int main (int argc, char *argv[]) {
 	edge nEdge = 0;
 	Graph graph;
 	readGraph<vertex, edge> (filename, graph, &nEdge);
-	string hrc (argv[3]);
+
 	string vfile = gname + "_" + nd;
 	string out_file;
 
@@ -35,66 +36,38 @@ int main (int argc, char *argv[]) {
 	string metafile = rest + "/fb100META/" + hname + ".mat.txt";
 	printf ("metafile: %s\n", metafile.c_str());
 	printf ("graph.size: %d\n", graph.size());
-//	FILE* p = fopen (metafile.c_str(), "r");
-	FILE* p = fopen ("/user/erdem/labeled_und/nucleus-rls/nd/34res/b-genders.txt", "r");
+	FILE* p = fopen (metafile.c_str(), "r");
 
 	int a, b, c, d, e, f, g;
 	char dummy;
 	int i = 1;
 
-//	while (1) {
-//		if (fscanf (p, "%d %c %d %c %d %c %d %c %d %c %d %c %d",
-//				&a, &dummy, &b, &dummy, &c, &dummy, &d, &dummy, &e, &dummy, &f, &dummy, &g) == EOF)
-//			break;
-////		printf ("a: %d b: %d c: %d d: %d e: %d f: %d g: %d\n", a, b, c, d, e, f, g);
-//		gender[i++] = b;
-//	}
+	while (1) {
+		if (fscanf (p, "%d %c %d %c %d %c %d %c %d %c %d %c %d",
+			&a, &dummy, &b, &dummy, &c, &dummy, &d, &dummy, &e, &dummy, &f, &dummy, &g) == EOF)
+			break;
+		gender[i++] = b;
+	}
 
-	gender[1596]=		2;
-	gender[203]=		1;
-	gender[2224	]=	1;
-	gender[252]=		2;
-	gender[2826]=		2;
-	gender[2975]=		2;
-	gender[3314]=		2;
-	gender[3588]=		1;
-	gender[535]=		1;
-	gender[568]=		2;
-	gender[646]=		2;
-	gender[87]=		2;
-	printf ("asdf graph.size: %d\n", graph.size());
-	for (int i = 0; i < 10; i++)
-		printf ("gender[%d]: %d\n", i, gender[i]);
-
-	string type (argv[4]);
+	string type (argv[3]);
 	vfile += "_" + type;
 	int labelType;
-	if (type == "FFM")
-		labelType = FFM;
-	else if (type == "FMM")
-		labelType = FMM;
-	else if (type == "FFF")
-		labelType = FFF;
-	else if (type == "MMM")
-		labelType = MMM;
-	else if (type == "FFFF")
-		labelType = FFFF;
-	else if (type == "FFFM")
-		labelType = FFFM;
-	else if (type == "FFMM")
-		labelType = FFMM;
-	else if (type == "FMMM")
-		labelType = FMMM;
-	else if (type == "MMMM")
-		labelType = MMMM;
-	else if (type == "XXX")
-		labelType = XXX;
+	if (type == "FFM")		 labelType = FFM;
+	else if (type == "FMM")	 labelType = FMM;
+	else if (type == "FFF")	 labelType = FFF;
+	else if (type == "MMM")	 labelType = MMM;
+	else if (type == "FFFF") labelType = FFFF;
+	else if (type == "FFFM") labelType = FFFM;
+	else if (type == "FFMM") labelType = FFMM;
+	else if (type == "FMMM") labelType = FMMM;
+	else if (type == "MMMM") labelType = MMMM;
+	else if (type == "XXX")	 labelType = XXX;
 	else {
 		printf ("invalid type\n");
 		exit(1);
 	}
 
-
+	string hrc (argv[4]);
 	bool hierarchy = (hrc == "YES" ? true : false);
 	if (hierarchy)
 		out_file = vfile + "_Hierarchy";
@@ -106,18 +79,8 @@ int main (int argc, char *argv[]) {
 	vertex maxK; // maximum K value in the graph
 	vector<vertex> K;
 
-	if (nd == "12")
-		base_kcore (graph, hierarchy, nEdge, K, &maxK, vfile, fp);
-	else if (nd == "13")
-		base_k13 (graph, hierarchy, nEdge, K, &maxK, vfile, fp);
-	else if (nd == "14")
-		base_k14 (graph, hierarchy, nEdge, K, &maxK, vfile, fp);
-	else if (nd == "23") {
+	if (nd == "23")
 		base_ktruss (graph, hierarchy, nEdge, K, &maxK, vfile, fp, gender, labelType);
-		//		base_ktruss_storeTriangles (graph, hierarchy, nEdge/2, K, &maxK, vfile, fp);
-	}
-	else if (nd == "24")
-		base_k24 (graph, hierarchy, nEdge, K, &maxK, vfile, fp);
 	else if (nd == "34")
 		base_k34 (graph, hierarchy, nEdge, K, &maxK, vfile, fp, gender, labelType);
 

@@ -1,45 +1,6 @@
 #include "main.h"
 
 
-double color (double ed) {
-        double a = (1 - ed) / 0.25;
-        int X = floor(a);
-        int Y = floor(255 * (a-X));
-        if (X < 4)
-                return (3 - X) + (255 - (double) Y) / 255;
-        else
-                return 0;
-}
-
-void print_nested_circle (vector<subcore>& hrc, int ind, FILE* fp, string cfl) {
-	if (hrc[ind].size < LOWERBOUND)
-            return;
-        double parent_color = color(hrc[ind].ed);
-        fprintf(fp, "{\"color\": %lf, \"fl\": \"%s\", \"index\": \"%d\", \"name\": \"%ld %.2lf (%d)\", \"size\": %ld",
-                        parent_color, cfl.c_str(), ind, hrc[ind].size, hrc[ind].ed, hrc[ind].K, hrc[ind].size);
-        if (hrc[ind].children.size() == 1) {
-                fprintf(fp, ", \"children\": [\n");
-                int ch = hrc[ind].children[0];
-                // ghost child
-                fprintf(fp, "{\"color\": %lf, \"fl\": \"\", \"name\": \"\", \"size\": %ld}, ",
-                                parent_color, hrc[hrc[ch].parent].size - hrc[ch].size);
-                // real child
-                print_nested_circle (hrc, ch, fp, cfl);
-                fprintf(fp, "\n]\n");
-        }
-        else if (hrc[ind].children.size() > 1) {
-                fprintf(fp, ", \n\"children\": [\n");
-                size_t i;
-                for (i = 0; i < hrc[ind].children.size() - 1; i++) {
-                        print_nested_circle (hrc, hrc[ind].children[i], fp, cfl);
-                        fprintf(fp, ",\n");
-                }
-                print_nested_circle (hrc, hrc[ind].children[i], fp, cfl);
-                fprintf(fp, "\n]");
-        }
-        fprintf(fp, "}\n");
-}
-
 inline vertex commons (vector<vertex>& a, vector<vertex>& b) {
 	vertex i = 0, j = 0;
 	vertex count = 0;
@@ -313,11 +274,4 @@ void presentNuclei (int variant, vector<subcore>& skeleton, vector<vertex>& comp
 		}
 	}
 	fclose (fp);
-
-
-    string temp (vfile);
-    string cfl = temp + "_circle.json";
-    FILE* gip = fopen (cfl.c_str(), "w");
-    print_nested_circle (skeleton, skeleton.size() - 1, gip, cfl);
-    fclose(gip);
 }

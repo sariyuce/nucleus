@@ -26,6 +26,7 @@
 
 using namespace std;
 
+// F is denoted by 1 and M is denoted by 2 in the metadata files
 #define MMM 6
 #define FMM 5
 #define FFM 4
@@ -42,7 +43,7 @@ using namespace std;
 
 
 #define LOWERBOUND 0
-#define UPPERBOUND 1000000 // compute densities of subgraphs with at most this size, set to INT_MAX to compute all -- takes a lot of time
+#define UPPERBOUND 5000 // compute densities of subgraphs with at most this size, set to INT_MAX to compute all -- takes a lot of time
 #define THRESHOLD 0.0
 #define PRIME 251231 // for hash function
 
@@ -225,12 +226,7 @@ inline bool genderCheck (vector<vertex>& gender, int labelType, vector<int>& num
 template <typename VtxType, typename EdgeType>
 void readGraph (char *filename, vector<vector<VtxType>>& graph, EdgeType* nEdge);
 
-void base_kcore (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* maxCore, string vfile, FILE* fp);
-void base_k13 (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* maxCore, string vfile, FILE* fp);
-void base_k14 (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* maxCore, string vfile, FILE* fp);
 void base_ktruss (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* maxtruss, string vfile, FILE* fp, vector<int>& gender, int labelType);
-void base_ktruss_storeTriangles (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* maxtruss, string vfile, FILE* fp);
-void base_k24 (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* max24, string vfile, FILE* fp);
 void base_k34 (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* max34, string vfile, FILE* fp, vector<int>& gender, int labelType);
 
 void createSkeleton (vertex u, initializer_list<vertex> neighbors, vertex* nSubcores, vector<vertex>& K, vector<subcore>& skeleton,	vector<vertex>& component, vector<vertex>& unassigned, vector<vp>& relations);

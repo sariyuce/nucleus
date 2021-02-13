@@ -1,7 +1,7 @@
 #include "main.h"
 
 #define MAXLINE 1000000
-#define WRITE_BINARY
+//#define WRITE_BINARY
 
 static int really_read(std::istream& is, char* buf, size_t global_size) {
 	char* temp2 = buf;

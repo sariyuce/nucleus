@@ -122,12 +122,6 @@ lol count4cliques (Graph& graph, Graph& orderedGraph, vector<vp>& el, vector<ver
 					increment (u, v, x, xtris, el, xel, orderedTris, graph, FC);
 					increment (u, w, x, xtris, el, xel, orderedTris, graph, FC);
 					increment (v, w, x, xtris, el, xel, orderedTris, graph, FC);
-
-					sort(nums.begin(), nums.end());
-					printf ("%d %d %d %d for %d %d %d %d\n",
-							gender[nums[0]], gender[nums[1]], gender[nums[2]], gender[nums[3]],
-							nums[0], nums[1], nums[2], nums[3]);
-
 					fc++;
 				}
 				i++; j++; k++;
@@ -144,7 +138,6 @@ lol count4cliques (Graph& graph, Graph& orderedGraph, vector<vp>& el, vector<ver
 		}
 	}
 	return fc;
-	exit (1);
 }
 
 void base_k34 (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* max34, string vfile, FILE* fp, vector<int>& gender, int labelType) {
