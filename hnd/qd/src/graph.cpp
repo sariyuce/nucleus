@@ -2,7 +2,7 @@
 
 
 #define MAXLINE 1000000
-#define WRITE_BINARY
+//#define WRITE_BINARY
 
 bool rev (vertex i, vertex j) { return (i > j); }
 
@@ -337,11 +337,6 @@ void readDirectedGraph (char *filename, vector<vector<VtxType>>& graph, EdgeType
 		signs[u][ind (v, graph[u])] = sign;
 	}
 	fclose (fp);
-
-//	for (auto u = 0; u < graph.size(); u++)
-//		for (auto i = 0; i < graph[u].size(); i++)
-//			printf ("%d %d with sign %d\n", u, graph[u][i], signs[u][i]);
-
 #endif
 	return;
 }
