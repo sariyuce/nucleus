@@ -163,7 +163,7 @@ int main (int argc, char *argv[]) {
 		Graph graph (rawgraph);
 
 		if (nd == "cycle")
-			cycle_truss_SUBS (graph, hierarchy, nEdge, K, &maxK, fp, vfile);
+			cycle_truss (graph, hierarchy, nEdge, K, &maxK, fp, vfile);
 		else if (nd == "acyclic")
 			acyclic_truss (graph, hierarchy, nEdge, K, &maxK, fp, vfile);
 		else if (nd == "acyclic-RA")
