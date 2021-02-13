@@ -64,7 +64,11 @@ int main (int argc, char *argv[]) {
 	// to read subgraph/quark/cluster lists and compute avg. motif degree and conductance metrics
 	if (COUNT_ONLY) {
 		string line;
+#ifdef SIGNS
+		ifstream myfile(argv[5]);
+#else
 		ifstream myfile(argv[4]);
+#endif
 		int num;
 		while (getline( myfile, line )) {
 			Graph graph (rawgraph);

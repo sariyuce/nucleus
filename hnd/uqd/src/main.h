@@ -26,7 +26,7 @@
 
 using namespace std;
 
-#define COUNT_ONLY 1 // make it 1 to count motifs only (and terminate)
+#define COUNT_ONLY 0 // make it 1 to count motifs only (and terminate)
 #define LOWERBOUND 0
 #define UPPERBOUND 100 // compute densities of subgraphs with at most this size, set to INT_MAX to compute all -- takes a lot of time
 #define THRESHOLD 0.0
