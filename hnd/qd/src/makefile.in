@@ -1,0 +1,67 @@
+OPT=yes
+DEBUG=no
+
+# ------- LINUX ----------
+ccc = gcc
+CC        = gcc
+CXX        = g++
+LD         = g++
+CFLAGS     = $(FLAGS) -Wstrict-prototypes
+CXXFLAGS   = $(FLAGS) -std=c++11
+LDFLAGS    = $(FLAGS) 
+
+
+ifeq ($(WARN),yes)
+FLAGS      = -Wall -W -Wextra
+endif
+
+ifeq ($(SIGNS),yes)
+FLAGS      = -D SIGNS
+endif
+
+ifeq ($(ORBITS),yes)
+FLAGS      = -D ORBITS
+endif
+
+
+ifeq ($(DEBUG),yes)
+CFLAGS    += -g
+CXXFLAGS    += -g 
+LDFLAGS   += -g 
+endif
+
+ifeq ($(OPT),yes)
+CFLAGS    += -O2 
+CXXFLAGS    += -O2 
+LDFLAGS   += 
+endif
+
+#ifeq ($(OPT),yes)
+#CFLAGS    += -O2 -DNDEBUG
+#CXXFLAGS    += -O2 -DNDEBUG
+#LDFLAGS   += -DNDEBUG
+#endif
+
+ifeq ($(DUMP_K),yes)
+CFLAGS    += -D DUMP_K
+CXXFLAGS    += -D DUMP_K
+LDFLAGS   += -D DUMP_K
+endif
+
+AR         = ar rv
+RANLIB     = ranlib
+
+INC        = 
+LIBS       = -lm
+
+
+.SUFFIXES:
+.SUFFIXES: .o .cpp
+.SUFFIXES: .o .c
+
+.c.o: 
+	$(ccc) $(CFLAGS) $(INCLUDES) -c $*.c -o $@
+
+.cpp.o: 
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -c $*.cpp -o $@
+	
