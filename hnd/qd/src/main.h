@@ -325,15 +325,7 @@ inline int ind (int val, vector<int>& v) {
 	return -1;
 }
 
-
-inline void checkAndDec (vertex kw, vertex kv, vertex w, vertex v, Naive_Bucket* nBucket, vertex tc) {
-	if (kv == -1 && kw == -1) {
-		if ((*nBucket).CurrentValue(v) > tc)
-			(*nBucket).DecVal(v);
-		if ((*nBucket).CurrentValue(w) > tc)
-			(*nBucket).DecVal(w);
-	}
-}
+void createSkeleton (vertex u, initializer_list<vertex> neighbors, vertex* nSubcores, vector<vertex>& K, vector<subcore>& skeleton,	vector<vertex>& component, vector<vertex>& unassigned, vector<vp>& relations);
 
 inline void checkAndDecAndHier (vertex w, vertex v, Naive_Bucket* nBucket, vertex tc, vertex u,
 		bool hierarchy, vertex* nSubcores, vector<vertex>& K, vector<subcore>& skeleton,
@@ -359,7 +351,7 @@ void readGraph (char *filename, vector<vector<VtxType>>& graph, EdgeType* nEdge)
 template <typename VtxType, typename EdgeType>
 void readDirectedGraph (char *filename, vector<vector<VtxType>>& graph, EdgeType* nEdge);
 
-void createSkeleton (vertex u, initializer_list<vertex> neighbors, vertex* nSubcores, vector<vertex>& K, vector<subcore>& skeleton,	vector<vertex>& component, vector<vertex>& unassigned, vector<vp>& relations);
+
 void updateUnassigned (vertex t, vector<vertex>& component, vertex* cid, vector<vp>& relations, vector<vertex>& unassigned);
 void buildHierarchy (vertex cn, vector<vp>& relations, vector<subcore>& skeleton, vertex* nSubcores, edge nEdge, vertex nVtx);
 void presentNuclei (int variant, vector<subcore>& skeleton, vector<vertex>& component, Graph& graph, edge nEdge, helpers& ax, string vfile, FILE* gp);
@@ -370,12 +362,13 @@ void asymmetric_undirecteds (vertex u, vector<vertex>& b, vector<vertex>& ret);
 void undirecteds (vector<vertex>& b, vector<vertex>& ret);
 void incomings (vector<vertex>& a, vector<vertex>& ret);
 
-void cycle_truss (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* maxK, FILE* fp);
-void acyclic_truss (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* maxK, FILE* fp);
-void outp_truss (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* maxK, FILE* fp);
-void cyclep_truss (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* maxK, FILE* fp);
-void inp_truss (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* maxK, FILE* fp);
-void cyclepp_truss (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* maxK, FILE* fp);
+void cycle_truss (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* maxK, FILE* fp, string vfile);
+void acyclic_truss (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* maxK, FILE* fp, string vfile);
+void acyclic_truss_roleAware (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* maxK, FILE* fp, string vfile);
+void outp_truss (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* maxK, FILE* fp, string vfile);
+void cyclep_truss (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* maxK, FILE* fp, string vfile);
+void inp_truss (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* maxK, FILE* fp, string vfile);
+void cyclepp_truss (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, vertex* maxK, FILE* fp, string vfile);
 
 double simple_count_acyclics (Graph& dgraph, unordered_map<int, bool>& numbers, unordered_map<int, bool>& crossing);
 double simple_count_cycles (Graph& dgraph, unordered_map<int, bool>& numbers, unordered_map<int, bool>& crossing);

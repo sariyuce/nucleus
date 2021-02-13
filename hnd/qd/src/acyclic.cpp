@@ -103,7 +103,6 @@ vertex count_acyclics (Graph& dgraph, Graph& TC) {
 				TC[u][ints[k]]++; // u-w
 				TC[v][ints[k+1]]++; // v-w
 				count++;
-				printf ("acyclic: %d %d %d\n", u, v, w);
 #else
 				_m11 = _11 = s1 = signs[u][ret[r]]; // u-v
 				_m12 = _12 = s2 = signs[u][ints[k]]; // u-w
@@ -512,128 +511,6 @@ void acyclic_truss_roleAware (Graph& graph, bool hierarchy, edge nEdge, vector<v
 
 	for (auto i = 0; i < el.size(); i++)
 		printf ("listfor %d ( %d - %d ): K1: %d \t K2: %d \t K3: %d\n", i, el[i].first, abs(el[i].second), K1[i], K2[i], K3[i]); // the ones with -1 kappa either do not participate in any outp or u > v for the corresponding u-v edge
-
-
-	// edge traversal
-	if (1) {
-		vector<bool> visited_1 (nEdge, false);
-		vector<bool> visited_2 (nEdge, false);
-		vector<bool> visited_3 (nEdge, false);
-
-
-		int quarkNumber;
-		for (int iter = 1; iter <= 3; iter++)
-			for (auto i = 0; i < el.size(); i++) {
-				queue<vp> q;
-				if (iter == 1 && !visited_1[i] && K1[i] == *maxK) {
-					quarkNumber = K1[i];
-					if (quarkNumber > 0) {
-						printf ("startOfLoop\n");
-						q.push(make_pair (i, 1));
-						visited_1[i] = true;
-					}
-				}
-				if (iter == 2 && !visited_2[i] && K2[i] == *maxK) {
-					quarkNumber = K2[i];
-					if (quarkNumber > 0) {
-						printf ("startOfLoop\n");
-						q.push(make_pair (i, 2));
-						visited_2[i] = true;
-					}
-				}
-				if (iter == 3 && !visited_3[i] && K1[i] == *maxK) {
-					quarkNumber = K3[i];
-					if (quarkNumber > 0) {
-						printf ("startOfLoop\n");
-						q.push(make_pair (i, 3));
-						visited_3[i] = true;
-					}
-				}
-
-				vector<bool> marked (nEdge, false);
-				marked[i] = true;
-				while (!q.empty()) {
-					auto c = q.front();
-					q.pop();
-					int e = c.first;
-					int type = c.second;
-					vertex u = el[e].first; // source
-					vertex v = el[e].second; // target
-					int quark_val;
-					if (type == 1) quark_val = K1[e];
-					else if (type == 2) quark_val = K2[e];
-					else if (type == 3) quark_val = K3[e];
-					printf ("%d %d -- K: %d type: %d\n", u, v, quark_val, type);
-					vector<vertex> ints;
-					if (type == 1) {
-						inter (2, 2, graph, u, v, ints); // u-v is type TC1
-					}
-					else if (type == 2) {
-						inter (2, 1, graph, u, v, ints); // u-v is type TC2
-					}
-					else if (type == 3) {
-						inter (1, 1, graph, u, v, ints); // u-v is type TC3
-					}
-
-					vertex id1, id2;
-
-					for (auto k = 0; k < ints.size(); k+=2) {
-						vertex w = graph[u][ints[k]];
-						vertex x = graph[v][ints[k+1]];
-						if (w >= 0 && x >= 0) { // blue orbit - TC1
-							id1 = getEdgeId (u, w, xel, el, graph); // 2
-							id2 = getEdgeId (v, w, xel, el, graph); // 3
-							if (K2[id1] >= quarkNumber && K3[id2] >= quarkNumber) {
-								if (	!marked[id1]) {
-									marked[id1] = true;
-									visited_2[id1] = true;
-									q.push(make_pair (id1, 2));
-								}
-								if (!marked[id2]) {
-									marked[id2] = true;
-									visited_3[id2] = true;
-									q.push(make_pair (id2, 3));
-								}
-							}
-						}
-						else if (w < 0 && x < 0) { // green orbit - TC 3
-							w = M2P (w);
-							id1 = getEdgeId (w, u, xel, el, graph); // 1
-							id2 = getEdgeId (w, v, xel, el, graph); // 2
-							if (K1[id1] >= quarkNumber && K2[id2] >= quarkNumber) {
-								if (!marked[id1]) {
-									marked[id1] = true;
-									visited_1[id1] = true;
-									q.push(make_pair (id1, 1));
-								}
-								if (!marked[id2]) {
-									marked[id2] = true;
-									visited_2[id2] = true;
-									q.push(make_pair (id2, 2));
-								}
-							}
-						}
-						else if (w >= 0 && x < 0) { // purple orbit - TC 2
-							id1 = getEdgeId (u, w, xel, el, graph);
-							id2 = getEdgeId (w, v, xel, el, graph);
-							if (K1[id1] >= quarkNumber && K3[id2] >= quarkNumber) {
-								if (!marked[id1]) {
-									marked[id1] = true;
-									visited_1[id1] = true;
-									q.push(make_pair (id1, 1));
-								}
-								if (!marked[id2]) {
-									marked[id2] = true;
-									visited_3[id2] = true;
-									q.push(make_pair (id2, 3));
-								}
-							}
-						}
-					}
-				}
-
-			}
-	}
 
 	return;
 }

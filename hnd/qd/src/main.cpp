@@ -9,16 +9,18 @@
 int main (int argc, char *argv[]) {
 
 	const auto t1 = chrono::steady_clock::now();
-	if (argc < 2) {
+	if (argc < 4) {
 		fprintf(stderr, "usage: %s "
 				"\n filename"
-				"\n alg: \n"
+				"\n motif: \n"
 				"cycle\n"
 				"acyclic\n"
-				"out-p\n"
-				"cycle-p\n"
-				"in-p\n"
-				"cycle-pp\n"
+				"acyclic-RA\n"
+				"outp\n"
+				"cyclep\n"
+				"inp\n"
+				"cyclepp\n"
+				"hierarchy: YES or NO\n"
 				, argv[0]);
 		exit(1);
 	}
@@ -61,6 +63,7 @@ int main (int argc, char *argv[]) {
 
 	// to read subgraph/quark/cluster lists and compute avg. motif degree and conductance metrics
 	if (COUNT_ONLY) {
+		printf ("asdfa\n");
 		string line;
 		ifstream myfile(argv[4]);
 		int num;

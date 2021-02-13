@@ -214,16 +214,6 @@ void outp_truss (Graph& graph, bool hierarchy, edge nEdge, vector<vertex>& K, ve
 		print_time (fp, "Total outp-truss nucleus decomposition time: ", (p2 - p1) + (t2 - t1) + (b2 - b1) + (d2 - d1));
 	}
 
-
-
-	for (auto i = 0; i < el.size(); i++) {
-		vertex u = el[i].first; // source
-		vertex v = el[i].second; // target
-		if (v < 0) // u-v is undirected. green neighborhood
-			printf ("listfor 1 : %d ( %d - %d ): K: %d\n", i, u, -v, K[i]);
-		else
-			printf ("listfor 0 : %d ( %d - %d ): K: %d\n", i, u, v, K[i]);
-	}
 	return;
 }
 
