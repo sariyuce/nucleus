@@ -34,12 +34,6 @@ CXXFLAGS    += -D DUMP_K
 LDFLAGS   += -D DUMP_K
 endif
 
-ifeq ($(ONLY_LEAF),yes)
-CFLAGS    += -D ONLY_LEAD
-CXXFLAGS    += -D ONLY_LEAF
-LDFLAGS   += -D ONLY_LEAF
-endif
-
 AR         = ar rv
 RANLIB     = ranlib
 
