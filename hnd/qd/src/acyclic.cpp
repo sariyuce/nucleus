@@ -510,7 +510,7 @@ void acyclic_truss_roleAware (Graph& graph, bool hierarchy, edge nEdge, vector<v
 	}
 
 	for (auto i = 0; i < el.size(); i++)
-		printf ("listfor %d ( %d - %d ): K1: %d \t K2: %d \t K3: %d\n", i, el[i].first, abs(el[i].second), K1[i], K2[i], K3[i]); // the ones with -1 kappa either do not participate in any outp or u > v for the corresponding u-v edge
+		fprintf (fp, "for edge %d ( %d - %d ): K1: %d \t K2: %d \t K3: %d\n", i, el[i].first, abs(el[i].second), K1[i], K2[i], K3[i]); // the ones with -1 kappa either do not participate in any outp or u > v for the corresponding u-v edge
 
 	return;
 }
