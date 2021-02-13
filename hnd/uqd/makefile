@@ -1,6 +1,6 @@
 CODE_DIR = src
 
-nuc: 
+undirected_quark: 
 	$(MAKE) -C $(CODE_DIR) 
 clean: 
 	$(MAKE) -C $(CODE_DIR) clean 

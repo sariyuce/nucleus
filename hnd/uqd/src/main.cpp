@@ -6,7 +6,7 @@ int main (int argc, char *argv[]) {
 	if (argc < 3) {
 		fprintf(stderr, "usage: %s "
 				"\n <filename>"
-				"\n <nucleus type: 12, 13, 14, 23, 24, 34>"
+				"\n 23"
 				"\n <hierarchy?: YES or NO>\n", argv[0]);
 		exit(1);
 	}
@@ -16,10 +16,6 @@ int main (int argc, char *argv[]) {
 	string gname = tmp.substr (tmp.find_last_of("/") + 1);
 
 	string nd (argv[2]);
-//	if (!(nd == "12" || nd == "13" || nd == "14" || nd == "23" || nd == "24" || nd == "34")) {
-//		printf ("Invalid algorithm, options are 12, 13, 14, 23, 24, and 34\n");
-//		exit(1);
-//	}
 
 	// read the graph, give sorted edges in graph
 	edge nEdge = 0;
@@ -40,8 +36,8 @@ int main (int argc, char *argv[]) {
 	vertex maxK; // maximum K value in the graph
 	vector<vertex> K;
 	Graph graph (rawgraph);
-	// READ CLUSTER LISTS, CONSTRUCT INDUCED SUBGRAPHS
 
+	// read quark/subgraph/cluster lists, construct induced subgraphs, compute avg. motif degree and conductance metrics
 	if (COUNT_ONLY) {
 		string line;
 		ifstream myfile(argv[4]);
@@ -50,45 +46,7 @@ int main (int argc, char *argv[]) {
 			unordered_map<int, bool> numbers;
 			istringstream iss(line);
 			while (iss >> num)
-			{
 				numbers.emplace(num, true);
-			}
-
-
-
-			if (0) {
-				unordered_map<int, bool> visited;
-				for (auto& x: numbers) {
-					int u = x.first;
-					if (visited.find (u) == visited.end()) {
-						visited.emplace (u, true);
-						vector<int> list;
-						queue<vertex> bfsorder; // we are doing bfs
-						bfsorder.push (u);
-						list.push_back (u);
-
-						while (!bfsorder.empty()) {
-							vertex v = bfsorder.front();
-							bfsorder.pop();
-							for (size_t i = 0; i < graph[v].size(); i++) {
-								vertex w = graph[v][i];
-								if (numbers.find(w) != numbers.end() &&
-										visited.find(w) == visited.end()) {
-									visited.emplace (w, true);
-									bfsorder.push(w);
-									list.push_back (w);
-								}
-							}
-						}
-
-//						printf ("cluster: ");
-						for (auto i : list)
-							printf ("%d ", i);
-						printf ("\n");
-					}
-				}
-				return 0;
-			}
 
 			Graph boundary (rawgraph);
 			unordered_map<int, bool> crossing;
@@ -154,11 +112,6 @@ int main (int argc, char *argv[]) {
 				Graph orderedGraph;
 				createOrderedIndexEdges (boundary, el, xel, orderedGraph);
 
-
-				//for (int i = 0; i < el.size(); i++)
-				//	printf ("el: %d %d\n", el[i].first, el[i].second);
-
-
 				// Triangle counting for each edge
 				vector<vector<vertex> > TC (nVtx);
 				for (vertex i = 0; i < nVtx; i++)
@@ -167,59 +120,12 @@ int main (int argc, char *argv[]) {
 				simple_count_triangles (boundary, orderedGraph, TC, numbers, crossing);
 			}
 		}
-
-//			// filter the graph to find the induced subgraph
-//			int newE = 0;
-//			// first ditch all the adj lists of non-existing nodes
-//			for (int i = 0; i < graph.size(); i++) {
-//				if (numbers.find(i) == numbers.end())
-//					graph[i].clear();
-//			}
-//
-//			// then ditch the non-existing nodes from adj lists of existing nodes
-//			for (int i = 0; i < graph.size(); i++) {
-//				if (!graph[i].empty()) {
-//					vector<int> newneigs;
-//					for (int j = 0; j < graph[i].size(); j++) {
-//						vertex v = graph[i][j];
-//						if (numbers.find(v) != numbers.end()) {
-//							newneigs.push_back (graph[i][j]);
-//						}
-//					}
-//
-//					newE += newneigs.size();
-//					graph[i].assign (newneigs.begin(), newneigs.end());
-//				}
-//			}
-//
-//
-//			printf ("|V|: %d\t |E|: %d\t", numbers.size(), newE);
-
 	}
-		else {
-
-
-
-
-	if (nd == "12")
-		base_kcore (graph, hierarchy, nEdge, K, &maxK, vfile, fp);
-	else if (nd == "012")
-		degreeBasedHierarchy (graph, hierarchy, nEdge, K, &maxK, vfile, fp);
-	else if (nd == "13")
-		base_k13 (graph, hierarchy, nEdge, K, &maxK, vfile, fp);
-	else if (nd == "14")
-		base_k14 (graph, hierarchy, nEdge, K, &maxK, vfile, fp);
-	else if (nd == "23") {
-		base_ktruss (graph, hierarchy, nEdge, K, &maxK, vfile, fp);
-		// base_ktruss_storeTriangles (graph, hierarchy, nEdge/2, K, &maxK, vfile, fp);
+	else {
+		if (nd == "23") {
+			base_ktruss (graph, hierarchy, nEdge, K, &maxK, vfile, fp);
 	}
-	else if (nd == "023")
-		tcBasedHierarchy (graph, hierarchy, nEdge, K, &maxK, vfile, fp);
-	else if (nd == "24")
-		base_k24 (graph, hierarchy, nEdge, K, &maxK, vfile, fp);
-	else if (nd == "34")
-		base_k34 (graph, hierarchy, nEdge, K, &maxK, vfile, fp);
-	}
+
 #ifdef DUMP_K
 	string kfile = vfile + "_K_values";
 	FILE* kf = fopen (kfile.c_str(), "w");
@@ -232,15 +138,5 @@ int main (int argc, char *argv[]) {
 	printf ("%s\t|V|: %d\t|E|: %d\tmaxK for %s-nucleus: %d\n", gname.c_str(), rawgraph.size(), nEdge, nd.c_str(), maxK);
 	print_time (fp, "End-to-end Time: ", t2 - t1);
 	fclose (fp);
-/*
-	vector<int> dist (maxK+1, 0);
-	for (vertex i = 0; i < K.size(); i++)
-		if (K[i] >= 0)
-			dist[K[i]]++;
-
-	for (vertex i = 0; i < dist.size(); i++)
-		if (dist[i] > 0)
-			printf ("K %d %d\n", i, dist[i]);
-*/
 	return 0;
 }
