@@ -45,8 +45,15 @@ int main (int argc, char *argv[]) {
 		while (getline( myfile, line )) {
 			unordered_map<int, bool> numbers;
 			istringstream iss(line);
-			while (iss >> num)
-				numbers.emplace(num, true);
+
+			int d;
+			double f;
+			iss >> d >> d >> d >> d >> f >> d >> d;// skip the first 7 numbers
+
+			while (iss >> num) {
+				if (num != -1)
+					numbers.emplace(num, true);
+			}
 
 			Graph boundary (rawgraph);
 			unordered_map<int, bool> crossing;

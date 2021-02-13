@@ -63,7 +63,6 @@ int main (int argc, char *argv[]) {
 
 	// to read subgraph/quark/cluster lists and compute avg. motif degree and conductance metrics
 	if (COUNT_ONLY) {
-		printf ("asdfa\n");
 		string line;
 		ifstream myfile(argv[4]);
 		int num;
@@ -71,8 +70,14 @@ int main (int argc, char *argv[]) {
 			Graph graph (rawgraph);
 			unordered_map<int, bool> numbers;
 			istringstream iss(line);
+
+			int d;
+			double f;
+			iss >> d >> d >> d >> d >> f >> d >> d;// skip the first 7 numbers
+
 			while (iss >> num) {
-				numbers.emplace(num, true);
+				if (num != -1)
+					numbers.emplace(num, true);
 			}
 
 			Graph boundary (rawgraph);
