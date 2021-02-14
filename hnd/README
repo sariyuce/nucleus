@@ -10,7 +10,7 @@ There are 3 folders:
     - uqd: quark decomposition code for directed and signed_directed networks with only reciprocal edges, where if u->v then v->u (for Section 5.1)
     - lqd: quark decomposition code for node-labeled networks (for Section 5.3)
 
-All the datasets can be found at http://sariyuce.com/WWW21_datasets.tar (3.8 GB). There are 4 folders in datasets:
+All the datasets can be found at https://drive.google.com/file/d/1GXLakOQTkcocEtmz86PJBd0L-UxJhqWI/view?usp=sharing (3.8 GB). There are 4 folders in datasets:
     - directed: 11 directed networks in Table 1 and metadata for some
     - signed_directed: 4 signed-directed networks in Table 4 and metadata for some
     - node_labeled: 100 networks from fb100 dataset and metadata for all
